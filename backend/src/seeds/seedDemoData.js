@@ -97,12 +97,8 @@ async function seedDemoData() {
         status: permitStatuses[i % permitStatuses.length],
         applicantName: citizen.name,
         applicantEmail: citizen.email,
-        applicantPhone: citizen.phone,
         propertyAddress: `${1000 + i * 100} Demo Street, Demo City, DC 20001`,
-        description: `Demo ${permitTypes[i % permitTypes.length]} permit application for property development`,
-        submittedAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000), // Random date within last 30 days
-        reviewedBy: i % 3 === 0 ? staff1[0].id : null,
-        estimatedCost: Math.floor(Math.random() * 50000) + 5000
+        projectDescription: `Demo ${permitTypes[i % permitTypes.length]} permit application for property development`
       });
       permits.push(permit);
     }
@@ -210,12 +206,12 @@ async function seedDemoData() {
         title: grantInfo.title,
         agencyName: grantInfo.agencyName,
         description: `Demo grant for ${grantInfo.category} projects`,
-        amount: grantInfo.amount,
+        estimatedTotalFunding: grantInfo.amount,
+        awardCeiling: grantInfo.amount,
         category: grantInfo.category,
-        applicationDeadline: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days from now
+        closeDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days from now
         status: 'open',
-        requirements: ['Demo requirement 1', 'Demo requirement 2'],
-        eligibilityCriteria: ['Criteria A', 'Criteria B']
+        eligibilityRequirements: 'Demo eligibility requirements for this grant opportunity'
       });
       grants.push(grant);
 
@@ -225,14 +221,13 @@ async function seedDemoData() {
         const appNumber = `APP-${grantInfo.grantNumber}-${String(i + 1).padStart(3, '0')}`;
         await GrantApplication.create({
           grantId: grant.id,
-          applicantId: applicantContact.id,
+          applicantId: adminUser[0].id, // Use admin user as applicant since applicantId references Users table
           applicationNumber: appNumber,
-          organizationName: applicantContact.organization || `${applicantContact.firstName} ${applicantContact.lastName}`,
           projectTitle: `Demo Project for ${grantInfo.title}`,
-          projectDescription: 'Comprehensive demo project description',
+          projectDescription: 'Comprehensive demo project description for demonstration purposes',
           requestedAmount: Math.floor(grantInfo.amount * 0.7),
-          status: i % 2 === 0 ? 'submitted' : 'under_review',
-          submittedAt: new Date()
+          status: i % 2 === 0 ? 'submitted' : 'in_review',
+          submittedDate: new Date()
         });
       }
     }
