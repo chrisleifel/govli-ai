@@ -29,6 +29,20 @@ const PublicComment = require('./PublicComment');
 const TownHallMeeting = require('./TownHallMeeting');
 const Survey = require('./Survey');
 const Poll = require('./Poll');
+const FoiaRequest = require('./FoiaRequest');
+const FoiaDocument = require('./FoiaDocument');
+const FoiaRedaction = require('./FoiaRedaction');
+const FoiaCommunication = require('./FoiaCommunication');
+const FoiaActivityLog = require('./FoiaActivityLog');
+const FoiaReadingRoom = require('./FoiaReadingRoom');
+const FoiaTemplate = require('./FoiaTemplate');
+const FoiaExemption = require('./FoiaExemption');
+const FoiaAIAnalysis = require('./FoiaAIAnalysis');
+const FoiaExtractedEntity = require('./FoiaExtractedEntity');
+const DocumentAnalysis = require('./DocumentAnalysis');
+const DetectedPII = require('./DetectedPII');
+const RedactionSuggestion = require('./RedactionSuggestion');
+const ExemptionClassification = require('./ExemptionClassification');
 
 // ============================================================================
 // USER RELATIONSHIPS
@@ -631,6 +645,289 @@ User.hasMany(Poll, {
 });
 
 // ============================================================================
+// FOIA RELATIONSHIPS
+// ============================================================================
+
+// FoiaRequest belongs to User (requester, assigned to, created by, updated by)
+FoiaRequest.belongsTo(User, {
+  foreignKey: 'requesterId',
+  as: 'requester'
+});
+User.hasMany(FoiaRequest, {
+  foreignKey: 'requesterId',
+  as: 'foiaRequests'
+});
+
+FoiaRequest.belongsTo(User, {
+  foreignKey: 'assignedTo',
+  as: 'assignedStaff'
+});
+User.hasMany(FoiaRequest, {
+  foreignKey: 'assignedTo',
+  as: 'assignedFoiaRequests'
+});
+
+FoiaRequest.belongsTo(User, {
+  foreignKey: 'createdBy',
+  as: 'creator'
+});
+
+FoiaRequest.belongsTo(User, {
+  foreignKey: 'updatedBy',
+  as: 'updater'
+});
+
+// FoiaRequest has many FoiaDocuments
+FoiaRequest.hasMany(FoiaDocument, {
+  foreignKey: 'requestId',
+  as: 'documents'
+});
+FoiaDocument.belongsTo(FoiaRequest, {
+  foreignKey: 'requestId',
+  as: 'request'
+});
+
+// FoiaRequest has many FoiaCommunications
+FoiaRequest.hasMany(FoiaCommunication, {
+  foreignKey: 'requestId',
+  as: 'communications'
+});
+FoiaCommunication.belongsTo(FoiaRequest, {
+  foreignKey: 'requestId',
+  as: 'request'
+});
+
+// FoiaRequest has many FoiaActivityLogs
+FoiaRequest.hasMany(FoiaActivityLog, {
+  foreignKey: 'requestId',
+  as: 'activityLogs'
+});
+FoiaActivityLog.belongsTo(FoiaRequest, {
+  foreignKey: 'requestId',
+  as: 'request'
+});
+
+// FoiaRequest has many FoiaReadingRoom entries
+FoiaRequest.hasMany(FoiaReadingRoom, {
+  foreignKey: 'requestId',
+  as: 'readingRoomEntries'
+});
+FoiaReadingRoom.belongsTo(FoiaRequest, {
+  foreignKey: 'requestId',
+  as: 'request'
+});
+
+// FoiaDocument belongs to User (uploaded by, redacted by, created by, updated by)
+FoiaDocument.belongsTo(User, {
+  foreignKey: 'uploadedBy',
+  as: 'uploader'
+});
+User.hasMany(FoiaDocument, {
+  foreignKey: 'uploadedBy',
+  as: 'uploadedFoiaDocuments'
+});
+
+FoiaDocument.belongsTo(User, {
+  foreignKey: 'redactedBy',
+  as: 'redactor'
+});
+
+FoiaDocument.belongsTo(User, {
+  foreignKey: 'createdBy',
+  as: 'creator'
+});
+
+FoiaDocument.belongsTo(User, {
+  foreignKey: 'updatedBy',
+  as: 'updater'
+});
+
+// FoiaDocument has many FoiaRedactions
+FoiaDocument.hasMany(FoiaRedaction, {
+  foreignKey: 'documentId',
+  as: 'redactions'
+});
+FoiaRedaction.belongsTo(FoiaDocument, {
+  foreignKey: 'documentId',
+  as: 'document'
+});
+
+// FoiaDocument has many FoiaActivityLogs
+FoiaDocument.hasMany(FoiaActivityLog, {
+  foreignKey: 'documentId',
+  as: 'activityLogs'
+});
+FoiaActivityLog.belongsTo(FoiaDocument, {
+  foreignKey: 'documentId',
+  as: 'document'
+});
+
+// FoiaRedaction belongs to User (reviewed by, created by, updated by)
+FoiaRedaction.belongsTo(User, {
+  foreignKey: 'reviewedBy',
+  as: 'reviewer'
+});
+User.hasMany(FoiaRedaction, {
+  foreignKey: 'reviewedBy',
+  as: 'reviewedRedactions'
+});
+
+FoiaRedaction.belongsTo(User, {
+  foreignKey: 'createdBy',
+  as: 'creator'
+});
+
+FoiaRedaction.belongsTo(User, {
+  foreignKey: 'updatedBy',
+  as: 'updater'
+});
+
+// FoiaCommunication belongs to User (sender, created by, updated by)
+FoiaCommunication.belongsTo(User, {
+  foreignKey: 'senderId',
+  as: 'sender'
+});
+User.hasMany(FoiaCommunication, {
+  foreignKey: 'senderId',
+  as: 'sentFoiaCommunications'
+});
+
+FoiaCommunication.belongsTo(User, {
+  foreignKey: 'createdBy',
+  as: 'creator'
+});
+
+FoiaCommunication.belongsTo(User, {
+  foreignKey: 'updatedBy',
+  as: 'updater'
+});
+
+// FoiaCommunication belongs to FoiaTemplate
+FoiaCommunication.belongsTo(FoiaTemplate, {
+  foreignKey: 'templateId',
+  as: 'template'
+});
+FoiaTemplate.hasMany(FoiaCommunication, {
+  foreignKey: 'templateId',
+  as: 'communications'
+});
+
+// FoiaActivityLog belongs to User (actor)
+FoiaActivityLog.belongsTo(User, {
+  foreignKey: 'actorId',
+  as: 'actor'
+});
+User.hasMany(FoiaActivityLog, {
+  foreignKey: 'actorId',
+  as: 'foiaActivities'
+});
+
+// FoiaReadingRoom belongs to User (created by, updated by, published by)
+FoiaReadingRoom.belongsTo(User, {
+  foreignKey: 'createdBy',
+  as: 'creator'
+});
+
+FoiaReadingRoom.belongsTo(User, {
+  foreignKey: 'updatedBy',
+  as: 'updater'
+});
+
+FoiaReadingRoom.belongsTo(User, {
+  foreignKey: 'publishedBy',
+  as: 'publisher'
+});
+User.hasMany(FoiaReadingRoom, {
+  foreignKey: 'publishedBy',
+  as: 'publishedReadingRoomEntries'
+});
+
+// FoiaTemplate belongs to User (created by, updated by)
+FoiaTemplate.belongsTo(User, {
+  foreignKey: 'createdBy',
+  as: 'creator'
+});
+User.hasMany(FoiaTemplate, {
+  foreignKey: 'createdBy',
+  as: 'createdFoiaTemplates'
+});
+
+FoiaTemplate.belongsTo(User, {
+  foreignKey: 'updatedBy',
+  as: 'updater'
+});
+
+// ============================================================================
+// FOIA AI ANALYSIS RELATIONSHIPS
+// ============================================================================
+
+// FoiaAIAnalysis belongs to FoiaRequest
+FoiaAIAnalysis.belongsTo(FoiaRequest, {
+  foreignKey: 'requestId',
+  as: 'request'
+});
+FoiaRequest.hasMany(FoiaAIAnalysis, {
+  foreignKey: 'requestId',
+  as: 'aiAnalyses'
+});
+
+// FoiaAIAnalysis has many FoiaExtractedEntities
+FoiaAIAnalysis.hasMany(FoiaExtractedEntity, {
+  foreignKey: 'analysisId',
+  as: 'extractedEntities'
+});
+FoiaExtractedEntity.belongsTo(FoiaAIAnalysis, {
+  foreignKey: 'analysisId',
+  as: 'analysis'
+});
+
+// Document Analysis Relationships
+FoiaDocument.hasOne(DocumentAnalysis, {
+  foreignKey: 'documentId',
+  as: 'analysis'
+});
+DocumentAnalysis.belongsTo(FoiaDocument, {
+  foreignKey: 'documentId',
+  as: 'document'
+});
+
+// DocumentAnalysis has many DetectedPII
+DocumentAnalysis.hasMany(DetectedPII, {
+  foreignKey: 'analysisId',
+  as: 'detectedPII'
+});
+DetectedPII.belongsTo(DocumentAnalysis, {
+  foreignKey: 'analysisId',
+  as: 'analysis'
+});
+
+// DetectedPII has one RedactionSuggestion
+DetectedPII.hasOne(RedactionSuggestion, {
+  foreignKey: 'piiId',
+  as: 'redactionSuggestion'
+});
+RedactionSuggestion.belongsTo(DetectedPII, {
+  foreignKey: 'piiId',
+  as: 'pii'
+});
+
+// RedactionSuggestion belongs to User (reviewer)
+RedactionSuggestion.belongsTo(User, {
+  foreignKey: 'reviewedBy',
+  as: 'reviewer'
+});
+
+// DocumentAnalysis has many ExemptionClassifications
+DocumentAnalysis.hasMany(ExemptionClassification, {
+  foreignKey: 'analysisId',
+  as: 'exemptions'
+});
+ExemptionClassification.belongsTo(DocumentAnalysis, {
+  foreignKey: 'analysisId',
+  as: 'analysis'
+});
+
+// ============================================================================
 // EXPORT ALL MODELS
 // ============================================================================
 
@@ -658,5 +955,19 @@ module.exports = {
   PublicComment,
   TownHallMeeting,
   Survey,
-  Poll
+  Poll,
+  FoiaRequest,
+  FoiaDocument,
+  FoiaRedaction,
+  FoiaCommunication,
+  FoiaActivityLog,
+  FoiaReadingRoom,
+  FoiaTemplate,
+  FoiaExemption,
+  FoiaAIAnalysis,
+  FoiaExtractedEntity,
+  DocumentAnalysis,
+  DetectedPII,
+  RedactionSuggestion,
+  ExemptionClassification
 };

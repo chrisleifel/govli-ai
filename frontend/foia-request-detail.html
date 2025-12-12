@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FOIA Request Detail - Govli AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'ocean-dark': '#0a1628',
+            'ocean-blue': '#1e3a8a',
+            'ocean-light': '#3b82f6'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #0a1628 0%, #1e3a8a 100%);
+      min-height: 100vh;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .glass-hover:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: white !important;
+        color: black !important;
+      }
+      .glass {
+        background: white !important;
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-section {
+        page-break-inside: avoid;
+      }
+      h1, h2, h3 {
+        color: black !important;
+      }
+      .text-white, .text-gray-300, .text-gray-400 {
+        color: #333 !important;
+      }
+      .bg-gradient-to-r {
+        background: #2563eb !important;
+        color: white !important;
+      }
+    }
+  </style>
+</head>
+<body class="text-white">
+  <!-- Header (no-print) -->
+  <header class="glass border-b border-white/10 no-print">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <h1 class="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+            Govli AI
+          </h1>
+          <span class="text-gray-400">|</span>
+          <span class="text-gray-300">FOIA Request Detail</span>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button onclick="window.print()" class="glass glass-hover px-4 py-2 rounded-lg text-sm flex items-center space-x-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+            </svg>
+            <span>Print</span>
+          </button>
+          <button onclick="exportToPDF()" class="glass glass-hover px-4 py-2 rounded-lg text-sm flex items-center space-x-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <span>Export PDF</span>
+          </button>
+          <a href="foia-track.html" class="text-gray-400 hover:text-white text-sm">Back to Tracking</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container mx-auto px-6 py-12 max-w-6xl" id="printContent">
+    <!-- Loading State -->
+    <div id="loadingState" class="text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-cyan-400 border-t-transparent no-print"></div>
+      <p class="mt-4 text-gray-400">Loading request details...</p>
+    </div>
+
+    <!-- Request Content -->
+    <div id="requestContent" class="hidden space-y-6">
+      <!-- Print Header -->
+      <div class="glass rounded-lg p-8 print-section">
+        <div class="flex items-start justify-between mb-6">
+          <div>
+            <h1 class="text-4xl font-bold mb-2" id="requestSubject">-</h1>
+            <div class="flex items-center space-x-4 text-sm text-gray-400">
+              <span>Tracking: <span id="trackingNumber" class="font-mono text-cyan-400">-</span></span>
+              <span>•</span>
+              <span>Status: <span id="statusText" class="font-semibold">-</span></span>
+              <span>•</span>
+              <span>Submitted: <span id="dateSubmitted">-</span></span>
+            </div>
+          </div>
+          <div class="text-right">
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzFmMmEzZSIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzYzYjNlZCIgZm9udC1zaXplPSIyMCIgZm9udC1mYW1pbHk9IkFyaWFsIj5HT1ZMSTwvdGV4dD48L3N2Zz4="
+              alt="Govli AI Logo" class="w-24 h-24">
+          </div>
+        </div>
+
+        <!-- Request Info Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-white/10">
+          <div>
+            <p class="text-sm text-gray-400 mb-1">Request Type</p>
+            <p id="requestType" class="font-semibold capitalize">-</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-400 mb-1">Priority</p>
+            <p id="priority" class="font-semibold capitalize">-</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-400 mb-1">Due Date</p>
+            <p id="dueDate" class="font-semibold">-</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-400 mb-1">Days Remaining</p>
+            <p id="daysRemaining" class="font-semibold text-cyan-400">-</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Requester Information -->
+      <div class="glass rounded-lg p-6 print-section">
+        <h2 class="text-2xl font-bold mb-4">Requester Information</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p class="text-sm text-gray-400 mb-1">Name</p>
+            <p id="requesterName" class="font-medium">-</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-400 mb-1">Email</p>
+            <p id="requesterEmail" class="font-medium">-</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-400 mb-1">Phone</p>
+            <p id="requesterPhone" class="font-medium">-</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-400 mb-1">Organization</p>
+            <p id="requesterOrganization" class="font-medium">-</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-400 mb-1">Requester Type</p>
+            <p id="requesterType" class="font-medium capitalize">-</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Request Description -->
+      <div class="glass rounded-lg p-6 print-section">
+        <h2 class="text-2xl font-bold mb-4">Request Description</h2>
+        <p id="description" class="text-gray-300 leading-relaxed whitespace-pre-wrap">-</p>
+
+        <div id="dateRangeSection" class="mt-4 pt-4 border-t border-white/10 hidden">
+          <p class="text-sm text-gray-400 mb-2">Date Range Requested:</p>
+          <p class="font-medium"><span id="dateRangeStart">-</span> to <span id="dateRangeEnd">-</span></p>
+        </div>
+      </div>
+
+      <!-- Processing Timeline -->
+      <div class="glass rounded-lg p-6 print-section">
+        <h2 class="text-2xl font-bold mb-6">Processing Timeline</h2>
+        <div id="timeline" class="space-y-4">
+          <!-- Timeline will be populated here -->
+        </div>
+      </div>
+
+      <!-- Documents -->
+      <div class="glass rounded-lg p-6 print-section">
+        <h2 class="text-2xl font-bold mb-6">Documents</h2>
+        <div id="documentsList" class="space-y-3">
+          <p class="text-gray-400">No documents available.</p>
+        </div>
+      </div>
+
+      <!-- Communications -->
+      <div class="glass rounded-lg p-6 print-section">
+        <h2 class="text-2xl font-bold mb-6">Communications History</h2>
+        <div id="communicationsList" class="space-y-4">
+          <p class="text-gray-400">No communications yet.</p>
+        </div>
+      </div>
+
+      <!-- Activity Log -->
+      <div class="glass rounded-lg p-6 print-section">
+        <h2 class="text-2xl font-bold mb-6">Activity Log</h2>
+        <div id="activityLog" class="space-y-3">
+          <p class="text-gray-400">No activity recorded.</p>
+        </div>
+      </div>
+
+      <!-- Fees & Payments -->
+      <div class="glass rounded-lg p-6 print-section" id="feesSection">
+        <h2 class="text-2xl font-bold mb-6">Fees & Payments</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <p class="text-sm text-gray-400 mb-1">Estimated Fee</p>
+            <p id="estimatedFee" class="text-2xl font-bold text-cyan-400">$0.00</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-400 mb-1">Actual Fee</p>
+            <p id="actualFee" class="text-2xl font-bold">$0.00</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-400 mb-1">Fee Status</p>
+            <p id="feeStatus" class="text-lg font-semibold capitalize">-</p>
+          </div>
+        </div>
+        <div id="feeWaiverInfo" class="mt-4 pt-4 border-t border-white/10 hidden">
+          <p class="text-sm text-yellow-500">Fee waiver requested</p>
+          <p id="feeWaiverReason" class="text-gray-300 mt-2">-</p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="text-center text-sm text-gray-400 py-6 print-section">
+        <p>This is an official record of your FOIA request.</p>
+        <p class="mt-1">For questions, contact: foia@govli.ai or call (555) 123-4567</p>
+        <p class="mt-4">Generated on: <span id="printDate"></span></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = 'http://localhost:3000';
+
+    // Get tracking number from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const trackingNumber = urlParams.get('tracking');
+
+    if (!trackingNumber) {
+      alert('No tracking number provided');
+      window.location.href = 'foia-track.html';
+    }
+
+    // Load request details
+    async function loadRequest() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/foia/requests/track/${trackingNumber}`);
+
+        if (!response.ok) {
+          throw new Error('Request not found');
+        }
+
+        const request = await response.json();
+        displayRequest(request);
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to load request details');
+      }
+    }
+
+    function displayRequest(request) {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('requestContent').classList.remove('hidden');
+
+      // Header Info
+      document.getElementById('requestSubject').textContent = request.subject || 'FOIA Request';
+      document.getElementById('trackingNumber').textContent = request.trackingNumber || '-';
+      document.getElementById('statusText').textContent = (request.status || '-').replace(/_/g, ' ').toUpperCase();
+      document.getElementById('dateSubmitted').textContent = new Date(request.dateSubmitted).toLocaleDateString();
+
+      // Request Details
+      document.getElementById('requestType').textContent = (request.requestType || '-').replace(/_/g, ' ');
+      document.getElementById('priority').textContent = request.priority || '-';
+      document.getElementById('dueDate').textContent = new Date(request.dateDue).toLocaleDateString();
+
+      const daysRemaining = Math.ceil((new Date(request.dateDue) - new Date()) / (1000 * 60 * 60 * 24));
+      document.getElementById('daysRemaining').textContent = daysRemaining > 0 ? `${daysRemaining} days` : 'Overdue';
+
+      // Requester Info
+      document.getElementById('requesterName').textContent = request.requesterName || '-';
+      document.getElementById('requesterEmail').textContent = request.requesterEmail || '-';
+      document.getElementById('requesterPhone').textContent = request.requesterPhone || 'Not provided';
+      document.getElementById('requesterOrganization').textContent = request.requesterOrganization || 'None';
+      document.getElementById('requesterType').textContent = request.requesterType || '-';
+
+      // Description
+      document.getElementById('description').textContent = request.description || '-';
+
+      // Date Range
+      if (request.dateRangeStart || request.dateRangeEnd) {
+        document.getElementById('dateRangeSection').classList.remove('hidden');
+        document.getElementById('dateRangeStart').textContent = request.dateRangeStart ? new Date(request.dateRangeStart).toLocaleDateString() : 'N/A';
+        document.getElementById('dateRangeEnd').textContent = request.dateRangeEnd ? new Date(request.dateRangeEnd).toLocaleDateString() : 'N/A';
+      }
+
+      // Fees
+      document.getElementById('estimatedFee').textContent = `$${(request.estimatedFee || 0).toFixed(2)}`;
+      document.getElementById('actualFee').textContent = `$${(request.actualFee || 0).toFixed(2)}`;
+      document.getElementById('feeStatus').textContent = request.feePaid ? 'Paid' : request.feeWaived ? 'Waived' : 'Pending';
+
+      if (request.feeWaived && request.feeWaiverReason) {
+        document.getElementById('feeWaiverInfo').classList.remove('hidden');
+        document.getElementById('feeWaiverReason').textContent = request.feeWaiverReason;
+      }
+
+      // Timeline
+      renderTimeline(request);
+
+      // Documents
+      renderDocuments(request.documents || []);
+
+      // Communications
+      renderCommunications(request.communications || []);
+
+      // Activity Log
+      renderActivityLog(request.activityLogs || []);
+
+      // Print date
+      document.getElementById('printDate').textContent = new Date().toLocaleString();
+    }
+
+    function renderTimeline(request) {
+      const timeline = document.getElementById('timeline');
+      const events = [
+        { date: request.dateSubmitted, title: 'Request Submitted', icon: '📝' },
+        { date: request.dateAcknowledged, title: 'Acknowledged', icon: '✓' },
+        { date: request.dateDue, title: 'Response Due', icon: '⏰' },
+        { date: request.dateCompleted, title: 'Completed', icon: '✅' }
+      ].filter(e => e.date);
+
+      timeline.innerHTML = events.map(event => `
+        <div class="flex items-start space-x-4 pb-4 border-b border-white/10 last:border-0">
+          <span class="text-2xl">${event.icon}</span>
+          <div class="flex-1">
+            <h4 class="font-semibold">${event.title}</h4>
+            <p class="text-sm text-gray-400">${new Date(event.date).toLocaleString()}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderDocuments(documents) {
+      const documentsList = document.getElementById('documentsList');
+
+      if (documents.length === 0) return;
+
+      documentsList.innerHTML = documents.map(doc => `
+        <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+          <div>
+            <p class="font-medium">${doc.filename || 'Document'}</p>
+            <p class="text-sm text-gray-400">
+              ${doc.fileType || 'Unknown'} • ${(doc.fileSize / 1024).toFixed(2)} KB
+              ${doc.redactionStatus ? `• Redaction: ${doc.redactionStatus}` : ''}
+            </p>
+          </div>
+          <button class="px-4 py-2 bg-cyan-500 rounded-lg text-sm no-print">Download</button>
+        </div>
+      `).join('');
+    }
+
+    function renderCommunications(communications) {
+      const communicationsList = document.getElementById('communicationsList');
+
+      if (communications.length === 0) return;
+
+      communicationsList.innerHTML = communications.map(comm => `
+        <div class="p-4 bg-white/5 rounded-lg">
+          <div class="flex items-start justify-between mb-2">
+            <h4 class="font-semibold">${comm.subject || 'Communication'}</h4>
+            <span class="text-sm text-gray-400">${new Date(comm.sentAt).toLocaleDateString()}</span>
+          </div>
+          <p class="text-sm text-gray-300">${comm.message || ''}</p>
+          <p class="text-xs text-gray-500 mt-2">${comm.direction === 'outgoing' ? 'From Staff' : 'To Staff'} • ${comm.communicationType || 'Email'}</p>
+        </div>
+      `).join('');
+    }
+
+    function renderActivityLog(logs) {
+      const activityLog = document.getElementById('activityLog');
+
+      if (logs.length === 0) return;
+
+      activityLog.innerHTML = logs.map(log => `
+        <div class="flex items-start justify-between p-3 bg-white/5 rounded text-sm">
+          <div>
+            <p class="font-medium">${log.action || 'Activity'}</p>
+            <p class="text-gray-400">${log.description || ''}</p>
+          </div>
+          <span class="text-gray-500 text-xs">${new Date(log.timestamp).toLocaleString()}</span>
+        </div>
+      `).join('');
+    }
+
+    function exportToPDF() {
+      window.print();
+    }
+
+    // Load request on page load
+    loadRequest();
+  </script>
+</body>
+</html>

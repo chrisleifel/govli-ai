@@ -89,6 +89,7 @@ const secureMeshRoutes = require('./routes/securemesh');
 const publicEngagementRoutes = require('./routes/public-engagement');
 const adminUpgradeRoutes = require('./routes/admin-upgrade');
 const demoRoutes = require('./routes/demo');
+const foiaRoutes = require('./routes/foia');
 
 // Service imports
 const aiService = require('./services/aiService');
@@ -113,6 +114,7 @@ app.use('/api/securemesh', secureMeshRoutes);
 app.use('/api/public-engagement', publicEngagementRoutes);
 app.use('/api/admin-upgrade', adminUpgradeRoutes); // TEMPORARY - Remove after upgrading user
 app.use('/api/demo', demoRoutes); // Demo data seeding and info
+app.use('/api/foia', foiaRoutes); // FOIA/Public Records Management
 
 // Health check endpoint (no rate limiting)
 app.get('/health', (req, res) => {

@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Records Request - Govli AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --deep-ocean: #0a1628;
+            --ocean-dark: #0c4a6e;
+            --ocean-primary: #0369a1;
+            --azure-blue: #0284c7;
+            --sky-blue: #0ea5e9;
+            --cyan-bright: #06b6d4;
+            --teal-accent: #14b8a6;
+            --emerald-success: #10b981;
+            --glass-bg: rgba(15, 23, 42, 0.75);
+            --glass-border: rgba(6, 182, 212, 0.25);
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg,
+                #0a1628 0%,
+                #0c2340 25%,
+                #0e3a5f 50%,
+                #1e3a5f 75%,
+                #164e7f 100%
+            );
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .gradient-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(20, 184, 166, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 16px 24px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--azure-blue) 0%, var(--ocean-primary) 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .form-input, .form-textarea, .form-select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--cyan-bright);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+        }
+
+        .form-input::placeholder, .form-textarea::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .form-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            color: white;
+            border-bottom-color: var(--cyan-bright);
+        }
+
+        .tab-button:hover {
+            color: white;
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <!-- Navigation -->
+    <div class="nav-header">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <i class="fas fa-file-alt text-3xl" style="color: var(--cyan-bright);"></i>
+                <div>
+                    <h1 class="text-2xl font-bold text-white">Public Records Request</h1>
+                    <p class="text-sm text-gray-400">Submit and track FOIA requests</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button onclick="window.location.href='index.html'" class="text-white hover:text-cyan-400 transition">
+                    <i class="fas fa-home text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="bg-gray-900 bg-opacity-50 border-b border-gray-700">
+        <div class="container mx-auto px-6">
+            <div class="flex space-x-1">
+                <button class="tab-button active" onclick="showTab('submit')">
+                    <i class="fas fa-plus-circle mr-2"></i>Submit New Request
+                </button>
+                <button class="tab-button" onclick="showTab('track')">
+                    <i class="fas fa-search mr-2"></i>Track Request
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-6 py-8">
+        <!-- Submit Request Tab -->
+        <div id="submitTab" class="tab-content">
+            <div class="max-w-3xl mx-auto">
+                <!-- AI Request Architect -->
+                <div class="glass rounded-xl p-8 mb-6" id="aiArchitectSection">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-white">
+                            <i class="fas fa-brain mr-3" style="color: var(--cyan-bright);"></i>AI Request Architect
+                        </h2>
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-cyan-500 to-blue-500 text-white">
+                            BETA
+                        </span>
+                    </div>
+
+                    <p class="text-gray-300 mb-6">
+                        Describe what you're looking for in plain language, and our AI will help structure your request, identify relevant departments, and estimate costs and timelines.
+                    </p>
+
+                    <!-- Natural Language Input -->
+                    <div class="mb-4">
+                        <label class="form-label">Describe what records you're looking for</label>
+                        <textarea id="aiRequestInput" class="form-textarea" rows="4"
+                                  placeholder="Example: I need all emails between the police department and the mayor's office regarding the downtown development project from January to March 2024."></textarea>
+                        <div class="flex items-center justify-between mt-2">
+                            <p class="text-xs text-gray-400">
+                                <i class="fas fa-lightbulb mr-1"></i>
+                                <span id="suggestionHint">Suggestions will appear as you type...</span>
+                            </p>
+                            <button type="button" onclick="analyzeRequest()" class="btn-primary text-sm py-2">
+                                <i class="fas fa-magic mr-2"></i>Analyze Request
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- AI Analysis Results (Hidden initially) -->
+                    <div id="aiAnalysisResults" class="hidden mt-6 space-y-4">
+                        <!-- Entities -->
+                        <div id="entitiesSection" class="hidden">
+                            <h4 class="text-sm font-semibold text-white mb-2">
+                                <i class="fas fa-tags mr-2"></i>Detected Information
+                            </h4>
+                            <div id="entitiesList" class="flex flex-wrap gap-2"></div>
+                        </div>
+
+                        <!-- Suggested Departments -->
+                        <div id="departmentsSection" class="hidden">
+                            <h4 class="text-sm font-semibold text-white mb-2">
+                                <i class="fas fa-building mr-2"></i>Suggested Departments
+                            </h4>
+                            <div id="departmentsList" class="space-y-2"></div>
+                        </div>
+
+                        <!-- Scope Analysis -->
+                        <div id="scopeSection" class="hidden">
+                            <h4 class="text-sm font-semibold text-white mb-2">
+                                <i class="fas fa-chart-line mr-2"></i>Scope Analysis
+                            </h4>
+                            <div id="scopeContent" class="space-y-3"></div>
+                        </div>
+
+                        <!-- Ambiguities & Suggestions -->
+                        <div id="ambiguitiesSection" class="hidden">
+                            <h4 class="text-sm font-semibold text-yellow-400 mb-2">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>Recommendations to Improve Your Request
+                            </h4>
+                            <div id="ambiguitiesList" class="space-y-2"></div>
+                        </div>
+
+                        <!-- Cost & Timeline Estimates -->
+                        <div id="estimatesSection" class="hidden">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-lg p-4">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-xs text-gray-400">Estimated Cost</p>
+                                            <p id="costEstimate" class="text-2xl font-bold text-green-400">$0</p>
+                                        </div>
+                                        <i class="fas fa-dollar-sign text-3xl text-green-400/30"></i>
+                                    </div>
+                                    <p id="costBreakdown" class="text-xs text-gray-400 mt-2"></p>
+                                </div>
+                                <div class="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/30 rounded-lg p-4">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-xs text-gray-400">Estimated Timeline</p>
+                                            <p id="timelineEstimate" class="text-2xl font-bold text-blue-400">0 days</p>
+                                        </div>
+                                        <i class="fas fa-clock text-3xl text-blue-400/30"></i>
+                                    </div>
+                                    <p id="timelineDetails" class="text-xs text-gray-400 mt-2"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Similar Requests -->
+                        <div id="similarSection" class="hidden">
+                            <h4 class="text-sm font-semibold text-white mb-2">
+                                <i class="fas fa-history mr-2"></i>Similar Past Requests
+                            </h4>
+                            <div id="similarList" class="space-y-2"></div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <div class="flex justify-end pt-4 border-t border-gray-700">
+                            <button onclick="useAnalysis()" class="btn-primary">
+                                <i class="fas fa-arrow-down mr-2"></i>Use This Analysis to Fill Form
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass rounded-xl p-8">
+                    <h2 class="text-2xl font-bold text-white mb-6">
+                        <i class="fas fa-file-alt mr-3"></i>New Public Records Request
+                    </h2>
+
+                    <!-- Success/Error Messages -->
+                    <div id="messageContainer" class="hidden mb-6"></div>
+
+                    <form id="foiaRequestForm" class="space-y-6">
+                        <!-- Your Information -->
+                        <div class="border-b border-gray-700 pb-6">
+                            <h3 class="text-lg font-semibold text-white mb-4">Your Information</h3>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="form-label">Full Name *</label>
+                                    <input type="text" id="requesterName" class="form-input" placeholder="John Smith" required>
+                                </div>
+                                <div>
+                                    <label class="form-label">Email *</label>
+                                    <input type="email" id="requesterEmail" class="form-input" placeholder="john@example.com" required>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div>
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="tel" id="requesterPhone" class="form-input" placeholder="(555) 123-4567">
+                                </div>
+                                <div>
+                                    <label class="form-label">Organization</label>
+                                    <input type="text" id="requesterOrganization" class="form-input" placeholder="Optional">
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <label class="form-label">Requester Type *</label>
+                                <select id="requesterType" class="form-select" required>
+                                    <option value="citizen">Individual/Citizen</option>
+                                    <option value="media">Media Representative</option>
+                                    <option value="attorney">Attorney</option>
+                                    <option value="commercial">Commercial Entity</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Request Details -->
+                        <div class="border-b border-gray-700 pb-6">
+                            <h3 class="text-lg font-semibold text-white mb-4">Request Details</h3>
+
+                            <div class="mb-4">
+                                <label class="form-label">Request Type *</label>
+                                <select id="requestType" class="form-select" required>
+                                    <option value="general">General Records</option>
+                                    <option value="police_report">Police Report</option>
+                                    <option value="building_permit">Building Permit</option>
+                                    <option value="meetings">Meeting Minutes/Agendas</option>
+                                    <option value="contracts">Contracts/Agreements</option>
+                                    <option value="financial">Financial Records</option>
+                                    <option value="personnel">Personnel Records</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Subject/Title *</label>
+                                <input type="text" id="subject" class="form-input"
+                                       placeholder="Brief description of records requested" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Detailed Description *</label>
+                                <textarea id="description" class="form-textarea" rows="6" required
+                                          placeholder="Please provide a detailed description of the records you are requesting. Be as specific as possible to help us locate the correct records."></textarea>
+                                <p class="text-xs text-gray-400 mt-2">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    The more specific your request, the faster we can process it.
+                                </p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="form-label">Date Range Start</label>
+                                    <input type="date" id="dateRangeStart" class="form-input">
+                                </div>
+                                <div>
+                                    <label class="form-label">Date Range End</label>
+                                    <input type="date" id="dateRangeEnd" class="form-input">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit -->
+                        <div class="flex items-center justify-between">
+                            <div class="text-sm text-gray-400">
+                                <i class="fas fa-shield-alt mr-2"></i>
+                                Your information is secure and will only be used to process your request.
+                            </div>
+                            <button type="submit" class="btn-primary">
+                                <i class="fas fa-paper-plane mr-2"></i>Submit Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Info Box -->
+                <div class="mt-6 glass rounded-xl p-6">
+                    <h4 class="text-lg font-semibold text-white mb-3">
+                        <i class="fas fa-info-circle mr-2"></i>What to Expect
+                    </h4>
+                    <ul class="space-y-2 text-gray-300">
+                        <li><i class="fas fa-check text-emerald-400 mr-2"></i>You'll receive a tracking number immediately</li>
+                        <li><i class="fas fa-check text-emerald-400 mr-2"></i>Acknowledgment within 3 business days</li>
+                        <li><i class="fas fa-check text-emerald-400 mr-2"></i>Response within 10 business days (may vary by jurisdiction)</li>
+                        <li><i class="fas fa-check text-emerald-400 mr-2"></i>Email notifications for all status updates</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Track Request Tab -->
+        <div id="trackTab" class="tab-content hidden">
+            <div class="max-w-2xl mx-auto">
+                <div class="glass rounded-xl p-8">
+                    <h2 class="text-2xl font-bold text-white mb-6">
+                        <i class="fas fa-search mr-3"></i>Track Your Request
+                    </h2>
+
+                    <!-- Success/Error Messages for Track Tab -->
+                    <div id="trackMessageContainer" class="hidden mb-6"></div>
+
+                    <div class="mb-6">
+                        <label class="form-label">Tracking Number</label>
+                        <div class="flex space-x-3">
+                            <input type="text" id="trackingNumber" class="form-input"
+                                   placeholder="FOIA-2025-00001">
+                            <button onclick="trackRequest()" class="btn-primary whitespace-nowrap">
+                                <i class="fas fa-search mr-2"></i>Search
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">
+                            Enter your tracking number to check the status of your request
+                        </p>
+                    </div>
+
+                    <div id="trackingResults" class="hidden">
+                        <!-- Results will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // VERSION: 2025-12-08-v3
+        const API_BASE_URL = 'http://localhost:3000';
+
+        // Store current AI analysis
+        let currentAnalysis = null;
+
+        // Debounce utility
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Show success/error messages
+        function showMessage(type, message, containerId = 'messageContainer') {
+            console.log('showMessage called:', type, message, containerId);
+            const container = document.getElementById(containerId);
+
+            if (!container) {
+                console.error('Message container not found:', containerId);
+                alert(message); // Fallback to alert
+                return;
+            }
+
+            // Use inline styles for reliability
+            const isSuccess = type === 'success';
+            const bgColor = isSuccess ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+            const borderColor = isSuccess ? '#10b981' : '#ef4444';
+            const textColor = isSuccess ? '#6ee7b7' : '#fca5a5';
+            const icon = isSuccess ? 'fa-check-circle' : 'fa-exclamation-circle';
+
+            // Create elements using DOM methods to avoid HTML injection issues
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'glass';
+            messageDiv.style.cssText = 'background: ' + bgColor + '; border-left: 4px solid ' + borderColor + '; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;';
+
+            const flexDiv = document.createElement('div');
+            flexDiv.style.cssText = 'display: flex; align-items: center;';
+
+            const iconEl = document.createElement('i');
+            iconEl.className = 'fas ' + icon;
+            iconEl.style.cssText = 'color: ' + textColor + '; font-size: 1.5rem; margin-right: 1rem;';
+
+            const textEl = document.createElement('p');
+            textEl.style.cssText = 'color: ' + textColor + '; font-weight: 500; margin: 0;';
+            textEl.textContent = message; // Use textContent to avoid HTML injection
+
+            flexDiv.appendChild(iconEl);
+            flexDiv.appendChild(textEl);
+            messageDiv.appendChild(flexDiv);
+
+            container.innerHTML = '';
+            container.appendChild(messageDiv);
+
+            container.style.display = 'block';
+            container.classList.remove('hidden');
+            console.log('Message displayed successfully');
+
+            // Auto-hide after 10 seconds for success messages
+            if (isSuccess) {
+                setTimeout(function() {
+                    container.style.display = 'none';
+                    container.classList.add('hidden');
+                }, 10000);
+            }
+        }
+
+        // Tab switching
+        function showTab(tab) {
+            // Hide all tabs and remove active state from all buttons
+            document.querySelectorAll('.tab-content').forEach(function(el) {
+                el.classList.add('hidden');
+            });
+            document.querySelectorAll('.tab-button').forEach(function(el) {
+                el.classList.remove('active');
+            });
+
+            // Show the selected tab and activate the corresponding button
+            if (tab === 'submit') {
+                document.getElementById('submitTab').classList.remove('hidden');
+                document.querySelectorAll('.tab-button')[0].classList.add('active');
+            } else if (tab === 'track') {
+                document.getElementById('trackTab').classList.remove('hidden');
+                document.querySelectorAll('.tab-button')[1].classList.add('active');
+            }
+        }
+
+        // Form submission
+        document.getElementById('foiaRequestForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const requestData = {
+                requesterName: document.getElementById('requesterName').value,
+                requesterEmail: document.getElementById('requesterEmail').value,
+                requesterPhone: document.getElementById('requesterPhone').value,
+                requesterOrganization: document.getElementById('requesterOrganization').value,
+                requesterType: document.getElementById('requesterType').value,
+                requestType: document.getElementById('requestType').value,
+                subject: document.getElementById('subject').value,
+                description: document.getElementById('description').value,
+                dateRangeStart: document.getElementById('dateRangeStart').value || null,
+                dateRangeEnd: document.getElementById('dateRangeEnd').value || null
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/foia/requests`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('success', `Success! Your tracking number is: ${result.request.trackingNumber}. Please save this number to track your request.`);
+                    document.getElementById('foiaRequestForm').reset();
+                    // Scroll to top to see message
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    showMessage('error', result.message || 'Failed to submit request. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error submitting request:', error);
+                showMessage('error', 'Failed to submit request. Please check your connection and try again.');
+            }
+        });
+
+        // Track request
+        async function trackRequest() {
+            const trackingNumber = document.getElementById('trackingNumber').value.trim();
+            const resultsDiv = document.getElementById('trackingResults');
+
+            // Hide previous results
+            if (resultsDiv) {
+                resultsDiv.classList.add('hidden');
+                resultsDiv.innerHTML = '';
+            }
+
+            if (!trackingNumber) {
+                showMessage('error', 'Please enter a tracking number', 'trackMessageContainer');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/foia/requests/${trackingNumber}/status`);
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('success', 'Request found!', 'trackMessageContainer');
+                    displayTrackingResults(result.request);
+                } else {
+                    showMessage('error', result.message || 'Request not found. Please check your tracking number.', 'trackMessageContainer');
+                }
+            } catch (error) {
+                console.error('Error tracking request:', error);
+                showMessage('error', 'Failed to track request. Please check your connection and try again.', 'trackMessageContainer');
+            }
+        }
+
+        function displayTrackingResults(request) {
+            const resultsDiv = document.getElementById('trackingResults');
+            resultsDiv.innerHTML = `
+                <div class="border-t border-gray-700 pt-6 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">Tracking Number:</span>
+                        <span class="text-white font-semibold">${request.trackingNumber}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">Status:</span>
+                        <span class="px-3 py-1 rounded-full text-sm font-semibold ${getStatusClass(request.status)}">
+                            ${formatStatus(request.status)}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">Submitted:</span>
+                        <span class="text-white">${new Date(request.dateSubmitted).toLocaleDateString()}</span>
+                    </div>
+                    ${request.dateDue ? `
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">Due Date:</span>
+                        <span class="text-white">${new Date(request.dateDue).toLocaleDateString()}</span>
+                    </div>
+                    ` : ''}
+                    ${request.publicNotes ? `
+                    <div class="mt-4 p-4 bg-gray-800 bg-opacity-50 rounded-lg">
+                        <div class="text-sm text-gray-400 mb-2">Latest Update:</div>
+                        <div class="text-white">${request.publicNotes}</div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+            resultsDiv.classList.remove('hidden');
+        }
+
+        function getStatusClass(status) {
+            const classes = {
+                'submitted': 'bg-blue-500 bg-opacity-20 text-blue-400',
+                'acknowledged': 'bg-cyan-500 bg-opacity-20 text-cyan-400',
+                'assigned': 'bg-purple-500 bg-opacity-20 text-purple-400',
+                'records_gathering': 'bg-yellow-500 bg-opacity-20 text-yellow-400',
+                'processing': 'bg-orange-500 bg-opacity-20 text-orange-400',
+                'ready_release': 'bg-green-500 bg-opacity-20 text-green-400',
+                'released': 'bg-emerald-500 bg-opacity-20 text-emerald-400',
+                'closed': 'bg-gray-500 bg-opacity-20 text-gray-400'
+            };
+            return classes[status] || 'bg-gray-500 bg-opacity-20 text-gray-400';
+        }
+
+        function formatStatus(status) {
+            return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        // ===================================================================
+        // AI REQUEST ARCHITECT FUNCTIONS
+        // ===================================================================
+
+        // Analyze request with AI
+        async function analyzeRequest() {
+            const inputText = document.getElementById('aiRequestInput').value.trim();
+
+            if (!inputText || inputText.length < 10) {
+                alert('Please enter a more detailed description (at least 10 characters)');
+                return;
+            }
+
+            const analyzeBtn = event.target;
+            const originalText = analyzeBtn.innerHTML;
+            analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Analyzing...';
+            analyzeBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/foia/ai/analyze-request`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: inputText })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    currentAnalysis = result.analysis;
+                    displayAnalysisResults(result.analysis);
+                } else {
+                    console.error('AI analysis failed:', result);
+                    alert('AI analysis is temporarily unavailable. Please use the manual form below.');
+                }
+            } catch (error) {
+                console.error('AI analysis error:', error);
+                alert('AI analysis is temporarily unavailable. Please use the manual form below.');
+            } finally {
+                analyzeBtn.innerHTML = originalText;
+                analyzeBtn.disabled = false;
+            }
+        }
+
+        // Display AI analysis results
+        function displayAnalysisResults(analysis) {
+            const resultsDiv = document.getElementById('aiAnalysisResults');
+            resultsDiv.classList.remove('hidden');
+
+            // Display entities
+            if (analysis.entities && analysis.entities.length > 0) {
+                const entitiesSection = document.getElementById('entitiesSection');
+                const entitiesList = document.getElementById('entitiesList');
+                entitiesSection.classList.remove('hidden');
+
+                const entityColors = {
+                    'PERSON': 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+                    'ORG': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+                    'DATE': 'bg-green-500/20 text-green-300 border-green-500/30',
+                    'LOCATION': 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+                    'EMAIL': 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+                    'PHONE': 'bg-pink-500/20 text-pink-300 border-pink-500/30',
+                    'SSN': 'bg-red-500/20 text-red-300 border-red-500/30',
+                    'MONEY': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+                    'CASE_NUMBER': 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+                };
+
+                entitiesList.innerHTML = analysis.entities.map(entity => {
+                    const colorClass = entityColors[entity.type] || 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+                    return `
+                        <span class="px-3 py-1 rounded-full text-xs font-medium border ${colorClass}">
+                            ${entity.type}: ${entity.value}
+                        </span>
+                    `;
+                }).join('');
+            }
+
+            // Display suggested departments
+            if (analysis.suggestedDepartments && analysis.suggestedDepartments.length > 0) {
+                const deptSection = document.getElementById('departmentsSection');
+                const deptList = document.getElementById('departmentsList');
+                deptSection.classList.remove('hidden');
+
+                deptList.innerHTML = analysis.suggestedDepartments.map(dept => `
+                    <div class="flex items-center justify-between bg-gray-800/40 rounded-lg p-3 border border-gray-700">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-building text-cyan-400"></i>
+                            <span class="text-white font-medium">${dept.name || formatDepartmentName(dept.id)}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="bg-cyan-500/20 px-2 py-1 rounded text-xs text-cyan-300">
+                                ${Math.round((dept.relevanceScore || dept.confidence || 0) * 100)}% match
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Display scope analysis
+            if (analysis.scopeAnalysis) {
+                const scopeSection = document.getElementById('scopeSection');
+                const scopeContent = document.getElementById('scopeContent');
+                scopeSection.classList.remove('hidden');
+
+                const scope = analysis.scopeAnalysis;
+                const complexityPercent = Math.round(scope.complexityScore * 100);
+                const complexityColor = complexityPercent > 70 ? 'text-red-400' :
+                                       complexityPercent > 40 ? 'text-yellow-400' : 'text-green-400';
+
+                scopeContent.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-800/40 rounded-lg p-3">
+                            <p class="text-xs text-gray-400">Est. Documents</p>
+                            <p class="text-xl font-bold text-white">${scope.estimatedDocuments || 'Unknown'}</p>
+                        </div>
+                        <div class="bg-gray-800/40 rounded-lg p-3">
+                            <p class="text-xs text-gray-400">Complexity</p>
+                            <p class="text-xl font-bold ${complexityColor}">${complexityPercent}%</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Display ambiguities and suggestions
+            if (analysis.scopeAnalysis && analysis.scopeAnalysis.ambiguities &&
+                analysis.scopeAnalysis.ambiguities.length > 0) {
+                const ambigSection = document.getElementById('ambiguitiesSection');
+                const ambigList = document.getElementById('ambiguitiesList');
+                ambigSection.classList.remove('hidden');
+
+                const severityColors = {
+                    'high': 'border-red-500/50 bg-red-500/10',
+                    'medium': 'border-yellow-500/50 bg-yellow-500/10',
+                    'low': 'border-blue-500/50 bg-blue-500/10'
+                };
+
+                ambigList.innerHTML = analysis.scopeAnalysis.ambiguities.map(amb => `
+                    <div class="border-l-4 ${severityColors[amb.severity] || severityColors.low} p-3 rounded">
+                        <p class="text-white text-sm font-medium mb-1">${amb.issue}</p>
+                        <p class="text-gray-300 text-xs"><strong>Suggestion:</strong> ${amb.suggestion}</p>
+                    </div>
+                `).join('');
+            }
+
+            // Display cost and timeline estimates
+            if (analysis.costEstimate || analysis.timelineEstimate) {
+                const estimatesSection = document.getElementById('estimatesSection');
+                estimatesSection.classList.remove('hidden');
+
+                if (analysis.costEstimate) {
+                    document.getElementById('costEstimate').textContent =
+                        `$${analysis.costEstimate.totalEstimate.toFixed(2)}`;
+                    document.getElementById('costBreakdown').textContent =
+                        `Search: $${analysis.costEstimate.searchFee} + Review: $${analysis.costEstimate.reviewFee} + Copy: $${analysis.costEstimate.copyFee}`;
+                }
+
+                if (analysis.timelineEstimate) {
+                    document.getElementById('timelineEstimate').textContent =
+                        `${analysis.timelineEstimate.estimatedDays} days`;
+                    document.getElementById('timelineDetails').textContent =
+                        analysis.timelineEstimate.explanation || '';
+                }
+            }
+
+            // Display similar requests
+            if (analysis.similarRequests && analysis.similarRequests.length > 0) {
+                const similarSection = document.getElementById('similarSection');
+                const similarList = document.getElementById('similarList');
+                similarSection.classList.remove('hidden');
+
+                similarList.innerHTML = analysis.similarRequests.slice(0, 3).map(req => `
+                    <div class="bg-gray-800/40 border border-gray-700 rounded-lg p-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-white font-medium text-sm">${req.subject || 'Similar Request'}</span>
+                            <span class="px-2 py-1 rounded text-xs ${getStatusClass(req.status)}">${formatStatus(req.status)}</span>
+                        </div>
+                        <p class="text-gray-400 text-xs">${req.description ? req.description.substring(0, 100) + '...' : ''}</p>
+                        <p class="text-gray-500 text-xs mt-1">Tracking: ${req.trackingNumber}</p>
+                    </div>
+                `).join('');
+            }
+
+            // Scroll to results
+            resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Use AI analysis to fill the form
+        function useAnalysis() {
+            if (!currentAnalysis) return;
+
+            const inputText = document.getElementById('aiRequestInput').value.trim();
+
+            // Fill description
+            document.getElementById('description').value = inputText;
+
+            // Try to extract a subject from the first sentence or key entities
+            let subject = '';
+            if (currentAnalysis.entities && currentAnalysis.entities.length > 0) {
+                const firstEntity = currentAnalysis.entities[0];
+                subject = `Records related to ${firstEntity.value}`;
+            } else {
+                subject = inputText.split('.')[0].substring(0, 100);
+            }
+            document.getElementById('subject').value = subject;
+
+            // Scroll to the form
+            document.getElementById('foiaRequestForm').scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+
+            // Highlight the form briefly
+            const formCard = document.querySelector('#foiaRequestForm').closest('.glass');
+            formCard.style.boxShadow = '0 0 30px rgba(6, 182, 212, 0.5)';
+            setTimeout(() => {
+                formCard.style.boxShadow = '';
+            }, 2000);
+        }
+
+        // Format department names
+        function formatDepartmentName(dept) {
+            const names = {
+                'police': 'Police Department',
+                'building': 'Building & Planning',
+                'finance': 'Finance Department',
+                'hr': 'Human Resources',
+                'legal': 'Legal Department',
+                'clerk': 'City Clerk',
+                'parks': 'Parks & Recreation',
+                'public_works': 'Public Works'
+            };
+            return names[dept] || dept.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        // Real-time suggestions (debounced)
+        const debouncedSuggestions = debounce(async function(text) {
+            if (text.length < 20) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/foia/ai/suggest`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+
+                const result = await response.json();
+
+                if (result.success && result.suggestions && result.suggestions.length > 0) {
+                    const hint = document.getElementById('suggestionHint');
+                    hint.textContent = result.suggestions[0].text || 'Click "Analyze Request" for full analysis';
+                    hint.className = 'text-cyan-400 font-medium';
+                }
+            } catch (error) {
+                // Silently fail for suggestions
+                console.log('Suggestions unavailable');
+            }
+        }, 1000);
+
+        // Attach input listener for real-time suggestions
+        document.addEventListener('DOMContentLoaded', function() {
+            const aiInput = document.getElementById('aiRequestInput');
+            if (aiInput) {
+                aiInput.addEventListener('input', function(e) {
+                    debouncedSuggestions(e.target.value);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

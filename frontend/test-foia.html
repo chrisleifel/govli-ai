@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FOIA Test Page</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-8">
+  <h1 class="text-3xl mb-6">FOIA Document Analysis Test</h1>
+
+  <div class="space-y-4">
+    <button id="testLogin" class="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500">
+      Test Login
+    </button>
+
+    <button id="testDocuments" class="px-4 py-2 bg-green-600 rounded hover:bg-green-500">
+      Test Get Documents
+    </button>
+
+    <button id="testAnalyze" class="px-4 py-2 bg-purple-600 rounded hover:bg-purple-500">
+      Test Analyze (needs doc ID)
+    </button>
+
+    <div id="output" class="bg-gray-800 p-4 rounded mt-4 font-mono text-sm">
+      Click buttons to test...
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = 'http://localhost:3000';
+    let token = localStorage.getItem('govli_token');
+
+    function log(msg) {
+      document.getElementById('output').innerHTML += msg + '<br>';
+      console.log(msg);
+    }
+
+    // Test login
+    document.getElementById('testLogin').addEventListener('click', async () => {
+      try {
+        log('Testing login...');
+        const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: 'admin@govli.ai',
+            password: 'admin123'
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.token) {
+          token = data.token;
+          localStorage.setItem('govli_token', token);
+          log('✅ Login successful! Token saved.');
+        } else {
+          log('❌ Login failed: ' + JSON.stringify(data));
+        }
+      } catch (error) {
+        log('❌ Error: ' + error.message);
+      }
+    });
+
+    // Test get documents
+    document.getElementById('testDocuments').addEventListener('click', async () => {
+      try {
+        if (!token) {
+          log('❌ No token! Please login first.');
+          return;
+        }
+
+        log('Getting documents...');
+        const response = await fetch(`${API_BASE_URL}/api/foia/admin/documents`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await response.json();
+        log('✅ Documents: ' + JSON.stringify(data, null, 2));
+      } catch (error) {
+        log('❌ Error: ' + error.message);
+      }
+    });
+
+    // Test analyze
+    document.getElementById('testAnalyze').addEventListener('click', async () => {
+      try {
+        if (!token) {
+          log('❌ No token! Please login first.');
+          return;
+        }
+
+        // First get a document
+        log('Getting first document...');
+        const docsResponse = await fetch(`${API_BASE_URL}/api/foia/admin/documents`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const docsData = await docsResponse.json();
+
+        if (!docsData.documents || docsData.documents.length === 0) {
+          log('❌ No documents found. Please upload a document first.');
+          return;
+        }
+
+        const docId = docsData.documents[0].id;
+        log('Analyzing document: ' + docId);
+
+        const sampleText = `Memorandum
+
+To: Jane Smith
+From: John Doe
+Date: December 9, 2025
+Subject: Quarterly Report
+
+Dear Jane,
+
+This is to inform you about our quarterly results. Please find the details below.
+
+Contact Information:
+Email: john.doe@example.com
+Phone: 555-123-4567
+SSN: 123-45-6789
+
+This document contains classified information regarding national security operations.
+
+Best regards,
+John Doe`;
+
+        const response = await fetch(`${API_BASE_URL}/api/foia/admin/documents/${docId}/analyze`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            documentText: sampleText,
+            pageCount: 1
+          })
+        });
+
+        const data = await response.json();
+        log('✅ Analysis result: ' + JSON.stringify(data, null, 2));
+
+      } catch (error) {
+        log('❌ Error: ' + error.message);
+      }
+    });
+
+    log('Current token: ' + (token ? 'Present ✅' : 'Missing ❌'));
+  </script>
+</body>
+</html>

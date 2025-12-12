@@ -1,0 +1,415 @@
+const express = require('express');
+const router = express.Router();
+const config = require('../config/config');
+const { FoiaRequest, FoiaDocument, FoiaTemplate } = require('../models');
+const { authMiddleware, requireRole, optionalAuth } = require('../middleware/auth');
+const { auditSensitiveOperation } = require('../middleware/auditLog');
+const FoiaService = require('../services/foiaService');
+
+// ============================================================================
+// PUBLIC/CITIZEN ENDPOINTS
+// ============================================================================
+
+/**
+ * @route   POST /api/foia/requests
+ * @desc    Submit a new FOIA request (public endpoint)
+ * @access  Public (optional authentication)
+ */
+router.post('/requests',
+  optionalAuth,
+  async (req, res) => {
+    try {
+      const requestData = {
+        requesterName: req.body.requesterName,
+        requesterEmail: req.body.requesterEmail,
+        requesterPhone: req.body.requesterPhone,
+        requesterOrganization: req.body.requesterOrganization,
+        requesterType: req.body.requesterType || 'citizen',
+        requestType: req.body.requestType,
+        subject: req.body.subject,
+        description: req.body.description,
+        dateRangeStart: req.body.dateRangeStart,
+        dateRangeEnd: req.body.dateRangeEnd,
+        isAnonymous: req.body.isAnonymous || false,
+        requesterId: req.user ? req.user.id : null
+      };
+
+      const request = await FoiaService.createRequest(requestData, req.user);
+
+      res.status(201).json({
+        success: true,
+        message: 'FOIA request submitted successfully',
+        request: {
+          id: request.id,
+          trackingNumber: request.trackingNumber,
+          status: request.status,
+          dateSubmitted: request.dateSubmitted,
+          dateDue: request.dateDue
+        }
+      });
+    } catch (error) {
+      console.error('Submit FOIA request error:', error);
+
+      res.status(500).json({
+        error: 'Failed to submit FOIA request',
+        message: config.nodeEnv === 'development' ? error.message : 'An error occurred'
+      });
+    }
+  }
+);
+
+/**
+ * @route   GET /api/foia/requests/:trackingNumber/status
+ * @desc    Check FOIA request status by tracking number (public)
+ * @access  Public
+ */
+router.get('/requests/:trackingNumber/status',
+  async (req, res) => {
+    try {
+      const request = await FoiaRequest.findOne({
+        where: { trackingNumber: req.params.trackingNumber },
+        attributes: [
+          'id',
+          'trackingNumber',
+          'status',
+          'dateSubmitted',
+          'dateAcknowledged',
+          'dateDue',
+          'dateCompleted',
+          'currentStep',
+          'publicNotes'
+        ]
+      });
+
+      if (!request) {
+        return res.status(404).json({
+          error: 'Request not found',
+          message: 'No request found with this tracking number'
+        });
+      }
+
+      res.json({
+        success: true,
+        request
+      });
+    } catch (error) {
+      console.error('Get FOIA status error:', error);
+
+      res.status(500).json({
+        error: 'Failed to fetch request status',
+        message: config.nodeEnv === 'development' ? error.message : 'An error occurred'
+      });
+    }
+  }
+);
+
+// ============================================================================
+// ADMIN ENDPOINTS
+// ============================================================================
+
+/**
+ * @route   GET /api/foia/admin/requests
+ * @desc    Search and list all FOIA requests (admin)
+ * @access  Private (Staff/Admin)
+ */
+router.get('/admin/requests',
+  authMiddleware,
+  requireRole(['staff', 'admin']),
+  async (req, res) => {
+    try {
+      const {
+        query,
+        status,
+        priority,
+        requestType,
+        requesterEmail,
+        assignedTo,
+        dateSubmittedAfter,
+        dateSubmittedBefore,
+        dateDueAfter,
+        dateDueBefore,
+        page = 1,
+        limit = 50,
+        sortBy = 'dateSubmitted',
+        sortOrder = 'DESC'
+      } = req.query;
+
+      const offset = (page - 1) * limit;
+
+      const filters = {
+        query,
+        status,
+        priority,
+        requestType,
+        requesterEmail,
+        assignedTo,
+        dateSubmittedAfter,
+        dateSubmittedBefore,
+        dateDueAfter,
+        dateDueBefore,
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+        sortBy,
+        sortOrder
+      };
+
+      const result = await FoiaService.searchRequests(filters);
+
+      res.json({
+        success: true,
+        requests: result.requests,
+        pagination: {
+          total: result.total,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          totalPages: Math.ceil(result.total / limit)
+        }
+      });
+    } catch (error) {
+      console.error('Search FOIA requests error:', error);
+
+      res.status(500).json({
+        error: 'Failed to fetch requests',
+        message: config.nodeEnv === 'development' ? error.message : 'An error occurred'
+      });
+    }
+  }
+);
+
+/**
+ * @route   GET /api/foia/admin/requests/:id
+ * @desc    Get full FOIA request details
+ * @access  Private (Staff/Admin)
+ */
+router.get('/admin/requests/:id',
+  authMiddleware,
+  requireRole(['staff', 'admin']),
+  async (req, res) => {
+    try {
+      const request = await FoiaService.getRequestDetails(req.params.id);
+
+      res.json({
+        success: true,
+        request
+      });
+    } catch (error) {
+      console.error('Get FOIA request error:', error);
+
+      if (error.message === 'FOIA request not found') {
+        return res.status(404).json({
+          error: 'Request not found'
+        });
+      }
+
+      res.status(500).json({
+        error: 'Failed to fetch request',
+        message: config.nodeEnv === 'development' ? error.message : 'An error occurred'
+      });
+    }
+  }
+);
+
+/**
+ * @route   PUT /api/foia/admin/requests/:id/status
+ * @desc    Update FOIA request status
+ * @access  Private (Staff/Admin)
+ */
+router.put('/admin/requests/:id/status',
+  authMiddleware,
+  requireRole(['staff', 'admin']),
+  auditSensitiveOperation('UPDATE_FOIA_STATUS'),
+  async (req, res) => {
+    try {
+      const { status, notes } = req.body;
+
+      if (!status) {
+        return res.status(400).json({
+          error: 'Status is required'
+        });
+      }
+
+      const request = await FoiaService.updateStatus(
+        req.params.id,
+        status,
+        req.user,
+        notes
+      );
+
+      res.json({
+        success: true,
+        message: 'Request status updated successfully',
+        request
+      });
+    } catch (error) {
+      console.error('Update FOIA status error:', error);
+
+      if (error.message === 'FOIA request not found') {
+        return res.status(404).json({
+          error: 'Request not found'
+        });
+      }
+
+      res.status(500).json({
+        error: 'Failed to update status',
+        message: config.nodeEnv === 'development' ? error.message : 'An error occurred'
+      });
+    }
+  }
+);
+
+/**
+ * @route   PUT /api/foia/admin/requests/:id/assign
+ * @desc    Assign FOIA request to staff member
+ * @access  Private (Admin)
+ */
+router.put('/admin/requests/:id/assign',
+  authMiddleware,
+  requireRole('admin'),
+  auditSensitiveOperation('ASSIGN_FOIA_REQUEST'),
+  async (req, res) => {
+    try {
+      const { assignedTo } = req.body;
+
+      const request = await FoiaRequest.findByPk(req.params.id);
+      if (!request) {
+        return res.status(404).json({
+          error: 'Request not found'
+        });
+      }
+
+      const oldAssignee = request.assignedTo;
+      request.assignedTo = assignedTo;
+      request.updatedBy = req.user.id;
+
+      if (request.status === 'submitted') {
+        request.status = 'assigned';
+      }
+
+      await request.save();
+
+      // Log activity
+      await FoiaService.logActivity({
+        requestId: request.id,
+        activityType: 'assignment',
+        action: `Request assigned to staff member`,
+        actorId: req.user.id,
+        actorName: req.user.name,
+        oldValue: oldAssignee,
+        newValue: assignedTo
+      });
+
+      res.json({
+        success: true,
+        message: 'Request assigned successfully',
+        request
+      });
+    } catch (error) {
+      console.error('Assign FOIA request error:', error);
+
+      res.status(500).json({
+        error: 'Failed to assign request',
+        message: config.nodeEnv === 'development' ? error.message : 'An error occurred'
+      });
+    }
+  }
+);
+
+/**
+ * @route   POST /api/foia/admin/requests/:id/documents
+ * @desc    Upload document to FOIA request
+ * @access  Private (Staff/Admin)
+ */
+router.post('/admin/requests/:id/documents',
+  authMiddleware,
+  requireRole(['staff', 'admin']),
+  auditSensitiveOperation('UPLOAD_FOIA_DOCUMENT'),
+  async (req, res) => {
+    try {
+      const fileData = req.body;
+
+      const document = await FoiaService.uploadDocument(
+        req.params.id,
+        fileData,
+        req.user
+      );
+
+      res.status(201).json({
+        success: true,
+        message: 'Document uploaded successfully',
+        document
+      });
+    } catch (error) {
+      console.error('Upload FOIA document error:', error);
+
+      if (error.message === 'FOIA request not found') {
+        return res.status(404).json({
+          error: 'Request not found'
+        });
+      }
+
+      res.status(500).json({
+        error: 'Failed to upload document',
+        message: config.nodeEnv === 'development' ? error.message : 'An error occurred'
+      });
+    }
+  }
+);
+
+/**
+ * @route   GET /api/foia/admin/dashboard
+ * @desc    Get FOIA dashboard statistics
+ * @access  Private (Staff/Admin)
+ */
+router.get('/admin/dashboard',
+  authMiddleware,
+  requireRole(['staff', 'admin']),
+  async (req, res) => {
+    try {
+      const stats = await FoiaService.getDashboardStats();
+
+      res.json({
+        success: true,
+        stats
+      });
+    } catch (error) {
+      console.error('Get FOIA dashboard error:', error);
+
+      res.status(500).json({
+        error: 'Failed to fetch dashboard stats',
+        message: config.nodeEnv === 'development' ? error.message : 'An error occurred'
+      });
+    }
+  }
+);
+
+/**
+ * @route   GET /api/foia/admin/templates
+ * @desc    Get all email templates
+ * @access  Private (Staff/Admin)
+ */
+router.get('/admin/templates',
+  authMiddleware,
+  requireRole(['staff', 'admin']),
+  async (req, res) => {
+    try {
+      const templates = await FoiaTemplate.findAll({
+        where: { isActive: true },
+        order: [['templateType', 'ASC'], ['name', 'ASC']]
+      });
+
+      res.json({
+        success: true,
+        templates
+      });
+    } catch (error) {
+      console.error('Get FOIA templates error:', error);
+
+      res.status(500).json({
+        error: 'Failed to fetch templates',
+        message: config.nodeEnv === 'development' ? error.message : 'An error occurred'
+      });
+    }
+  }
+);
+
+module.exports = router;
