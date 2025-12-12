@@ -3,11 +3,6 @@
   "version": "1.0.0",
   "description": "Govli AI Government Services Platform - Frontend",
   "scripts": {
-    "build:css": "npx tailwindcss -i ./frontend/src/input.css -o ./frontend/dist/output.css --minify",
-    "watch:css": "npx tailwindcss -i ./frontend/src/input.css -o ./frontend/dist/output.css --watch",
-    "build": "npm run build:css"
-  },
-  "devDependencies": {
-    "tailwindcss": "^3.4.0"
+    "build": "echo 'Static site - no build needed. Pages use Tailwind CDN.'"
   }
 }
