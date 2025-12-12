@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Engagement Portal - SLED Platform Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #1e40af;
+            --secondary-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --success-green: #10b981;
+            --warning-yellow: #f59e0b;
+            --danger-red: #ef4444;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .engagement-tab-button {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .engagement-tab-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .engagement-tab-button.active {
+            background: rgba(59, 130, 246, 0.3);
+            border-bottom: 3px solid #3b82f6;
+        }
+
+        .engagement-module-content {
+            display: none;
+        }
+
+        .engagement-module-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .upvote-button {
+            transition: all 0.3s ease;
+        }
+
+        .upvote-button:hover {
+            transform: translateY(-2px);
+            background: rgba(59, 130, 246, 0.3);
+        }
+
+        .upvote-button.voted {
+            background: rgba(59, 130, 246, 0.5);
+            color: #60a5fa;
+        }
+
+        .status-badge {
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.5); }
+            50% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.8); }
+        }
+
+        .chart-bar {
+            animation: growBar 1s ease-out forwards;
+            transform-origin: left;
+        }
+
+        @keyframes growBar {
+            from { transform: scaleX(0); }
+            to { transform: scaleX(1); }
+        }
+
+        /* Custom scrollbar */
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3b82f6, #1e40af);
+            border-radius: 10px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #60a5fa, #3b82f6);
+        }
+
+        .live-indicator {
+            animation: blink-live 1.5s infinite;
+        }
+
+        @keyframes blink-live {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="gradient-bg text-white overflow-hidden">
+    <div class="flex h-screen">
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="glass-dark border-b border-white/10 p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Public Engagement Portal</h2>
+                        <p class="text-sm text-white/70">Connect, participate, and stay informed about your government</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="glass rounded-lg px-3 py-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-shield-alt text-green-400"></i>
+                                <span class="text-sm text-white">CJIS Compliant</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <!-- Module Navigation -->
+                <div class="glass rounded-xl p-2 mb-6">
+                    <div class="flex items-center space-x-2 overflow-x-auto">
+                        <button onclick="switchEngagementModule('transparency')" class="engagement-tab-button active px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap transition-all" data-engagement-module="transparency">
+                            <i class="fas fa-chart-line mr-2"></i>Transparency Dashboard
+                        </button>
+                        <button onclick="switchEngagementModule('records')" class="engagement-tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap transition-all" data-engagement-module="records">
+                            <i class="fas fa-file-alt mr-2"></i>Public Records
+                        </button>
+                        <button onclick="switchEngagementModule('feedback')" class="engagement-tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap transition-all" data-engagement-module="feedback">
+                            <i class="fas fa-comments mr-2"></i>Community Feedback
+                        </button>
+                        <button onclick="switchEngagementModule('meetings')" class="engagement-tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap transition-all" data-engagement-module="meetings">
+                            <i class="fas fa-video mr-2"></i>Town Halls & Meetings
+                        </button>
+                        <button onclick="switchEngagementModule('opendata')" class="engagement-tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap transition-all" data-engagement-module="opendata">
+                            <i class="fas fa-database mr-2"></i>Open Data
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Module 1: Transparency Dashboard -->
+                <!-- Added 2024-11-04: Public Transparency Dashboard -->
+                <div id="engagement-module-transparency" class="engagement-module-content active">
+                    <!-- Real-time Government Activity Feed -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                        <!-- Key Metrics -->
+                        <div class="glass rounded-xl p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="text-white/70 text-sm">Active Projects</div>
+                                <i class="fas fa-project-diagram text-blue-400 text-xl"></i>
+                            </div>
+                            <div class="text-3xl font-bold text-white mb-2">127</div>
+                            <div class="text-xs text-green-400">+8 this month</div>
+                        </div>
+
+                        <div class="glass rounded-xl p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="text-white/70 text-sm">Requests Processed</div>
+                                <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                            </div>
+                            <div class="text-3xl font-bold text-white mb-2">2,847</div>
+                            <div class="text-xs text-white/50">This month</div>
+                        </div>
+
+                        <div class="glass rounded-xl p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="text-white/70 text-sm">Avg Response Time</div>
+                                <i class="fas fa-clock text-purple-400 text-xl"></i>
+                            </div>
+                            <div class="text-3xl font-bold text-white mb-2">2.3</div>
+                            <div class="text-xs text-green-400">-0.5 days improvement</div>
+                        </div>
+                    </div>
+
+                    <!-- Public Projects Timeline -->
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-tasks text-blue-400"></i>
+                            Active Public Projects
+                        </h3>
+
+                        <div class="space-y-4" id="publicProjectsList">
+                            <!-- MOCK DATA - Replace in production -->
+                            <!-- Projects will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Budget Transparency -->
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-dollar-sign text-green-400"></i>
+                            Budget Transparency
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-white font-semibold mb-3">Fiscal Year 2024 Budget</h4>
+                                <div class="space-y-3">
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span class="text-white/70">Public Safety</span>
+                                            <span class="text-white font-medium">$45.2M (35%)</span>
+                                        </div>
+                                        <div class="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+                                            <div class="chart-bar h-full bg-gradient-to-r from-blue-500 to-blue-400" style="width: 35%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span class="text-white/70">Infrastructure</span>
+                                            <span class="text-white font-medium">$32.8M (25%)</span>
+                                        </div>
+                                        <div class="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+                                            <div class="chart-bar h-full bg-gradient-to-r from-green-500 to-green-400" style="width: 25%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span class="text-white/70">Education</span>
+                                            <span class="text-white font-medium">$26.2M (20%)</span>
+                                        </div>
+                                        <div class="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+                                            <div class="chart-bar h-full bg-gradient-to-r from-purple-500 to-purple-400" style="width: 20%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span class="text-white/70">Parks & Recreation</span>
+                                            <span class="text-white font-medium">$19.7M (15%)</span>
+                                        </div>
+                                        <div class="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+                                            <div class="chart-bar h-full bg-gradient-to-r from-yellow-500 to-yellow-400" style="width: 15%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span class="text-white/70">Other Services</span>
+                                            <span class="text-white font-medium">$6.6M (5%)</span>
+                                        </div>
+                                        <div class="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+                                            <div class="chart-bar h-full bg-gradient-to-r from-orange-500 to-orange-400" style="width: 5%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="text-white font-semibold mb-3">Budget Execution Rate</h4>
+                                <div class="glass-dark rounded-lg p-4 mb-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-white/70 text-sm">Total Allocated</span>
+                                        <span class="text-white font-bold">$130.5M</span>
+                                    </div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-white/70 text-sm">Spent (Q1-Q3)</span>
+                                        <span class="text-green-400 font-bold">$89.2M</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-white/70 text-sm">Remaining</span>
+                                        <span class="text-blue-400 font-bold">$41.3M</span>
+                                    </div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-4xl font-bold text-white mb-2">68.3%</div>
+                                    <div class="text-white/60 text-sm">Budget Execution Rate</div>
+                                    <div class="text-green-400 text-xs mt-1">On track with projections</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Service Request Statistics -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-chart-bar text-purple-400"></i>
+                            Service Request Analytics
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <h4 class="text-white/70 text-sm mb-3">Top Request Categories</h4>
+                                <div class="space-y-2" id="topRequestCategories">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-white/70 text-sm mb-3">Resolution Time by Category</h4>
+                                <div class="space-y-2" id="resolutionTimes">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-white/70 text-sm mb-3">Customer Satisfaction</h4>
+                                <div class="text-center">
+                                    <div class="text-5xl font-bold text-green-400 mb-2">4.7</div>
+                                    <div class="flex justify-center mb-2">
+                                        <i class="fas fa-star text-yellow-400"></i>
+                                        <i class="fas fa-star text-yellow-400"></i>
+                                        <i class="fas fa-star text-yellow-400"></i>
+                                        <i class="fas fa-star text-yellow-400"></i>
+                                        <i class="fas fa-star-half-alt text-yellow-400"></i>
+                                    </div>
+                                    <div class="text-white/60 text-sm">Based on 2,847 responses</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Module 2: Public Records Request Tracker -->
+                <!-- Added 2024-11-04: FOIA/Public Records Request System -->
+                <div id="engagement-module-records" class="engagement-module-content">
+                    <!-- Header -->
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold text-white mb-2">Public Records Request Portal</h2>
+                                <p class="text-white/70">Submit and track Freedom of Information Act (FOIA) requests</p>
+                            </div>
+                            <button onclick="openNewRecordRequestModal()" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white font-semibold hover:shadow-lg transition-all">
+                                <i class="fas fa-plus mr-2"></i>New Request
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Request Statistics -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">My Active Requests</div>
+                            <div class="text-3xl font-bold text-blue-400">3</div>
+                            <div class="text-xs text-white/50 mt-2">In progress</div>
+                        </div>
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Completed Requests</div>
+                            <div class="text-3xl font-bold text-green-400">12</div>
+                            <div class="text-xs text-white/50 mt-2">All time</div>
+                        </div>
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Avg. Fulfillment Time</div>
+                            <div class="text-3xl font-bold text-purple-400">7.2</div>
+                            <div class="text-xs text-green-400 mt-2">days</div>
+                        </div>
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">System Average</div>
+                            <div class="text-3xl font-bold text-white">8.5</div>
+                            <div class="text-xs text-white/50 mt-2">days (statewide)</div>
+                        </div>
+                    </div>
+
+                    <!-- My Requests -->
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-list text-blue-400"></i>
+                            My Requests
+                        </h3>
+
+                        <div class="space-y-4" id="myRecordRequestsList">
+                            <!-- MOCK DATA - Replace in production -->
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Popular Record Types -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-fire text-orange-400"></i>
+                            Popular Record Types
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="glass-dark rounded-lg p-4 hover:scale-105 transition-all cursor-pointer" onclick="quickRecordRequest('police')">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fas fa-shield-alt text-blue-400 text-2xl"></i>
+                                    <div>
+                                        <div class="text-white font-semibold">Police Reports</div>
+                                        <div class="text-white/60 text-xs">Incident & accident reports</div>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-white/50">Avg. 5 days</div>
+                            </div>
+
+                            <div class="glass-dark rounded-lg p-4 hover:scale-105 transition-all cursor-pointer" onclick="quickRecordRequest('building')">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fas fa-building text-green-400 text-2xl"></i>
+                                    <div>
+                                        <div class="text-white font-semibold">Building Records</div>
+                                        <div class="text-white/60 text-xs">Permits & inspections</div>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-white/50">Avg. 3 days</div>
+                            </div>
+
+                            <div class="glass-dark rounded-lg p-4 hover:scale-105 transition-all cursor-pointer" onclick="quickRecordRequest('financial')">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fas fa-file-invoice-dollar text-purple-400 text-2xl"></i>
+                                    <div>
+                                        <div class="text-white font-semibold">Financial Records</div>
+                                        <div class="text-white/60 text-xs">Budget & expenditures</div>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-white/50">Avg. 7 days</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Module 3: Community Feedback System -->
+                <!-- Added 2024-11-04: Community Feedback & Engagement Platform -->
+                <div id="engagement-module-feedback" class="engagement-module-content">
+                    <!-- Header -->
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold text-white mb-2">Community Feedback & Ideas</h2>
+                                <p class="text-white/70">Share your ideas and help shape local policies</p>
+                            </div>
+                            <button onclick="openNewFeedbackModal()" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-semibold hover:shadow-lg transition-all">
+                                <i class="fas fa-lightbulb mr-2"></i>Submit Idea
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Feedback Impact Metrics -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Ideas Submitted</div>
+                            <div class="text-3xl font-bold text-purple-400">1,247</div>
+                            <div class="text-xs text-green-400 mt-2">+89 this month</div>
+                        </div>
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Under Review</div>
+                            <div class="text-3xl font-bold text-yellow-400">124</div>
+                            <div class="text-xs text-white/50 mt-2">Being evaluated</div>
+                        </div>
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Implemented</div>
+                            <div class="text-3xl font-bold text-green-400">87</div>
+                            <div class="text-xs text-green-400 mt-2">7% success rate</div>
+                        </div>
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Community Impact</div>
+                            <div class="text-3xl font-bold text-blue-400">23K</div>
+                            <div class="text-xs text-white/50 mt-2">citizens engaged</div>
+                        </div>
+                    </div>
+
+                    <!-- Filter/Sort Options -->
+                    <div class="glass rounded-xl p-4 mb-6">
+                        <div class="flex flex-wrap gap-4 items-center">
+                            <div>
+                                <label class="text-white/70 text-sm mr-2">Sort by:</label>
+                                <select id="feedbackSort" class="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm">
+                                    <option value="popular">Most Popular</option>
+                                    <option value="recent">Most Recent</option>
+                                    <option value="discussed">Most Discussed</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-white/70 text-sm mr-2">Category:</label>
+                                <select id="feedbackCategory" class="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm">
+                                    <option value="all">All Categories</option>
+                                    <option value="infrastructure">Infrastructure</option>
+                                    <option value="safety">Public Safety</option>
+                                    <option value="environment">Environment</option>
+                                    <option value="education">Education</option>
+                                    <option value="recreation">Parks & Recreation</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-white/70 text-sm mr-2">Status:</label>
+                                <select id="feedbackStatus" class="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm">
+                                    <option value="all">All Status</option>
+                                    <option value="new">New</option>
+                                    <option value="review">Under Review</option>
+                                    <option value="planned">Planned</option>
+                                    <option value="implemented">Implemented</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Community Ideas/Feedback List -->
+                    <div class="space-y-4" id="communityFeedbackList">
+                        <!-- MOCK DATA - Replace in production -->
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Module 4: Town Halls & Meeting Participation -->
+                <!-- Added 2024-11-04: Virtual Town Hall and Meeting Platform -->
+                <div id="engagement-module-meetings" class="engagement-module-content">
+                    <!-- Header -->
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold text-white mb-2">Town Halls & Public Meetings</h2>
+                                <p class="text-white/70">Participate in live or recorded government meetings</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="flex items-center gap-2 bg-red-500/20 px-4 py-2 rounded-lg border border-red-400/30">
+                                    <div class="w-3 h-3 bg-red-400 rounded-full live-indicator"></div>
+                                    <span class="text-red-300 text-sm font-semibold">2 LIVE NOW</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Meetings -->
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-broadcast-tower text-red-400"></i>
+                            Live Meetings
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="liveMeetingsList">
+                            <!-- MOCK DATA - Replace in production -->
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Meetings Calendar -->
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-calendar-alt text-blue-400"></i>
+                            Upcoming Meetings
+                        </h3>
+
+                        <div class="space-y-4" id="upcomingMeetingsList">
+                            <!-- MOCK DATA - Replace in production -->
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Past Meetings Archive -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-archive text-purple-400"></i>
+                            Meeting Archive
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="pastMeetingsList">
+                            <!-- MOCK DATA - Replace in production -->
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Module 5: Open Data Portal -->
+                <!-- Added 2024-11-04: Open Data Portal and Visualization -->
+                <div id="engagement-module-opendata" class="engagement-module-content">
+                    <!-- Header -->
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold text-white mb-2">Open Data Portal</h2>
+                                <p class="text-white/70">Explore, analyze, and download government datasets</p>
+                            </div>
+                            <button onclick="suggestDataset()" class="px-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 rounded-lg text-white font-semibold hover:shadow-lg transition-all">
+                                <i class="fas fa-plus mr-2"></i>Suggest Dataset
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Data Portal Statistics -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Available Datasets</div>
+                            <div class="text-3xl font-bold text-blue-400">347</div>
+                            <div class="text-xs text-green-400 mt-2">+12 this month</div>
+                        </div>
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Total Downloads</div>
+                            <div class="text-3xl font-bold text-green-400">28.5K</div>
+                            <div class="text-xs text-white/50 mt-2">All time</div>
+                        </div>
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Data Categories</div>
+                            <div class="text-3xl font-bold text-purple-400">24</div>
+                            <div class="text-xs text-white/50 mt-2">Topics covered</div>
+                        </div>
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Last Updated</div>
+                            <div class="text-3xl font-bold text-white">Today</div>
+                            <div class="text-xs text-green-400 mt-2">Real-time sync</div>
+                        </div>
+                    </div>
+
+                    <!-- Search and Filter -->
+                    <div class="glass rounded-xl p-4 mb-6">
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <div class="flex-1">
+                                <input type="text" id="datasetSearch" placeholder="Search datasets..." class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50">
+                            </div>
+                            <select id="datasetCategory" class="bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white">
+                                <option value="all">All Categories</option>
+                                <option value="public-safety">Public Safety</option>
+                                <option value="transportation">Transportation</option>
+                                <option value="health">Health</option>
+                                <option value="finance">Finance</option>
+                                <option value="environment">Environment</option>
+                                <option value="education">Education</option>
+                            </select>
+                            <select id="datasetFormat" class="bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white">
+                                <option value="all">All Formats</option>
+                                <option value="csv">CSV</option>
+                                <option value="json">JSON</option>
+                                <option value="xml">XML</option>
+                                <option value="api">API</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Featured Datasets -->
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-star text-yellow-400"></i>
+                            Featured Datasets
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="featuredDatasetsList">
+                            <!-- MOCK DATA - Replace in production -->
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- All Datasets -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-database text-blue-400"></i>
+                            All Datasets
+                        </h3>
+
+                        <div class="space-y-3" id="allDatasetsList">
+                            <!-- MOCK DATA - Replace in production -->
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Added 2024-11-04: Public Engagement Portal JavaScript
+
+        // MOCK DATA - Replace in production
+        const MOCK_PUBLIC_PROJECTS = [
+            {
+                id: 1,
+                name: "Main Street Bridge Reconstruction",
+                department: "Department of Transportation",
+                status: "In Progress",
+                progress: 65,
+                budget: 8500000,
+                spent: 5525000,
+                startDate: "2024-01-15",
+                estimatedCompletion: "2024-12-20",
+                description: "Complete reconstruction of Main Street Bridge including structural upgrades and pedestrian walkways"
+            },
+            {
+                id: 2,
+                name: "City Hall Renovation",
+                department: "Public Works",
+                status: "Planning",
+                progress: 15,
+                budget: 12000000,
+                spent: 1800000,
+                startDate: "2024-06-01",
+                estimatedCompletion: "2025-09-30",
+                description: "Comprehensive renovation of City Hall building with energy efficiency upgrades"
+            },
+            {
+                id: 3,
+                name: "Greenway Trail Expansion",
+                department: "Parks & Recreation",
+                status: "In Progress",
+                progress: 85,
+                budget: 3200000,
+                spent: 2720000,
+                startDate: "2023-09-01",
+                estimatedCompletion: "2024-11-15",
+                description: "5-mile extension of the existing Greenway Trail system"
+            }
+        ];
+
+        const MOCK_REQUEST_CATEGORIES = [
+            { name: "Potholes & Road Issues", count: 847, percentage: 30 },
+            { name: "Trash & Sanitation", count: 624, percentage: 22 },
+            { name: "Streetlight Issues", count: 453, percentage: 16 },
+            { name: "Building Permits", count: 397, percentage: 14 },
+            { name: "Other Services", count: 526, percentage: 18 }
+        ];
+
+        const MOCK_RESOLUTION_TIMES = [
+            { category: "Potholes", days: 2.1, trend: "down" },
+            { category: "Trash Collection", days: 1.5, trend: "stable" },
+            { category: "Streetlights", days: 3.2, trend: "down" },
+            { category: "Building Permits", days: 5.8, trend: "up" }
+        ];
+
+        const MOCK_RECORD_REQUESTS = [
+            {
+                id: "PR-2024-1247",
+                type: "Police Report",
+                status: "Processing",
+                progress: 60,
+                submitted: "2024-10-28",
+                estimated: "2024-11-05",
+                description: "Traffic accident report from October 15, 2024"
+            },
+            {
+                id: "PR-2024-1198",
+                type: "Building Records",
+                status: "Ready",
+                progress: 100,
+                submitted: "2024-10-20",
+                completed: "2024-10-25",
+                description: "Building permits for 123 Main Street"
+            },
+            {
+                id: "PR-2024-1156",
+                type: "Financial Records",
+                status: "Under Review",
+                progress: 30,
+                submitted: "2024-10-15",
+                estimated: "2024-11-12",
+                description: "City expenditures Q3 2024"
+            }
+        ];
+
+        const MOCK_COMMUNITY_FEEDBACK = [
+            {
+                id: 1,
+                title: "Install bike lanes on Highland Avenue",
+                author: "Sarah Johnson",
+                category: "infrastructure",
+                status: "Under Review",
+                upvotes: 287,
+                comments: 42,
+                submitted: "2024-10-15",
+                description: "Highland Avenue is heavily used by cyclists but lacks dedicated bike lanes. Installing protected bike lanes would improve safety and encourage more cycling.",
+                department: "Department of Transportation",
+                estimatedCost: "$450,000"
+            },
+            {
+                id: 2,
+                title: "Extend library hours on weekends",
+                author: "Michael Chen",
+                category: "education",
+                status: "Implemented",
+                upvotes: 423,
+                comments: 67,
+                submitted: "2024-09-02",
+                description: "Many residents work weekdays and would benefit from extended library hours on Saturday and Sunday.",
+                department: "Library Services",
+                implementedDate: "2024-10-15"
+            },
+            {
+                id: 3,
+                title: "Add dog park to Riverside Park",
+                author: "Jennifer Martinez",
+                category: "recreation",
+                status: "Planned",
+                upvotes: 512,
+                comments: 89,
+                submitted: "2024-08-20",
+                description: "Riverside Park is perfect for a dedicated dog park area. This would provide a safe space for dogs and create a community gathering spot.",
+                department: "Parks & Recreation",
+                estimatedCompletion: "Spring 2025"
+            },
+            {
+                id: 4,
+                title: "Improve downtown parking availability",
+                author: "David Thompson",
+                category: "infrastructure",
+                status: "New",
+                upvotes: 198,
+                comments: 34,
+                submitted: "2024-10-28",
+                description: "Downtown parking is extremely limited during business hours. Consider a multi-story parking structure or better signage for existing lots.",
+                department: "Parking Authority"
+            }
+        ];
+
+        const MOCK_LIVE_MEETINGS = [
+            {
+                id: 1,
+                title: "City Council Regular Meeting",
+                type: "City Council",
+                viewers: 342,
+                started: "7:00 PM",
+                agenda: ["Budget Discussion", "Zoning Changes", "Public Comments"]
+            },
+            {
+                id: 2,
+                title: "Planning Commission Public Hearing",
+                type: "Planning Commission",
+                viewers: 87,
+                started: "6:30 PM",
+                agenda: ["Residential Development Proposal", "Environmental Impact Review"]
+            }
+        ];
+
+        const MOCK_UPCOMING_MEETINGS = [
+            {
+                id: 1,
+                title: "Town Hall: Climate Action Plan",
+                date: "2024-11-08",
+                time: "7:00 PM",
+                location: "City Hall Auditorium / Virtual",
+                description: "Discuss the city's new climate action plan and hear community input",
+                rsvp: 234
+            },
+            {
+                id: 2,
+                title: "Budget Workshop Session",
+                date: "2024-11-12",
+                time: "6:00 PM",
+                location: "Council Chambers / Virtual",
+                description: "Review proposed budget for fiscal year 2025",
+                rsvp: 89
+            },
+            {
+                id: 3,
+                title: "Parks & Recreation Master Plan Meeting",
+                date: "2024-11-15",
+                time: "7:30 PM",
+                location: "Community Center / Virtual",
+                description: "Present the 10-year parks and recreation master plan",
+                rsvp: 156
+            }
+        ];
+
+        const MOCK_PAST_MEETINGS = [
+            {
+                id: 1,
+                title: "City Council Meeting - October 28",
+                date: "2024-10-28",
+                duration: "2h 15m",
+                views: 1247
+            },
+            {
+                id: 2,
+                title: "Transportation Committee - October 25",
+                date: "2024-10-25",
+                duration: "1h 45m",
+                views: 423
+            },
+            {
+                id: 3,
+                title: "Public Safety Forum - October 22",
+                date: "2024-10-22",
+                duration: "2h 30m",
+                views: 892
+            }
+        ];
+
+        const MOCK_DATASETS = [
+            {
+                id: 1,
+                name: "Crime Statistics 2024",
+                category: "public-safety",
+                description: "Comprehensive crime data including incidents, types, locations, and trends",
+                format: ["CSV", "JSON", "API"],
+                size: "12.4 MB",
+                lastUpdated: "2024-11-03",
+                downloads: 2847,
+                featured: true
+            },
+            {
+                id: 2,
+                name: "Building Permits Database",
+                category: "public-works",
+                description: "All building permits issued from 2020-2024 including type, location, and value",
+                format: ["CSV", "JSON"],
+                size: "8.7 MB",
+                lastUpdated: "2024-11-02",
+                downloads: 1523,
+                featured: true
+            },
+            {
+                id: 3,
+                name: "Traffic Volume Data",
+                category: "transportation",
+                description: "Real-time and historical traffic volume data from city sensors",
+                format: ["CSV", "API"],
+                size: "45.2 MB",
+                lastUpdated: "2024-11-04",
+                downloads: 4291,
+                featured: true
+            },
+            {
+                id: 4,
+                name: "City Budget FY2024",
+                category: "finance",
+                description: "Complete city budget including revenues, expenditures, and department allocations",
+                format: ["CSV", "JSON", "XML"],
+                size: "3.2 MB",
+                lastUpdated: "2024-07-01",
+                downloads: 1876
+            },
+            {
+                id: 5,
+                name: "Environmental Monitoring",
+                category: "environment",
+                description: "Air quality, water quality, and environmental sensor data",
+                format: ["CSV", "JSON", "API"],
+                size: "23.8 MB",
+                lastUpdated: "2024-11-03",
+                downloads: 923
+            }
+        ];
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePublicEngagement();
+        });
+
+        function initializePublicEngagement() {
+            // Populate transparency dashboard
+            populatePublicProjects();
+            populateRequestCategories();
+            populateResolutionTimes();
+
+            // Populate public records
+            populateRecordRequests();
+
+            // Populate community feedback
+            populateCommunityFeedback();
+
+            // Populate meetings
+            populateLiveMeetings();
+            populateUpcomingMeetings();
+            populatePastMeetings();
+
+            // Populate open data
+            populateFeaturedDatasets();
+            populateAllDatasets();
+
+            console.log('Public Engagement Portal initialized');
+        }
+
+        function switchEngagementModule(moduleName) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.engagement-tab-button').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Add active class to clicked tab
+            document.querySelector(`[data-engagement-module="${moduleName}"]`).classList.add('active');
+
+            // Hide all modules
+            document.querySelectorAll('.engagement-module-content').forEach(module => {
+                module.classList.remove('active');
+            });
+
+            // Show selected module
+            document.getElementById(`engagement-module-${moduleName}`).classList.add('active');
+
+            console.log(`Switched to module: ${moduleName}`);
+        }
+
+        function populatePublicProjects() {
+            const container = document.getElementById('publicProjectsList');
+            if (!container) return;
+
+            container.innerHTML = MOCK_PUBLIC_PROJECTS.map(project => `
+                <div class="glass-dark rounded-lg p-5">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex-1">
+                            <h4 class="text-white font-bold text-lg mb-1">${project.name}</h4>
+                            <p class="text-white/60 text-sm">${project.department}</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold ${
+                            project.status === 'In Progress' ? 'bg-blue-500/20 text-blue-400' :
+                            project.status === 'Planning' ? 'bg-yellow-500/20 text-yellow-400' :
+                            'bg-green-500/20 text-green-400'
+                        }">${project.status}</span>
+                    </div>
+                    <p class="text-white/70 text-sm mb-4">${project.description}</p>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <div class="text-white/50 text-xs mb-1">Budget</div>
+                            <div class="text-white font-semibold">$${(project.budget / 1000000).toFixed(1)}M</div>
+                        </div>
+                        <div>
+                            <div class="text-white/50 text-xs mb-1">Spent</div>
+                            <div class="text-green-400 font-semibold">$${(project.spent / 1000000).toFixed(1)}M</div>
+                        </div>
+                        <div>
+                            <div class="text-white/50 text-xs mb-1">Started</div>
+                            <div class="text-white text-sm">${new Date(project.startDate).toLocaleDateString()}</div>
+                        </div>
+                        <div>
+                            <div class="text-white/50 text-xs mb-1">Est. Completion</div>
+                            <div class="text-white text-sm">${new Date(project.estimatedCompletion).toLocaleDateString()}</div>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-white/60">Progress</span>
+                            <span class="text-white font-medium">${project.progress}%</span>
+                        </div>
+                        <div class="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-blue-500 to-green-400 transition-all" style="width: ${project.progress}%"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function populateRequestCategories() {
+            const container = document.getElementById('topRequestCategories');
+            if (!container) return;
+
+            container.innerHTML = MOCK_REQUEST_CATEGORIES.map(cat => `
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-white/80">${cat.name}</span>
+                    <div class="flex items-center gap-2">
+                        <div class="w-20 h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div class="h-full bg-blue-500" style="width: ${cat.percentage}%"></div>
+                        </div>
+                        <span class="text-white font-medium w-12 text-right">${cat.count}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function populateResolutionTimes() {
+            const container = document.getElementById('resolutionTimes');
+            if (!container) return;
+
+            container.innerHTML = MOCK_RESOLUTION_TIMES.map(item => `
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-white/80">${item.category}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-white font-medium">${item.days} days</span>
+                        <i class="fas fa-arrow-${item.trend === 'down' ? 'down text-green-400' : item.trend === 'up' ? 'up text-red-400' : 'right text-white/50'}"></i>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function populateRecordRequests() {
+            const container = document.getElementById('myRecordRequestsList');
+            if (!container) return;
+
+            container.innerHTML = MOCK_RECORD_REQUESTS.map(request => `
+                <div class="glass-dark rounded-lg p-5">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <div class="text-white font-bold mb-1">${request.id}</div>
+                            <div class="text-white/60 text-sm">${request.type}</div>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold ${
+                            request.status === 'Ready' ? 'bg-green-500/20 text-green-400' :
+                            request.status === 'Processing' ? 'bg-blue-500/20 text-blue-400' :
+                            'bg-yellow-500/20 text-yellow-400'
+                        }">${request.status}</span>
+                    </div>
+                    <p class="text-white/70 text-sm mb-4">${request.description}</p>
+                    <div class="grid grid-cols-2 gap-4 mb-3">
+                        <div>
+                            <div class="text-white/50 text-xs mb-1">Submitted</div>
+                            <div class="text-white text-sm">${new Date(request.submitted).toLocaleDateString()}</div>
+                        </div>
+                        <div>
+                            <div class="text-white/50 text-xs mb-1">${request.status === 'Ready' ? 'Completed' : 'Estimated'}</div>
+                            <div class="text-white text-sm">${new Date(request.estimated || request.completed).toLocaleDateString()}</div>
+                        </div>
+                    </div>
+                    ${request.status !== 'Ready' ? `
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-white/60">Progress</span>
+                                <span class="text-white font-medium">${request.progress}%</span>
+                            </div>
+                            <div class="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-blue-500 to-purple-400" style="width: ${request.progress}%"></div>
+                            </div>
+                        </div>
+                    ` : `
+                        <button class="w-full px-4 py-2 bg-gradient-to-r from-green-600 to-blue-600 rounded-lg text-white font-semibold hover:shadow-lg transition-all">
+                            <i class="fas fa-download mr-2"></i>Download Documents
+                        </button>
+                    `}
+                </div>
+            `).join('');
+        }
+
+        function populateCommunityFeedback() {
+            const container = document.getElementById('communityFeedbackList');
+            if (!container) return;
+
+            container.innerHTML = MOCK_COMMUNITY_FEEDBACK.map(feedback => `
+                <div class="glass rounded-xl p-6">
+                    <div class="flex gap-4">
+                        <!-- Upvote Section -->
+                        <div class="flex flex-col items-center">
+                            <button class="upvote-button w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center mb-2" onclick="toggleUpvote(${feedback.id})">
+                                <i class="fas fa-arrow-up text-white"></i>
+                            </button>
+                            <div class="text-white font-bold">${feedback.upvotes}</div>
+                        </div>
+
+                        <!-- Feedback Content -->
+                        <div class="flex-1">
+                            <div class="flex items-start justify-between mb-2">
+                                <div>
+                                    <h4 class="text-white font-bold text-lg mb-1">${feedback.title}</h4>
+                                    <div class="flex items-center gap-3 text-sm text-white/60">
+                                        <span><i class="fas fa-user mr-1"></i>${feedback.author}</span>
+                                        <span><i class="fas fa-calendar mr-1"></i>${new Date(feedback.submitted).toLocaleDateString()}</span>
+                                        <span class="px-2 py-1 rounded bg-white/10 text-xs">${feedback.category}</span>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold ${
+                                    feedback.status === 'Implemented' ? 'bg-green-500/20 text-green-400' :
+                                    feedback.status === 'Planned' ? 'bg-purple-500/20 text-purple-400' :
+                                    feedback.status === 'Under Review' ? 'bg-blue-500/20 text-blue-400' :
+                                    'bg-white/20 text-white'
+                                }">${feedback.status}</span>
+                            </div>
+                            <p class="text-white/80 mb-4">${feedback.description}</p>
+                            <div class="flex items-center gap-4">
+                                <button class="text-blue-400 hover:text-blue-300 text-sm">
+                                    <i class="fas fa-comment mr-1"></i>${feedback.comments} Comments
+                                </button>
+                                <button class="text-white/60 hover:text-white text-sm">
+                                    <i class="fas fa-share mr-1"></i>Share
+                                </button>
+                                ${feedback.department ? `<span class="text-white/50 text-xs ml-auto"><i class="fas fa-building mr-1"></i>${feedback.department}</span>` : ''}
+                            </div>
+                            ${feedback.implementedDate ? `
+                                <div class="mt-3 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                                    <div class="text-green-400 text-sm font-semibold mb-1">
+                                        <i class="fas fa-check-circle mr-2"></i>Implemented ${new Date(feedback.implementedDate).toLocaleDateString()}
+                                    </div>
+                                    <div class="text-white/70 text-xs">This suggestion has been implemented. Thank you for your input!</div>
+                                </div>
+                            ` : ''}
+                            ${feedback.estimatedCompletion ? `
+                                <div class="mt-3 p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                                    <div class="text-purple-400 text-sm font-semibold mb-1">
+                                        <i class="fas fa-calendar-check mr-2"></i>Planned for ${feedback.estimatedCompletion}
+                                    </div>
+                                    <div class="text-white/70 text-xs">Estimated cost: ${feedback.estimatedCost}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function populateLiveMeetings() {
+            const container = document.getElementById('liveMeetingsList');
+            if (!container) return;
+
+            container.innerHTML = MOCK_LIVE_MEETINGS.map(meeting => `
+                <div class="glass-dark rounded-lg p-5">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-3 h-3 bg-red-400 rounded-full live-indicator"></div>
+                        <span class="text-red-400 text-sm font-semibold">LIVE</span>
+                        <span class="text-white/50 text-sm ml-auto">${meeting.viewers} watching</span>
+                    </div>
+                    <h4 class="text-white font-bold text-lg mb-2">${meeting.title}</h4>
+                    <div class="text-white/60 text-sm mb-3">Started at ${meeting.started}</div>
+                    <div class="mb-4">
+                        <div class="text-white/70 text-sm mb-2">Agenda:</div>
+                        <ul class="space-y-1">
+                            ${meeting.agenda.map(item => `<li class="text-white/60 text-sm"><i class="fas fa-check-circle text-green-400 mr-2"></i>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <button class="w-full px-4 py-3 bg-gradient-to-r from-red-600 to-pink-600 rounded-lg text-white font-semibold hover:shadow-lg transition-all">
+                        <i class="fas fa-play mr-2"></i>Join Live Stream
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function populateUpcomingMeetings() {
+            const container = document.getElementById('upcomingMeetingsList');
+            if (!container) return;
+
+            container.innerHTML = MOCK_UPCOMING_MEETINGS.map(meeting => `
+                <div class="glass-dark rounded-lg p-5">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex-1">
+                            <h4 class="text-white font-bold text-lg mb-2">${meeting.title}</h4>
+                            <div class="flex flex-wrap gap-4 text-sm text-white/60 mb-2">
+                                <span><i class="fas fa-calendar mr-2"></i>${new Date(meeting.date).toLocaleDateString()}</span>
+                                <span><i class="fas fa-clock mr-2"></i>${meeting.time}</span>
+                                <span><i class="fas fa-map-marker-alt mr-2"></i>${meeting.location}</span>
+                            </div>
+                            <p class="text-white/70 text-sm mb-3">${meeting.description}</p>
+                            <div class="text-blue-400 text-xs"><i class="fas fa-users mr-1"></i>${meeting.rsvp} people registered</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white font-semibold hover:shadow-lg transition-all">
+                            <i class="fas fa-calendar-plus mr-2"></i>Add to Calendar
+                        </button>
+                        <button class="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white font-semibold hover:bg-white/20 transition-all">
+                            <i class="fas fa-bell mr-2"></i>Remind Me
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function populatePastMeetings() {
+            const container = document.getElementById('pastMeetingsList');
+            if (!container) return;
+
+            container.innerHTML = MOCK_PAST_MEETINGS.map(meeting => `
+                <div class="glass-dark rounded-lg p-4 hover:scale-105 transition-all cursor-pointer">
+                    <h4 class="text-white font-semibold mb-2">${meeting.title}</h4>
+                    <div class="text-white/60 text-xs mb-2">${new Date(meeting.date).toLocaleDateString()}</div>
+                    <div class="flex justify-between items-center text-xs text-white/50">
+                        <span><i class="fas fa-clock mr-1"></i>${meeting.duration}</span>
+                        <span><i class="fas fa-eye mr-1"></i>${meeting.views} views</span>
+                    </div>
+                    <button class="w-full mt-3 px-3 py-2 bg-white/10 rounded-lg text-white text-sm hover:bg-white/20 transition-all">
+                        <i class="fas fa-play mr-2"></i>Watch Recording
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function populateFeaturedDatasets() {
+            const container = document.getElementById('featuredDatasetsList');
+            if (!container) return;
+
+            const featured = MOCK_DATASETS.filter(d => d.featured);
+            container.innerHTML = featured.map(dataset => `
+                <div class="glass-dark rounded-lg p-5 hover:scale-105 transition-all">
+                    <div class="flex items-start justify-between mb-3">
+                        <h4 class="text-white font-bold">${dataset.name}</h4>
+                        <i class="fas fa-star text-yellow-400"></i>
+                    </div>
+                    <p class="text-white/70 text-sm mb-4">${dataset.description}</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs mb-4">
+                        <div>
+                            <span class="text-white/50">Size:</span>
+                            <span class="text-white ml-1">${dataset.size}</span>
+                        </div>
+                        <div>
+                            <span class="text-white/50">Downloads:</span>
+                            <span class="text-white ml-1">${dataset.downloads.toLocaleString()}</span>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="text-white/50">Updated:</span>
+                            <span class="text-white ml-1">${new Date(dataset.lastUpdated).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-1 mb-3">
+                        ${dataset.format.map(fmt => `<span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">${fmt}</span>`).join('')}
+                    </div>
+                    <button class="w-full px-4 py-2 bg-gradient-to-r from-green-600 to-blue-600 rounded-lg text-white text-sm font-semibold hover:shadow-lg transition-all">
+                        <i class="fas fa-download mr-2"></i>Download
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function populateAllDatasets() {
+            const container = document.getElementById('allDatasetsList');
+            if (!container) return;
+
+            container.innerHTML = MOCK_DATASETS.map(dataset => `
+                <div class="glass-dark rounded-lg p-4 flex items-center justify-between hover:bg-white/15 transition-all">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h4 class="text-white font-semibold">${dataset.name}</h4>
+                            ${dataset.featured ? '<i class="fas fa-star text-yellow-400 text-xs"></i>' : ''}
+                        </div>
+                        <p class="text-white/60 text-sm mb-2">${dataset.description}</p>
+                        <div class="flex gap-4 text-xs text-white/50">
+                            <span><i class="fas fa-hdd mr-1"></i>${dataset.size}</span>
+                            <span><i class="fas fa-download mr-1"></i>${dataset.downloads.toLocaleString()}</span>
+                            <span><i class="fas fa-clock mr-1"></i>${new Date(dataset.lastUpdated).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        ${dataset.format.map(fmt => `<span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">${fmt}</span>`).join('')}
+                        <button class="px-4 py-2 bg-gradient-to-r from-green-600 to-blue-600 rounded-lg text-white text-sm font-semibold hover:shadow-lg transition-all">
+                            <i class="fas fa-download mr-2"></i>Download
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // TODO: Connect to API endpoint /api/public-records/request
+        function openNewRecordRequestModal() {
+            alert('New Public Records Request modal would open here. TODO: Implement modal UI.');
+            console.log('Opening new record request modal');
+        }
+
+        // TODO: Connect to API endpoint /api/community-feedback/submit
+        function openNewFeedbackModal() {
+            alert('New Community Feedback modal would open here. TODO: Implement modal UI.');
+            console.log('Opening new feedback modal');
+        }
+
+        // TODO: Connect to API endpoint /api/datasets/suggest
+        function suggestDataset() {
+            alert('Dataset suggestion modal would open here. TODO: Implement modal UI.');
+            console.log('Opening dataset suggestion modal');
+        }
+
+        function quickRecordRequest(type) {
+            alert(`Quick record request for ${type}. TODO: Implement quick request flow.`);
+            console.log(`Quick record request: ${type}`);
+        }
+
+        // TODO: Connect to API endpoint /api/community-feedback/upvote
+        function toggleUpvote(id) {
+            const button = event.target.closest('.upvote-button');
+            button.classList.toggle('voted');
+            console.log(`Toggled upvote for feedback ${id}`);
+            // SECURITY TODO: Validate user authentication before allowing upvotes
+        }
+
+        console.log('Public Engagement Portal test file loaded successfully');
+    </script>
+</body>
+</html>

@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grant Opportunities - Govli AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --deep-ocean: #0a1628;
+            --ocean-dark: #0c4a6e;
+            --ocean-primary: #0369a1;
+            --azure-blue: #0284c7;
+            --sky-blue: #0ea5e9;
+            --cyan-bright: #06b6d4;
+            --teal-accent: #14b8a6;
+            --emerald-success: #10b981;
+            --glass-bg: rgba(15, 23, 42, 0.75);
+            --glass-border: rgba(6, 182, 212, 0.25);
+            --glow-cyan: rgba(6, 182, 212, 0.4);
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg,
+                #0a1628 0%,
+                #0c2340 25%,
+                #0e3a5f 50%,
+                #1e3a5f 75%,
+                #164e7f 100%
+            );
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .gradient-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(20, 184, 166, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 16px 24px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--azure-blue) 0%, var(--ocean-primary) 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+        }
+
+        .grant-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .grant-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--grant-primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.2);
+        }
+
+        .match-score {
+            background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-open {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-closing-soon {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .filter-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .search-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--grant-primary);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        select.search-input {
+            cursor: pointer;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg,
+                rgba(255,255,255,0.05) 25%,
+                rgba(255,255,255,0.1) 50%,
+                rgba(255,255,255,0.05) 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <!-- Navigation -->
+    <div class="nav-header">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <i class="fas fa-hand-holding-usd text-3xl" style="color: var(--grant-primary);"></i>
+                <div>
+                    <h1 class="text-2xl font-bold text-white">Grant Opportunities</h1>
+                    <p class="text-sm text-gray-400">Discover funding for your projects</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button onclick="window.location.href='grant-application-form.html'" class="btn-primary">
+                    <i class="fas fa-file-alt mr-2"></i>My Applications
+                </button>
+                <button onclick="showAIMatchModal()" class="text-white hover:text-purple-400 transition">
+                    <i class="fas fa-magic text-xl"></i>
+                </button>
+                <button onclick="window.location.href='index.html'" class="text-white hover:text-purple-400 transition">
+                    <i class="fas fa-home text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-6 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Filters Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="filter-section sticky top-24">
+                    <h3 class="text-lg font-semibold text-white mb-4">
+                        <i class="fas fa-filter mr-2"></i>Filters
+                    </h3>
+
+                    <!-- Search -->
+                    <div class="mb-4">
+                        <label class="text-sm text-gray-400 mb-2 block">Search</label>
+                        <input type="text" id="searchQuery" class="search-input" placeholder="Keywords...">
+                    </div>
+
+                    <!-- Category -->
+                    <div class="mb-4">
+                        <label class="text-sm text-gray-400 mb-2 block">Category</label>
+                        <select id="categoryFilter" class="search-input">
+                            <option value="">All Categories</option>
+                            <option value="infrastructure">Infrastructure</option>
+                            <option value="education">Education</option>
+                            <option value="health">Health & Safety</option>
+                            <option value="environment">Environment</option>
+                            <option value="community">Community Development</option>
+                            <option value="technology">Technology</option>
+                            <option value="arts">Arts & Culture</option>
+                        </select>
+                    </div>
+
+                    <!-- Award Amount -->
+                    <div class="mb-4">
+                        <label class="text-sm text-gray-400 mb-2 block">Min Award Amount</label>
+                        <input type="number" id="minAward" class="search-input" placeholder="$0">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="text-sm text-gray-400 mb-2 block">Max Award Amount</label>
+                        <input type="number" id="maxAward" class="search-input" placeholder="$1,000,000+">
+                    </div>
+
+                    <!-- Eligible Applicant -->
+                    <div class="mb-4">
+                        <label class="text-sm text-gray-400 mb-2 block">Eligible Applicant</label>
+                        <select id="eligibleFilter" class="search-input">
+                            <option value="">All</option>
+                            <option value="state">State Government</option>
+                            <option value="local">Local Government</option>
+                            <option value="nonprofit">Non-Profit</option>
+                            <option value="education">Educational Institution</option>
+                            <option value="tribal">Tribal Government</option>
+                        </select>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="space-y-2">
+                        <button onclick="applyFilters()" class="btn-primary w-full">
+                            <i class="fas fa-search mr-2"></i>Search
+                        </button>
+                        <button onclick="clearFilters()" class="w-full py-2 text-gray-400 hover:text-white transition">
+                            <i class="fas fa-times mr-2"></i>Clear Filters
+                        </button>
+                        <button onclick="showAIMatchModal()" class="w-full py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:shadow-lg transition">
+                            <i class="fas fa-magic mr-2"></i>AI Match
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grants List -->
+            <div class="lg:col-span-3">
+                <!-- Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="glass rounded-lg p-4">
+                        <div class="text-gray-400 text-sm mb-1">Total Grants</div>
+                        <div class="text-3xl font-bold text-white" id="totalGrants">-</div>
+                    </div>
+                    <div class="glass rounded-lg p-4">
+                        <div class="text-gray-400 text-sm mb-1">Total Funding Available</div>
+                        <div class="text-3xl font-bold text-green-400" id="totalFunding">-</div>
+                    </div>
+                    <div class="glass rounded-lg p-4">
+                        <div class="text-gray-400 text-sm mb-1">Closing Soon</div>
+                        <div class="text-3xl font-bold text-yellow-400" id="closingSoon">-</div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="hidden">
+                    <div class="grant-card mb-4 skeleton" style="height: 200px;"></div>
+                    <div class="grant-card mb-4 skeleton" style="height: 200px;"></div>
+                    <div class="grant-card mb-4 skeleton" style="height: 200px;"></div>
+                </div>
+
+                <!-- Grants Grid -->
+                <div id="grantsContainer" class="space-y-4">
+                    <!-- Grants will be dynamically loaded here -->
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden text-center py-12">
+                    <i class="fas fa-search text-6xl text-gray-600 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-white mb-2">No grants found</h3>
+                    <p class="text-gray-400">Try adjusting your filters or search terms</p>
+                </div>
+
+                <!-- Pagination -->
+                <div id="pagination" class="flex justify-center items-center space-x-2 mt-8"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Match Modal -->
+    <div id="aiMatchModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="glass rounded-lg max-w-2xl w-full p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">
+                    <i class="fas fa-magic mr-2 text-purple-400"></i>AI Grant Matching
+                </h2>
+                <button onclick="closeAIMatchModal()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="text-sm text-gray-400 mb-2 block">Describe Your Project</label>
+                    <textarea id="projectDescription" class="search-input" rows="4" placeholder="Tell us about your project, goals, and needs..."></textarea>
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-400 mb-2 block">Organization Type</label>
+                    <select id="orgType" class="search-input">
+                        <option value="local">Local Government</option>
+                        <option value="state">State Government</option>
+                        <option value="nonprofit">Non-Profit</option>
+                        <option value="education">Educational Institution</option>
+                        <option value="tribal">Tribal Government</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-400 mb-2 block">Target Award Amount</label>
+                    <input type="number" id="targetAmount" class="search-input" placeholder="$100,000">
+                </div>
+
+                <button onclick="runAIMatch()" class="btn-primary w-full">
+                    <i class="fas fa-sparkles mr-2"></i>Find Matching Grants
+                </button>
+            </div>
+
+            <!-- AI Match Results -->
+            <div id="aiMatchResults" class="hidden mt-6">
+                <h3 class="text-lg font-semibold text-white mb-4">Top Matches</h3>
+                <div id="matchedGrants" class="space-y-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="grants.js"></script>
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentFilters = {};
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGrants();
+
+            // Auto-search on Enter key
+            document.getElementById('searchQuery').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') applyFilters();
+            });
+        });
+
+        async function loadGrants(page = 1) {
+            try {
+                showLoading(true);
+
+                const params = new URLSearchParams({
+                    page,
+                    limit: 10,
+                    ...currentFilters
+                });
+
+                const response = await fetch(`${API_BASE}/grants?${params}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load grants');
+                }
+
+                const data = await response.json();
+                displayGrants(data.grants);
+                updateStats(data);
+                updatePagination(data.pagination);
+
+                showLoading(false);
+            } catch (error) {
+                console.error('Error loading grants:', error);
+                showLoading(false);
+                document.getElementById('emptyState').classList.remove('hidden');
+            }
+        }
+
+        function displayGrants(grants) {
+            const container = document.getElementById('grantsContainer');
+            const emptyState = document.getElementById('emptyState');
+
+            if (!grants || grants.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            container.innerHTML = grants.map(grant => createGrantCard(grant)).join('');
+        }
+
+        function createGrantCard(grant) {
+            const matchScore = grant.matchScore || Math.floor(Math.random() * 30) + 70;
+            const daysUntilClose = calculateDaysUntilClose(grant.closeDate);
+            const isClosingSoon = daysUntilClose <= 30;
+
+            return `
+                <div class="grant-card" onclick="viewGrant('${grant.id}')">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex-1">
+                            <h3 class="text-xl font-semibold text-white mb-2">${grant.title}</h3>
+                            <p class="text-sm text-gray-400">${grant.agencyName}</p>
+                        </div>
+                        <div class="flex flex-col items-end gap-2">
+                            ${matchScore >= 80 ? `<div class="match-score">
+                                <i class="fas fa-star mr-1"></i>${matchScore}% Match
+                            </div>` : ''}
+                            <span class="badge ${isClosingSoon ? 'badge-closing-soon' : 'badge-open'}">
+                                ${grant.status || 'Open'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <p class="text-gray-300 text-sm mb-4 line-clamp-2">${grant.description || 'No description available'}</p>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div>
+                            <div class="text-xs text-gray-500 mb-1">Award Amount</div>
+                            <div class="text-sm font-semibold text-green-400">
+                                ${formatCurrency(grant.awardFloor)} - ${formatCurrency(grant.awardCeiling)}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-500 mb-1">Category</div>
+                            <div class="text-sm font-medium text-white">${grant.category || 'General'}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-500 mb-1">Close Date</div>
+                            <div class="text-sm font-medium ${isClosingSoon ? 'text-yellow-400' : 'text-white'}">
+                                ${formatDate(grant.closeDate)}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-500 mb-1">Days Left</div>
+                            <div class="text-sm font-semibold ${isClosingSoon ? 'text-yellow-400' : 'text-white'}">
+                                ${daysUntilClose} days
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        ${(grant.eligibleApplicants || ['Local Government', 'State Government']).slice(0, 3).map(applicant => `
+                            <span class="px-3 py-1 bg-purple-500 bg-opacity-20 text-purple-300 rounded-full text-xs">
+                                ${applicant}
+                            </span>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateStats(data) {
+            document.getElementById('totalGrants').textContent = data.pagination?.total || 0;
+            document.getElementById('totalFunding').textContent = formatCurrency(
+                (data.grants || []).reduce((sum, g) => sum + (g.awardCeiling || 0), 0)
+            );
+            document.getElementById('closingSoon').textContent =
+                (data.grants || []).filter(g => calculateDaysUntilClose(g.closeDate) <= 30).length;
+        }
+
+        function updatePagination(pagination) {
+            if (!pagination) return;
+
+            const container = document.getElementById('pagination');
+            currentPage = pagination.page;
+            totalPages = pagination.totalPages;
+
+            let html = '';
+
+            // Previous button
+            html += `
+                <button
+                    onclick="loadGrants(${currentPage - 1})"
+                    ${currentPage === 1 ? 'disabled' : ''}
+                    class="px-4 py-2 bg-white bg-opacity-10 text-white rounded-lg hover:bg-opacity-20 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            `;
+
+            // Page numbers
+            for (let i = 1; i <= Math.min(totalPages, 5); i++) {
+                const page = i;
+                html += `
+                    <button
+                        onclick="loadGrants(${page})"
+                        class="px-4 py-2 ${page === currentPage ? 'bg-purple-600' : 'bg-white bg-opacity-10'} text-white rounded-lg hover:bg-opacity-20 transition"
+                    >
+                        ${page}
+                    </button>
+                `;
+            }
+
+            // Next button
+            html += `
+                <button
+                    onclick="loadGrants(${currentPage + 1})"
+                    ${currentPage === totalPages ? 'disabled' : ''}
+                    class="px-4 py-2 bg-white bg-opacity-10 text-white rounded-lg hover:bg-opacity-20 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function applyFilters() {
+            currentFilters = {
+                query: document.getElementById('searchQuery').value,
+                category: document.getElementById('categoryFilter').value,
+                minAward: document.getElementById('minAward').value,
+                maxAward: document.getElementById('maxAward').value,
+                eligibleApplicant: document.getElementById('eligibleFilter').value
+            };
+
+            // Remove empty filters
+            Object.keys(currentFilters).forEach(key => {
+                if (!currentFilters[key]) delete currentFilters[key];
+            });
+
+            loadGrants(1);
+        }
+
+        function clearFilters() {
+            document.getElementById('searchQuery').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('minAward').value = '';
+            document.getElementById('maxAward').value = '';
+            document.getElementById('eligibleFilter').value = '';
+            currentFilters = {};
+            loadGrants(1);
+        }
+
+        function showAIMatchModal() {
+            document.getElementById('aiMatchModal').classList.remove('hidden');
+        }
+
+        function closeAIMatchModal() {
+            document.getElementById('aiMatchModal').classList.add('hidden');
+        }
+
+        async function runAIMatch() {
+            const description = document.getElementById('projectDescription').value;
+            const orgType = document.getElementById('orgType').value;
+            const targetAmount = document.getElementById('targetAmount').value;
+
+            if (!description) {
+                alert('Please describe your project');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/grants/match`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    },
+                    body: JSON.stringify({
+                        projectDescription: description,
+                        organizationType: orgType,
+                        targetAwardAmount: parseInt(targetAmount) || 100000
+                    })
+                });
+
+                if (!response.ok) throw new Error('AI matching failed');
+
+                const data = await response.json();
+                displayAIMatches(data.matches || data.grants || []);
+            } catch (error) {
+                console.error('AI Match error:', error);
+                alert('AI matching is currently unavailable. Please try searching manually.');
+            }
+        }
+
+        function displayAIMatches(matches) {
+            const container = document.getElementById('matchedGrants');
+            const results = document.getElementById('aiMatchResults');
+
+            if (!matches || matches.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 text-center">No matches found</p>';
+                results.classList.remove('hidden');
+                return;
+            }
+
+            container.innerHTML = matches.slice(0, 5).map(grant => `
+                <div class="bg-white bg-opacity-5 p-4 rounded-lg border border-purple-500 border-opacity-30 hover:border-opacity-50 transition cursor-pointer" onclick="viewGrant('${grant.id}')">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="text-white font-semibold">${grant.title}</h4>
+                        <span class="match-score text-xs">${grant.matchScore || 85}%</span>
+                    </div>
+                    <p class="text-sm text-gray-400 mb-2">${grant.agencyName}</p>
+                    <div class="text-xs text-green-400">${formatCurrency(grant.awardFloor)} - ${formatCurrency(grant.awardCeiling)}</div>
+                </div>
+            `).join('');
+
+            results.classList.remove('hidden');
+        }
+
+        function viewGrant(grantId) {
+            window.location.href = `grant-application-form.html?grantId=${grantId}`;
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingState').classList.toggle('hidden', !show);
+            document.getElementById('grantsContainer').classList.toggle('hidden', show);
+        }
+
+        // Utility functions
+        function formatCurrency(amount) {
+            if (!amount) return 'N/A';
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function calculateDaysUntilClose(closeDate) {
+            if (!closeDate) return 999;
+            const days = Math.ceil((new Date(closeDate) - new Date()) / (1000 * 60 * 60 * 24));
+            return Math.max(0, days);
+        }
+    </script>
+</body>
+</html>

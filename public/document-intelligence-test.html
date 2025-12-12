@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Document Intelligence - Govli AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Added 2024-10-30: Enhanced Document Intelligence System */
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .pulse-ring {
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+            }
+        }
+
+        .validation-item {
+            transition: all 0.3s ease;
+        }
+
+        .validation-item:hover {
+            transform: translateX(5px);
+        }
+
+        .upload-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .upload-zone.dragover {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .confidence-bar {
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .confidence-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .field-box {
+            position: absolute;
+            border: 2px solid;
+            pointer-events: none;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .page-thumbnail {
+            width: 80px;
+            height: 100px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .page-thumbnail.active {
+            border: 3px solid #3b82f6;
+            transform: scale(1.05);
+        }
+
+        .json-viewer {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .json-key { color: #60a5fa; }
+        .json-string { color: #34d399; }
+        .json-number { color: #f59e0b; }
+        .json-boolean { color: #8b5cf6; }
+
+        .processing-animation {
+            animation: scan 2s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header - Enhanced 2024-10-30 -->
+        <div class="glass rounded-xl p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-white mb-2">
+                        <i class="fas fa-brain mr-3"></i>Enhanced Document Intelligence
+                    </h1>
+                    <p class="text-white/70">Government-specific AI models with cross-document validation & compliance checking</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span class="badge bg-green-500/20 text-green-400">
+                        <i class="fas fa-shield-alt mr-1"></i>CJIS Compliant
+                    </span>
+                    <span class="badge bg-blue-500/20 text-blue-400">
+                        <i class="fas fa-certificate mr-1"></i>FedRAMP High
+                    </span>
+                    <span class="badge bg-purple-500/20 text-purple-400">
+                        <i class="fas fa-lock mr-1"></i>FISMA Certified
+                    </span>
+                </div>
+            </div>
+
+            <!-- Enhanced Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div class="glass rounded-lg p-4">
+                    <div class="text-white/70 text-sm mb-1">Gov Documents Processed</div>
+                    <div class="text-2xl font-bold text-white">127,493</div>
+                    <div class="text-green-400 text-sm mt-1"><i class="fas fa-arrow-up mr-1"></i>18% this month</div>
+                </div>
+                <div class="glass rounded-lg p-4">
+                    <div class="text-white/70 text-sm mb-1">Classification Accuracy</div>
+                    <div class="text-2xl font-bold text-white">98.9%</div>
+                    <div class="text-green-400 text-sm mt-1"><i class="fas fa-check mr-1"></i>Above 95% target</div>
+                </div>
+                <div class="glass rounded-lg p-4">
+                    <div class="text-white/70 text-sm mb-1">Auto-Validated</div>
+                    <div class="text-2xl font-bold text-white">85.2%</div>
+                    <div class="text-blue-400 text-sm mt-1"><i class="fas fa-robot mr-1"></i>High confidence</div>
+                </div>
+                <div class="glass rounded-lg p-4">
+                    <div class="text-white/70 text-sm mb-1">CRM Auto-Sync</div>
+                    <div class="text-2xl font-bold text-white">94.7%</div>
+                    <div class="text-purple-400 text-sm mt-1"><i class="fas fa-link mr-1"></i>Synced</div>
+                </div>
+                <div class="glass rounded-lg p-4">
+                    <div class="text-white/70 text-sm mb-1">Avg Processing Time</div>
+                    <div class="text-2xl font-bold text-white">1.8s</div>
+                    <div class="text-green-400 text-sm mt-1"><i class="fas fa-bolt mr-1"></i>Fast</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column: Upload & Document View -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Added 2024-10-30: Government Document Model Selector -->
+                <div class="glass rounded-xl p-6">
+                    <h2 class="text-xl font-bold text-white mb-4">
+                        <i class="fas fa-layer-group mr-2"></i>Select Document Model
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <button onclick="selectModel('permits')" id="model-permits" class="glass rounded-lg p-4 text-left hover:bg-blue-500/20 transition model-btn" aria-label="Select building permits model">
+                            <i class="fas fa-file-contract text-2xl text-blue-400 mb-2"></i>
+                            <div class="text-white font-semibold">Building Permits</div>
+                            <div class="text-white/60 text-sm mt-1">Residential, Commercial, Electrical</div>
+                        </button>
+                        <button onclick="selectModel('licenses')" id="model-licenses" class="glass rounded-lg p-4 text-left hover:bg-green-500/20 transition model-btn" aria-label="Select licenses model">
+                            <i class="fas fa-id-card text-2xl text-green-400 mb-2"></i>
+                            <div class="text-white font-semibold">Licenses</div>
+                            <div class="text-white/60 text-sm mt-1">Business, Professional, Driver</div>
+                        </button>
+                        <button onclick="selectModel('tax-forms')" id="model-tax-forms" class="glass rounded-lg p-4 text-left hover:bg-yellow-500/20 transition model-btn" aria-label="Select tax forms model">
+                            <i class="fas fa-file-invoice-dollar text-2xl text-yellow-400 mb-2"></i>
+                            <div class="text-white font-semibold">Tax Forms</div>
+                            <div class="text-white/60 text-sm mt-1">W-2, 1099, Property Tax</div>
+                        </button>
+                        <button onclick="selectModel('legal')" id="model-legal" class="glass rounded-lg p-4 text-left hover:bg-purple-500/20 transition model-btn" aria-label="Select legal documents model">
+                            <i class="fas fa-gavel text-2xl text-purple-400 mb-2"></i>
+                            <div class="text-white font-semibold">Legal Documents</div>
+                            <div class="text-white/60 text-sm mt-1">Contracts, Deeds, Judgments</div>
+                        </button>
+                        <button onclick="selectModel('compliance')" id="model-compliance" class="glass rounded-lg p-4 text-left hover:bg-red-500/20 transition model-btn" aria-label="Select compliance forms model">
+                            <i class="fas fa-clipboard-check text-2xl text-red-400 mb-2"></i>
+                            <div class="text-white font-semibold">Compliance Forms</div>
+                            <div class="text-white/60 text-sm mt-1">EPA, OSHA, FDA Reports</div>
+                        </button>
+                        <button onclick="selectModel('identity')" id="model-identity" class="glass rounded-lg p-4 text-left hover:bg-pink-500/20 transition model-btn" aria-label="Select identity documents model">
+                            <i class="fas fa-user-shield text-2xl text-pink-400 mb-2"></i>
+                            <div class="text-white font-semibold">Identity Docs</div>
+                            <div class="text-white/60 text-sm mt-1">Passports, SSN, Birth Certs</div>
+                        </button>
+                    </div>
+                    <div id="selectedModel" class="mt-4 text-white/70 text-sm">
+                        <i class="fas fa-info-circle mr-2"></i>Select a document model for optimized processing
+                    </div>
+                </div>
+
+                <!-- Upload Zone -->
+                <div class="glass rounded-xl p-6" id="uploadSection">
+                    <h2 class="text-xl font-bold text-white mb-4">
+                        <i class="fas fa-cloud-upload-alt mr-2"></i>Upload Document
+                    </h2>
+                    <div class="upload-zone glass rounded-lg p-12 text-center cursor-pointer" id="uploadZone" role="button" tabindex="0" aria-label="Upload document area">
+                        <i class="fas fa-file-upload text-6xl text-white/40 mb-4"></i>
+                        <p class="text-white text-lg mb-2">Drop your government document here or click to browse</p>
+                        <p class="text-white/60 text-sm">Supports PDF, PNG, JPG, TIFF up to 50MB</p>
+                        <input type="file" id="fileInput" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.tiff" />
+                    </div>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <button onclick="loadSampleDocument('residential')" class="glass px-4 py-2 rounded-lg text-white text-sm hover:bg-white/20 transition" aria-label="Load residential permit sample">
+                            <i class="fas fa-home mr-2"></i>Sample: Residential Permit
+                        </button>
+                        <button onclick="loadSampleDocument('commercial')" class="glass px-4 py-2 rounded-lg text-white text-sm hover:bg-white/20 transition" aria-label="Load commercial permit sample">
+                            <i class="fas fa-building mr-2"></i>Sample: Commercial Permit
+                        </button>
+                        <button onclick="loadSampleDocument('electrical')" class="glass px-4 py-2 rounded-lg text-white text-sm hover:bg-white/20 transition" aria-label="Load electrical permit sample">
+                            <i class="fas fa-bolt mr-2"></i>Sample: Electrical Permit
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Processing Status -->
+                <div class="glass rounded-xl p-6 hidden" id="processingSection">
+                    <h2 class="text-xl font-bold text-white mb-4">
+                        <i class="fas fa-cog fa-spin mr-2"></i>Processing Document
+                    </h2>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-white/80">Analyzing document structure...</span>
+                            <span class="text-green-400"><i class="fas fa-check"></i></span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-white/80">Detecting form type...</span>
+                            <span class="text-blue-400"><i class="fas fa-spinner fa-spin"></i></span>
+                        </div>
+                        <div class="flex items-center justify-between text-white/40">
+                            <span>Extracting fields...</span>
+                            <span><i class="fas fa-circle"></i></span>
+                        </div>
+                        <div class="flex items-center justify-between text-white/40">
+                            <span>Validating data...</span>
+                            <span><i class="fas fa-circle"></i></span>
+                        </div>
+                    </div>
+                    <div class="mt-4 glass rounded-lg overflow-hidden">
+                        <div class="h-2 bg-blue-500 processing-animation" style="width: 45%"></div>
+                    </div>
+                </div>
+
+                <!-- Document Viewer -->
+                <div class="glass rounded-xl p-6 hidden" id="documentViewer">
+                    <h2 class="text-xl font-bold text-white mb-4">
+                        <i class="fas fa-search mr-2"></i>Document Analysis
+                    </h2>
+
+                    <!-- Page Navigation -->
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-2" id="pageThumbnails">
+                            <!-- Thumbnails will be inserted here -->
+                        </div>
+                        <div class="text-white/70 text-sm">
+                            Page <span id="currentPage">1</span> of <span id="totalPages">1</span>
+                        </div>
+                    </div>
+
+                    <!-- Document Display -->
+                    <div class="relative bg-white rounded-lg p-8 min-h-[600px]" id="documentDisplay">
+                        <div class="absolute top-0 left-0 w-full h-full" id="fieldOverlay"></div>
+                        <img src="" id="documentImage" class="w-full h-auto" style="display: none;" />
+                        <div id="documentPlaceholder" class="text-gray-400 text-center py-32">
+                            <i class="fas fa-file-alt text-6xl mb-4"></i>
+                            <p>Document preview will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Results & Analysis -->
+            <div class="space-y-6">
+                <!-- Added 2024-10-30: Confidence Routing Display -->
+                <div class="glass rounded-xl p-6 hidden" id="confidenceRoutingSection">
+                    <h2 class="text-xl font-bold text-white mb-4">
+                        <i class="fas fa-chart-line mr-2"></i>Confidence Routing
+                    </h2>
+                    <div class="glass rounded-lg p-4 mb-3">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-white font-semibold">Confidence Score</span>
+                            <span class="text-2xl font-bold text-white" id="confidenceScore">--</span>
+                        </div>
+                        <div class="confidence-bar mb-2">
+                            <div class="confidence-fill" id="confidenceBar"></div>
+                        </div>
+                        <div class="flex items-center justify-between text-xs mt-2">
+                            <span class="text-red-400">← Manual (0-70%)</span>
+                            <span class="text-yellow-400">Review (70-85%)</span>
+                            <span class="text-green-400">Auto (85-100%) →</span>
+                        </div>
+                    </div>
+                    <div class="glass rounded-lg p-4" id="routingDecision">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Added 2024-10-30: Cross-Document Validation -->
+                <div class="glass rounded-xl p-6 hidden" id="crossValidationSection">
+                    <h2 class="text-xl font-bold text-white mb-4">
+                        <i class="fas fa-check-double mr-2"></i>Cross-Document Validation
+                    </h2>
+                    <div class="space-y-3" id="crossValidation">
+                        <div class="glass rounded-lg p-3 text-white/60 text-sm text-center">
+                            Upload a document to see validation results
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Added 2024-10-30: Regulatory Compliance -->
+                <div class="glass rounded-xl p-6 hidden" id="complianceSection">
+                    <h2 class="text-xl font-bold text-white mb-4">
+                        <i class="fas fa-balance-scale mr-2"></i>Regulatory Compliance
+                    </h2>
+                    <div class="space-y-3" id="complianceChecks">
+                        <div class="glass rounded-lg p-3 text-white/60 text-sm text-center">
+                            Compliance checks will appear here
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Added 2024-10-30: CRM Integration -->
+                <div class="glass rounded-xl p-6 hidden" id="crmIntegrationSection">
+                    <h2 class="text-xl font-bold text-white mb-4">
+                        <i class="fas fa-link mr-2"></i>CRM Integration
+                    </h2>
+                    <div class="space-y-3" id="crmIntegration">
+                        <div class="glass rounded-lg p-3 text-white/60 text-sm text-center">
+                            CRM matching will appear here
+                        </div>
+                    </div>
+                    <button onclick="syncToCRM()" id="syncCrmBtn" class="w-full mt-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-3 rounded-lg transition hidden" aria-label="Sync data to CRM">
+                        <i class="fas fa-sync-alt mr-2"></i>Sync to CRM
+                    </button>
+                </div>
+
+                <!-- Form Type Detection -->
+                <div class="glass rounded-xl p-6 hidden" id="formTypeSection">
+                    <h2 class="text-xl font-bold text-white mb-4">
+                        <i class="fas fa-tag mr-2"></i>Form Classification
+                    </h2>
+                    <div class="space-y-3">
+                        <div class="glass rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-white font-semibold" id="detectedType">Residential Building Permit</span>
+                                <span class="badge bg-green-500/20 text-green-400" id="typeConfidence">98.5%</span>
+                            </div>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill bg-green-500" id="typeConfidenceBar" style="width: 98.5%"></div>
+                            </div>
+                        </div>
+
+                        <div class="text-white/70 text-sm font-semibold mb-2">Other Possibilities:</div>
+                        <div id="alternativeTypes">
+                            <!-- Alternative classifications will appear here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Extracted Fields -->
+                <div class="glass rounded-xl p-6 hidden" id="extractedFieldsSection">
+                    <h2 class="text-xl font-bold text-white mb-4">
+                        <i class="fas fa-list-ul mr-2"></i>Extracted Fields
+                    </h2>
+                    <div class="space-y-3" id="fieldsList">
+                        <!-- Fields will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- JSON Output -->
+                <div class="glass rounded-xl p-6 hidden" id="jsonOutputSection">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold text-white">
+                            <i class="fas fa-code mr-2"></i>JSON Output
+                        </h2>
+                        <button onclick="copyJSON()" class="glass px-3 py-1 rounded-lg text-white text-sm hover:bg-white/20 transition">
+                            <i class="fas fa-copy mr-1"></i>Copy
+                        </button>
+                    </div>
+                    <div class="json-viewer text-white" id="jsonOutput">
+                        <!-- JSON will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="glass rounded-xl p-6 hidden" id="actionsSection">
+                    <h2 class="text-xl font-bold text-white mb-4">
+                        <i class="fas fa-bolt mr-2"></i>Actions
+                    </h2>
+                    <div class="space-y-3">
+                        <button onclick="exportData()" class="w-full glass rounded-lg p-3 text-white hover:bg-white/20 transition">
+                            <i class="fas fa-download mr-2"></i>Export to Database
+                        </button>
+                        <button onclick="reviewDocument()" class="w-full glass rounded-lg p-3 text-white hover:bg-white/20 transition">
+                            <i class="fas fa-eye mr-2"></i>Review & Validate
+                        </button>
+                        <button onclick="processNew()" class="w-full glass rounded-lg p-3 text-white hover:bg-white/20 transition">
+                            <i class="fas fa-plus mr-2"></i>Process New Document
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // MOCK DATA - Replace in production
+        // TODO: Connect to enhanced AI document intelligence API endpoint
+        // Added 2024-10-30: Enhanced document intelligence with government-specific models
+        // SECURITY TODO: Validate all document data before processing
+
+        let selectedDocModel = null;
+
+        // Government-specific document models
+        const DOCUMENT_MODELS = {
+            permits: {
+                name: 'Building Permits',
+                types: ['Residential', 'Commercial', 'Electrical', 'Plumbing', 'Mechanical'],
+                validation_rules: ['contractor_license', 'zoning_compliance', 'insurance_verification']
+            },
+            licenses: {
+                name: 'Business Licenses',
+                types: ['Business License', 'Professional License', 'Liquor License', 'Food Service'],
+                validation_rules: ['business_registration', 'tax_id', 'owner_background_check']
+            },
+            'tax-forms': {
+                name: 'Tax Forms',
+                types: ['W-2', '1099', 'W-9', 'Property Tax Assessment'],
+                validation_rules: ['ssn_validation', 'ein_verification', 'calculation_check']
+            },
+            legal: {
+                name: 'Legal Documents',
+                types: ['Property Deed', 'Contract', 'Court Judgment', 'Affidavit'],
+                validation_rules: ['signature_verification', 'notary_check', 'jurisdictional_validity']
+            },
+            compliance: {
+                name: 'Compliance Reports',
+                types: ['EPA Report', 'OSHA Inspection', 'FDA Compliance', 'Safety Audit'],
+                validation_rules: ['regulatory_standards', 'inspector_credentials', 'date_validity']
+            },
+            identity: {
+                name: 'Identity Documents',
+                types: ['Passport', 'Driver License', 'Birth Certificate', 'SSN Card'],
+                validation_rules: ['document_authenticity', 'photo_match', 'expiration_check']
+            }
+        };
+
+        const SAMPLE_DOCUMENTS = {
+            residential: {
+                type: 'Residential Building Permit',
+                model: 'permits',
+                confidence: 98.5,
+                routing: 'auto-approved',
+                pages: 3,
+                alternatives: [
+                    { type: 'Home Addition Permit', confidence: 1.2 },
+                    { type: 'Renovation Permit', confidence: 0.3 }
+                ],
+                fields: [
+                    { name: 'Permit Number', value: 'RES-2024-00184', confidence: 99.8, location: { page: 1, x: 120, y: 45 }, handwritten: false },
+                    { name: 'Property Address', value: '1847 Oak Street, Springfield', confidence: 98.2, location: { page: 1, x: 120, y: 85 }, handwritten: false },
+                    { name: 'Owner Name', value: 'Sarah Johnson', confidence: 97.5, location: { page: 1, x: 120, y: 125 }, handwritten: true },
+                    { name: 'Owner Email', value: 'sarah.j@email.com', confidence: 96.4, location: { page: 1, x: 120, y: 145 }, handwritten: true },
+                    { name: 'Owner Phone', value: '(555) 847-2910', confidence: 97.2, location: { page: 1, x: 120, y: 155 }, handwritten: false },
+                    { name: 'Construction Type', value: 'New Single Family Dwelling', confidence: 99.1, location: { page: 1, x: 120, y: 165 }, handwritten: false },
+                    { name: 'Square Footage', value: '2,450 sq ft', confidence: 96.8, location: { page: 1, x: 120, y: 205 }, handwritten: false },
+                    { name: 'Estimated Cost', value: '$485,000', confidence: 98.9, location: { page: 1, x: 120, y: 245 }, handwritten: false },
+                    { name: 'Contractor License', value: 'CA-LIC-847261', confidence: 99.2, location: { page: 1, x: 120, y: 285 }, handwritten: false },
+                    { name: 'Application Date', value: '2024-10-15', confidence: 99.5, location: { page: 1, x: 120, y: 325 }, handwritten: false },
+                    { name: 'Signature Detected', value: 'Yes (Owner)', confidence: 94.3, location: { page: 3, x: 320, y: 520 }, handwritten: true },
+                    { name: 'Zoning Code', value: 'R-1 (Single Family Residential)', confidence: 97.8, location: { page: 2, x: 120, y: 95 }, handwritten: false }
+                ],
+                validation: {
+                    contractor_license: { status: 'valid', details: 'License CA-LIC-847261 verified with California Contractors State License Board - Active status' },
+                    zoning_compliance: { status: 'valid', details: 'Property zoned R-1 (Single Family) - matches intended residential use' },
+                    insurance_verification: { status: 'valid', details: 'General liability insurance verified - $2M coverage confirmed' }
+                },
+                compliance: [
+                    { regulation: 'International Building Code (IBC) 2021', status: 'compliant', icon: 'check' },
+                    { regulation: 'Americans with Disabilities Act (ADA)', status: 'compliant', icon: 'check' },
+                    { regulation: 'Energy Code Title 24', status: 'compliant', icon: 'check' }
+                ],
+                crm_match: {
+                    found: true,
+                    contact: {
+                        name: 'Sarah Johnson',
+                        email: 'sarah.j@email.com',
+                        phone: '(555) 847-2910',
+                        existing_records: 2
+                    },
+                    action: 'update-existing'
+                }
+            },
+            commercial: {
+                type: 'Commercial Building Permit',
+                model: 'permits',
+                confidence: 99.2,
+                routing: 'auto-approved',
+                pages: 5,
+                alternatives: [
+                    { type: 'Industrial Building Permit', confidence: 0.6 },
+                    { type: 'Mixed-Use Permit', confidence: 0.2 }
+                ],
+                fields: [
+                    { name: 'Permit Number', value: 'COM-2024-00392', confidence: 99.9, location: { page: 1, x: 120, y: 45 }, handwritten: false },
+                    { name: 'Business Name', value: 'Springfield Medical Center', confidence: 98.7, location: { page: 1, x: 120, y: 85 }, handwritten: false },
+                    { name: 'Property Address', value: '4500 Commerce Blvd, Springfield', confidence: 99.1, location: { page: 1, x: 120, y: 125 }, handwritten: false },
+                    { name: 'Contact Name', value: 'Dr. Emily Chen', confidence: 98.3, location: { page: 1, x: 120, y: 145 }, handwritten: false },
+                    { name: 'Contact Email', value: 'echen@springfieldmed.com', confidence: 97.8, location: { page: 1, x: 120, y: 155 }, handwritten: false },
+                    { name: 'Building Type', value: 'Healthcare Facility', confidence: 97.9, location: { page: 1, x: 120, y: 165 }, handwritten: false },
+                    { name: 'Total Area', value: '35,000 sq ft', confidence: 98.5, location: { page: 1, x: 120, y: 205 }, handwritten: false },
+                    { name: 'Number of Floors', value: '3', confidence: 99.6, location: { page: 1, x: 120, y: 245 }, handwritten: false },
+                    { name: 'Estimated Cost', value: '$8,500,000', confidence: 97.2, location: { page: 1, x: 120, y: 285 }, handwritten: false },
+                    { name: 'Architect License', value: 'ARC-IL-94572', confidence: 99.4, location: { page: 2, x: 120, y: 65 }, handwritten: false },
+                    { name: 'Fire Suppression', value: 'Sprinkler System Required', confidence: 96.8, location: { page: 3, x: 120, y: 145 }, handwritten: false },
+                    { name: 'ADA Compliance', value: 'Full Accessibility Plan Included', confidence: 98.1, location: { page: 4, x: 120, y: 225 }, handwritten: false }
+                ],
+                validation: {
+                    contractor_license: { status: 'valid', details: 'Architect License ARC-IL-94572 verified with Illinois Department of Financial and Professional Regulation' },
+                    zoning_compliance: { status: 'valid', details: 'Property zoned C-3 (Commercial) - matches healthcare facility use' },
+                    insurance_verification: { status: 'valid', details: 'Commercial general liability verified - $10M coverage' }
+                },
+                compliance: [
+                    { regulation: 'International Building Code (IBC) 2021', status: 'compliant', icon: 'check' },
+                    { regulation: 'Americans with Disabilities Act (ADA)', status: 'compliant', icon: 'check' },
+                    { regulation: 'Healthcare Facility Code NFPA 99', status: 'compliant', icon: 'check' },
+                    { regulation: 'HIPAA Facility Requirements', status: 'compliant', icon: 'check' }
+                ],
+                crm_match: {
+                    found: true,
+                    contact: {
+                        name: 'Dr. Emily Chen',
+                        company: 'Springfield Medical Center',
+                        email: 'echen@springfieldmed.com',
+                        existing_records: 5
+                    },
+                    action: 'update-existing'
+                }
+            },
+            electrical: {
+                type: 'Electrical Permit',
+                model: 'permits',
+                confidence: 77.8,
+                routing: 'human-validation',
+                pages: 2,
+                alternatives: [
+                    { type: 'Plumbing Permit', confidence: 1.8 },
+                    { type: 'HVAC Permit', confidence: 0.4 }
+                ],
+                fields: [
+                    { name: 'Permit Number', value: 'ELEC-2024-01573', confidence: 99.7, location: { page: 1, x: 120, y: 45 }, handwritten: false },
+                    { name: 'Property Address', value: '892 Maple Drive, Springfield', confidence: 98.9, location: { page: 1, x: 120, y: 85 }, handwritten: false },
+                    { name: 'Work Description', value: 'Service Panel Upgrade 200A', confidence: 96.5, location: { page: 1, x: 120, y: 125 }, handwritten: true },
+                    { name: 'Electrician Name', value: 'Mike Rodriguez', confidence: 97.8, location: { page: 1, x: 120, y: 165 }, handwritten: false },
+                    { name: 'License Number', value: 'ELEC-CA-38475', confidence: 99.3, location: { page: 1, x: 120, y: 205 }, handwritten: false },
+                    { name: 'Contact Phone', value: '(555) 293-8471', confidence: 96.1, location: { page: 1, x: 120, y: 225 }, handwritten: true },
+                    { name: 'Voltage', value: '240V', confidence: 98.6, location: { page: 1, x: 120, y: 245 }, handwritten: false },
+                    { name: 'Circuit Breakers', value: '28 circuits', confidence: 95.2, location: { page: 1, x: 120, y: 285 }, handwritten: true },
+                    { name: 'Estimated Cost', value: '$3,200', confidence: 97.4, location: { page: 1, x: 120, y: 325 }, handwritten: false },
+                    { name: 'Inspection Required', value: 'Rough-in and Final', confidence: 99.1, location: { page: 2, x: 120, y: 95 }, handwritten: false }
+                ],
+                validation: {
+                    contractor_license: { status: 'pending', details: 'License ELEC-CA-38475 verification in progress with California Electrical Board (2-3 business days)' },
+                    zoning_compliance: { status: 'valid', details: 'Residential property - electrical work permitted' },
+                    insurance_verification: { status: 'valid', details: 'Electrician liability insurance verified - $1M coverage' }
+                },
+                compliance: [
+                    { regulation: 'National Electrical Code (NEC) 2020', status: 'compliant', icon: 'check' },
+                    { regulation: 'California Electrical Code Title 24', status: 'review-needed', icon: 'exclamation' },
+                    { regulation: 'OSHA Electrical Safety Standards', status: 'compliant', icon: 'check' }
+                ],
+                crm_match: {
+                    found: false,
+                    suggested_action: 'create-new',
+                    contact: {
+                        name: 'Mike Rodriguez',
+                        phone: '(555) 293-8471'
+                    }
+                }
+            }
+        };
+
+        let currentDocument = null;
+        let currentPageNum = 1;
+
+        // Upload zone handlers
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+
+        function handleFileUpload(file) {
+            // TODO: Connect to actual document processing API
+            console.log('File uploaded:', file.name);
+
+            // Simulate processing
+            document.getElementById('uploadSection').classList.add('hidden');
+            document.getElementById('processingSection').classList.remove('hidden');
+
+            setTimeout(() => {
+                // Simulate completion - use residential as default for actual uploads
+                loadSampleDocument('residential');
+            }, 3000);
+        }
+
+        // Added 2024-10-30: Model selection function
+        function selectModel(model) {
+            selectedDocModel = model;
+
+            // Update UI
+            document.querySelectorAll('.model-btn').forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-blue-400', 'pulse-ring');
+            });
+            document.getElementById(`model-${model}`).classList.add('ring-2', 'ring-blue-400', 'pulse-ring');
+
+            const modelData = DOCUMENT_MODELS[model];
+            document.getElementById('selectedModel').innerHTML = `
+                <i class="fas fa-check-circle text-green-400 mr-2"></i>
+                <strong>${modelData.name}</strong> model selected - Ready to process: ${modelData.types.join(', ')}
+            `;
+        }
+
+        function loadSampleDocument(type) {
+            currentDocument = SAMPLE_DOCUMENTS[type];
+            currentPageNum = 1;
+
+            // Hide upload/processing, show results
+            document.getElementById('uploadSection').classList.add('hidden');
+            document.getElementById('processingSection').classList.add('hidden');
+            document.getElementById('documentViewer').classList.remove('hidden');
+
+            // Show enhanced sections - Added 2024-10-30
+            document.getElementById('confidenceRoutingSection').classList.remove('hidden');
+            document.getElementById('crossValidationSection').classList.remove('hidden');
+            document.getElementById('complianceSection').classList.remove('hidden');
+            document.getElementById('crmIntegrationSection').classList.remove('hidden');
+
+            document.getElementById('formTypeSection').classList.remove('hidden');
+            document.getElementById('extractedFieldsSection').classList.remove('hidden');
+            document.getElementById('jsonOutputSection').classList.remove('hidden');
+            document.getElementById('actionsSection').classList.remove('hidden');
+
+            // Render enhanced sections - Added 2024-10-30
+            renderConfidenceRouting();
+            renderCrossValidation();
+            renderCompliance();
+            renderCRMIntegration();
+
+            // Render form type
+            renderFormType();
+
+            // Render extracted fields
+            renderExtractedFields();
+
+            // Render JSON output
+            renderJSONOutput();
+
+            // Render page thumbnails
+            renderPageThumbnails();
+
+            // Show document (placeholder for now)
+            renderDocumentPage(1);
+        }
+
+        function renderFormType() {
+            document.getElementById('detectedType').textContent = currentDocument.type;
+            document.getElementById('typeConfidence').textContent = currentDocument.confidence + '%';
+            document.getElementById('typeConfidenceBar').style.width = currentDocument.confidence + '%';
+
+            const altTypesHTML = currentDocument.alternatives.map(alt => `
+                <div class="glass rounded-lg p-3 flex items-center justify-between">
+                    <span class="text-white/80 text-sm">${alt.type}</span>
+                    <span class="text-white/60 text-sm">${alt.confidence}%</span>
+                </div>
+            `).join('');
+
+            document.getElementById('alternativeTypes').innerHTML = altTypesHTML;
+        }
+
+        function renderExtractedFields() {
+            const fieldsHTML = currentDocument.fields.map((field, index) => {
+                const confidenceColor = field.confidence >= 95 ? 'green' : field.confidence >= 90 ? 'yellow' : 'orange';
+                return `
+                    <div class="glass rounded-lg p-3 cursor-pointer hover:bg-white/20 transition" onclick="highlightField(${index})">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-white/70 text-sm">${field.name}</span>
+                            ${field.handwritten ? '<i class="fas fa-pen text-purple-400 text-xs" title="Handwritten"></i>' : ''}
+                        </div>
+                        <div class="text-white font-semibold mb-2">${field.value}</div>
+                        <div class="flex items-center justify-between">
+                            <div class="confidence-bar flex-1 mr-2">
+                                <div class="confidence-fill bg-${confidenceColor}-500" style="width: ${field.confidence}%"></div>
+                            </div>
+                            <span class="text-${confidenceColor}-400 text-xs">${field.confidence}%</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('fieldsList').innerHTML = fieldsHTML;
+        }
+
+        function renderJSONOutput() {
+            const jsonData = {
+                document_id: `DOC-${Date.now()}`,
+                classification: {
+                    type: currentDocument.type,
+                    confidence: currentDocument.confidence / 100,
+                    alternatives: currentDocument.alternatives.map(alt => ({
+                        type: alt.type,
+                        confidence: alt.confidence / 100
+                    }))
+                },
+                pages: currentDocument.pages,
+                fields: currentDocument.fields.map(field => ({
+                    name: field.name,
+                    value: field.value,
+                    confidence: field.confidence / 100,
+                    location: field.location,
+                    handwritten: field.handwritten
+                })),
+                metadata: {
+                    processed_at: new Date().toISOString(),
+                    processing_time_ms: 2347,
+                    model_version: "gov-doc-v2.4.1"
+                }
+            };
+
+            const jsonString = JSON.stringify(jsonData, null, 2);
+            const highlighted = jsonString
+                .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+                .replace(/: "([^"]+)"/g, ': <span class="json-string">"$1"</span>')
+                .replace(/: (\d+\.?\d*)/g, ': <span class="json-number">$1</span>')
+                .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>');
+
+            document.getElementById('jsonOutput').innerHTML = highlighted;
+        }
+
+        function renderPageThumbnails() {
+            const thumbnailsHTML = Array.from({ length: currentDocument.pages }, (_, i) => `
+                <div class="page-thumbnail glass rounded ${i === 0 ? 'active' : ''}" onclick="renderDocumentPage(${i + 1})">
+                    <div class="h-full flex items-center justify-center">
+                        <div class="text-center">
+                            <i class="fas fa-file-alt text-2xl text-white/60"></i>
+                            <div class="text-white/60 text-xs mt-1">${i + 1}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('pageThumbnails').innerHTML = thumbnailsHTML;
+            document.getElementById('totalPages').textContent = currentDocument.pages;
+        }
+
+        function renderDocumentPage(pageNum) {
+            currentPageNum = pageNum;
+            document.getElementById('currentPage').textContent = pageNum;
+
+            // Update active thumbnail
+            document.querySelectorAll('.page-thumbnail').forEach((thumb, index) => {
+                thumb.classList.toggle('active', index === pageNum - 1);
+            });
+
+            // TODO: Show actual document image
+            document.getElementById('documentPlaceholder').innerHTML = `
+                <i class="fas fa-file-alt text-6xl mb-4"></i>
+                <p class="text-lg font-semibold mb-2">Page ${pageNum} Preview</p>
+                <p class="text-sm">Document visualization will appear here</p>
+                <p class="text-xs mt-4 text-gray-500">In production: Render actual PDF/image with field overlays</p>
+            `;
+        }
+
+        function highlightField(fieldIndex) {
+            const field = currentDocument.fields[fieldIndex];
+
+            // Navigate to the field's page
+            if (field.location.page !== currentPageNum) {
+                renderDocumentPage(field.location.page);
+            }
+
+            // TODO: Add visual highlight on document
+            console.log('Highlighting field:', field.name, 'at', field.location);
+
+            // Show notification
+            showNotification(`Viewing: ${field.name} (Page ${field.location.page})`);
+        }
+
+        function copyJSON() {
+            const jsonText = document.getElementById('jsonOutput').textContent;
+            navigator.clipboard.writeText(jsonText);
+            showNotification('JSON copied to clipboard');
+        }
+
+        function exportData() {
+            // TODO: Connect to database export API
+            showNotification('Exporting to database...', 'info');
+            setTimeout(() => {
+                showNotification('Data exported successfully', 'success');
+            }, 1500);
+        }
+
+        function reviewDocument() {
+            // TODO: Open review interface
+            showNotification('Opening review interface...', 'info');
+        }
+
+        function processNew() {
+            currentDocument = null;
+            currentPageNum = 1;
+
+            document.getElementById('uploadSection').classList.remove('hidden');
+            document.getElementById('processingSection').classList.add('hidden');
+            document.getElementById('documentViewer').classList.add('hidden');
+
+            // Hide enhanced sections - Added 2024-10-30
+            document.getElementById('confidenceRoutingSection').classList.add('hidden');
+            document.getElementById('crossValidationSection').classList.add('hidden');
+            document.getElementById('complianceSection').classList.add('hidden');
+            document.getElementById('crmIntegrationSection').classList.add('hidden');
+
+            document.getElementById('formTypeSection').classList.add('hidden');
+            document.getElementById('extractedFieldsSection').classList.add('hidden');
+            document.getElementById('jsonOutputSection').classList.add('hidden');
+            document.getElementById('actionsSection').classList.add('hidden');
+        }
+
+        // Added 2024-10-30: Enhanced rendering functions
+        function renderConfidenceRouting() {
+            const confidence = currentDocument.confidence;
+            let routingColor, routingText, routingIcon;
+
+            if (confidence >= 85) {
+                routingColor = 'green';
+                routingText = 'Auto-Approved';
+                routingIcon = 'check-circle';
+            } else if (confidence >= 70) {
+                routingColor = 'yellow';
+                routingText = 'Human Validation Required';
+                routingIcon = 'user-check';
+            } else {
+                routingColor = 'red';
+                routingText = 'Manual Review Required';
+                routingIcon = 'exclamation-triangle';
+            }
+
+            document.getElementById('confidenceScore').textContent = confidence.toFixed(1) + '%';
+            document.getElementById('confidenceBar').className = `confidence-fill bg-${routingColor}-500`;
+            document.getElementById('confidenceBar').style.width = confidence + '%';
+
+            document.getElementById('routingDecision').innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i class="fas fa-${routingIcon} text-${routingColor}-400 text-2xl mr-3"></i>
+                        <div>
+                            <div class="text-white font-semibold">${routingText}</div>
+                            <div class="text-white/60 text-sm">Threshold: ${confidence >= 85 ? '≥85%' : confidence >= 70 ? '70-85%' : '<70%'}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCrossValidation() {
+            if (!currentDocument.validation) return;
+
+            const validationHTML = Object.entries(currentDocument.validation).map(([key, val]) => {
+                const statusColor = val.status === 'valid' ? 'green' : val.status === 'pending' ? 'yellow' : 'blue';
+                const statusIcon = val.status === 'valid' ? 'check-circle' : val.status === 'pending' ? 'clock' : 'spinner fa-spin';
+
+                return `
+                    <div class="validation-item glass rounded-lg p-3">
+                        <div class="flex items-start">
+                            <i class="fas fa-${statusIcon} text-${statusColor}-400 mr-3 mt-1"></i>
+                            <div class="flex-1">
+                                <div class="text-white font-semibold text-sm mb-1">${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+                                <div class="text-white/70 text-xs">${val.details}</div>
+                                <div class="mt-2">
+                                    <span class="badge bg-${statusColor}-500/20 text-${statusColor}-400">${val.status}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('crossValidation').innerHTML = validationHTML;
+        }
+
+        function renderCompliance() {
+            if (!currentDocument.compliance) return;
+
+            const complianceHTML = currentDocument.compliance.map(comp => {
+                const statusColor = comp.status === 'compliant' ? 'green' : comp.status === 'review-needed' ? 'yellow' : 'blue';
+                const statusIcon = comp.icon === 'check' ? 'check-circle' : comp.icon === 'exclamation' ? 'exclamation-triangle' : 'clock';
+
+                return `
+                    <div class="glass rounded-lg p-3 flex items-center justify-between">
+                        <div class="flex items-center flex-1">
+                            <i class="fas fa-${statusIcon} text-${statusColor}-400 mr-3"></i>
+                            <span class="text-white text-sm">${comp.regulation}</span>
+                        </div>
+                        <span class="badge bg-${statusColor}-500/20 text-${statusColor}-400 text-xs ml-2">${comp.status}</span>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('complianceChecks').innerHTML = complianceHTML;
+        }
+
+        function renderCRMIntegration() {
+            if (!currentDocument.crm_match) return;
+
+            if (currentDocument.crm_match.found) {
+                const contact = currentDocument.crm_match.contact;
+                document.getElementById('crmIntegration').innerHTML = `
+                    <div class="glass rounded-lg p-3 bg-blue-500/10">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-user-check text-blue-400 text-xl mr-3"></i>
+                            <div class="flex-1">
+                                <div class="text-white font-semibold">${contact.name}</div>
+                                ${contact.company ? `<div class="text-white/70 text-sm">${contact.company}</div>` : ''}
+                            </div>
+                        </div>
+                        ${contact.email ? `<div class="text-white/70 text-sm"><i class="fas fa-envelope mr-2"></i>${contact.email}</div>` : ''}
+                        ${contact.phone ? `<div class="text-white/70 text-sm mt-1"><i class="fas fa-phone mr-2"></i>${contact.phone}</div>` : ''}
+                        <div class="mt-3 pt-3 border-t border-white/10">
+                            <div class="badge bg-green-500/20 text-green-400">
+                                <i class="fas fa-link mr-1"></i>Match Found • ${contact.existing_records || 0} existing records
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('syncCrmBtn').classList.remove('hidden');
+            } else {
+                const contact = currentDocument.crm_match.contact;
+                document.getElementById('crmIntegration').innerHTML = `
+                    <div class="glass rounded-lg p-3 bg-yellow-500/10">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-user-plus text-yellow-400 text-xl mr-3"></i>
+                            <div class="flex-1">
+                                <div class="text-white font-semibold">New Contact</div>
+                                <div class="text-white/70 text-sm">${contact.name}</div>
+                            </div>
+                        </div>
+                        ${contact.company ? `<div class="text-white/70 text-sm">${contact.company}</div>` : ''}
+                        ${contact.email ? `<div class="text-white/70 text-sm mt-1"><i class="fas fa-envelope mr-2"></i>${contact.email}</div>` : ''}
+                        ${contact.phone ? `<div class="text-white/70 text-sm mt-1"><i class="fas fa-phone mr-2"></i>${contact.phone}</div>` : ''}
+                        <div class="mt-3 pt-3 border-t border-white/10">
+                            <div class="badge bg-yellow-500/20 text-yellow-400">
+                                <i class="fas fa-plus mr-1"></i>Create New CRM Record
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('syncCrmBtn').classList.remove('hidden');
+            }
+        }
+
+        function syncToCRM() {
+            if (!currentDocument) return;
+
+            // TODO: Connect to CRM API endpoint for data synchronization
+            // SECURITY TODO: Validate all data before syncing to CRM
+
+            showNotification('Syncing document data to CRM...', 'info');
+
+            setTimeout(() => {
+                showNotification('Data successfully synced to CRM', 'success');
+
+                // Update CRM integration display
+                const crmDiv = document.getElementById('crmIntegration');
+                const syncTime = new Date().toLocaleTimeString();
+                crmDiv.innerHTML += `
+                    <div class="mt-3 glass rounded-lg p-3 bg-green-500/10">
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle text-green-400 mr-2"></i>
+                            <span class="text-white text-sm">Successfully synced at ${syncTime}</span>
+                        </div>
+                    </div>
+                `;
+            }, 1500);
+        }
+
+        function showNotification(message, type = 'success') {
+            // Simple notification - can be enhanced
+            const color = type === 'success' ? 'green' : type === 'error' ? 'red' : 'blue';
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 glass rounded-lg p-4 text-white bg-${color}-500/20 border-${color}-400 z-50`;
+            notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} mr-2"></i>${message}`;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (!currentDocument) return;
+
+            // Arrow keys for page navigation
+            if (e.key === 'ArrowLeft' && currentPageNum > 1) {
+                renderDocumentPage(currentPageNum - 1);
+            } else if (e.key === 'ArrowRight' && currentPageNum < currentDocument.pages) {
+                renderDocumentPage(currentPageNum + 1);
+            }
+        });
+    </script>
+</body>
+</html>

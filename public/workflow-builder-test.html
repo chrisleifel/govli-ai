@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow Builder - Test Isolated</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Added 2024-10-05: Blue Ocean Design System from RULES.md */
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .workflow-step {
+            transition: all 0.3s ease;
+            cursor: move;
+        }
+
+        .workflow-step:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .workflow-step.dragging {
+            opacity: 0.5;
+        }
+
+        .drop-zone {
+            min-height: 400px;
+            transition: all 0.3s ease;
+        }
+
+        .drop-zone.drag-over {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+        }
+
+        .saved-workflow-btn {
+            transition: all 0.3s ease;
+        }
+
+        .saved-workflow-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        /* Custom scrollbar - Blue Ocean theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3b82f6, #1e40af);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #60a5fa, #3b82f6);
+        }
+    </style>
+</head>
+<body class="text-white p-6">
+    <!-- Header -->
+    <div class="max-w-7xl mx-auto mb-6">
+        <div class="flex items-center justify-between mb-2">
+            <h1 class="text-3xl font-bold text-white">Drag & Drop Workflow Builder</h1>
+            <button onclick="window.location.href='index.html'" class="glass px-4 py-2 rounded-lg text-white hover:border-cyan-500 transition-all">
+                <i class="fas fa-home mr-2"></i>
+                Portal Hub
+            </button>
+        </div>
+        <p class="text-white/70">Test environment - Following RULES.md standards</p>
+    </div>
+
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left: AI Agent Input -->
+        <div class="lg:col-span-2">
+            <!-- AI Agent Section -->
+            <div class="glass rounded-xl p-6 mb-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center mr-3">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white">AI Workflow Assistant</h3>
+                        <p class="text-sm text-white/70">Describe your workflow in plain language</p>
+                    </div>
+                </div>
+
+                <textarea
+                    id="aiWorkflowInput"
+                    rows="3"
+                    placeholder="Example: Create a permit approval workflow with document validation, supervisor review, and email notifications..."
+                    class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-3"
+                    aria-label="Describe your workflow"></textarea>
+
+                <div class="flex justify-between items-center">
+                    <div class="flex gap-2">
+                        <button class="text-sm px-3 py-1 bg-purple-500/20 rounded-lg text-purple-300 hover:bg-purple-500/30 transition-all"
+                                aria-label="Example: Permit workflow">
+                            Permit Example
+                        </button>
+                        <button class="text-sm px-3 py-1 bg-blue-500/20 rounded-lg text-blue-300 hover:bg-blue-500/30 transition-all"
+                                aria-label="Example: Approval workflow">
+                            Approval Example
+                        </button>
+                    </div>
+                    <button
+                        id="generateBtn"
+                        class="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-2 rounded-lg hover:shadow-lg transition-all font-medium"
+                        aria-label="Generate workflow with AI">
+                        <i class="fas fa-magic mr-2"></i>Generate Workflow
+                    </button>
+                </div>
+
+                <!-- Loading/Error/Success States -->
+                <div id="aiStatus" class="mt-4 hidden"></div>
+            </div>
+
+            <!-- Drop Zone -->
+            <div class="glass rounded-xl p-6">
+                <h3 class="font-bold text-white mb-4">Workflow Canvas</h3>
+                <div
+                    id="dropZone"
+                    class="drop-zone glass rounded-lg border-2 border-dashed border-white/30 p-6"
+                    role="region"
+                    aria-label="Workflow drop zone">
+                    <div id="emptyState" class="text-center py-12">
+                        <i class="fas fa-layer-group text-6xl text-white/30 mb-4"></i>
+                        <p class="text-white/50">Drag steps here or use AI to generate</p>
+                    </div>
+                    <div id="workflowSteps" class="space-y-3"></div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-4">
+                    <button
+                        id="clearBtn"
+                        class="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-all"
+                        aria-label="Clear workflow">
+                        <i class="fas fa-trash mr-2"></i>Clear
+                    </button>
+                    <button
+                        id="saveBtn"
+                        class="px-6 py-2 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg hover:shadow-lg transition-all font-medium"
+                        aria-label="Save workflow">
+                        <i class="fas fa-save mr-2"></i>Save Workflow
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Step Library & Saved Workflows -->
+        <div>
+            <!-- Step Library -->
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-toolbox text-blue-400"></i>
+                    Step Library
+                    <span class="ml-auto text-xs text-white/50 bg-blue-500/20 px-2 py-1 rounded-full">40+ Steps</span>
+                </h3>
+                <div id="stepLibrary" class="space-y-2 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-blue-500/50 scrollbar-track-white/10">
+                    <!-- Steps will be populated by JS -->
+                </div>
+            </div>
+
+            <!-- Saved Workflows -->
+            <div class="glass rounded-xl p-6">
+                <h3 class="font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-bookmark text-purple-400"></i>
+                    Saved Workflows
+                </h3>
+                <div id="savedWorkflows" class="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                    <div class="text-white/50 text-sm text-center py-4">
+                        No saved workflows yet
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Workflow Modal -->
+    <div id="saveModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" role="dialog" aria-labelledby="saveModalTitle">
+        <div class="glass rounded-xl p-6 max-w-md w-full mx-4 animate-fadeIn">
+            <h3 id="saveModalTitle" class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-save text-green-400"></i>
+                Save Workflow
+            </h3>
+            <div class="mb-6">
+                <label for="workflowName" class="block text-white/70 text-sm mb-2">Workflow Name</label>
+                <input
+                    type="text"
+                    id="workflowName"
+                    class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/30 focus:outline-none focus:border-blue-400 transition-all"
+                    placeholder="e.g., Permit Application Process"
+                    aria-label="Enter workflow name">
+            </div>
+            <div class="flex gap-3">
+                <button
+                    id="cancelSave"
+                    class="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-all"
+                    aria-label="Cancel">
+                    Cancel
+                </button>
+                <button
+                    id="confirmSave"
+                    class="flex-1 px-4 py-2 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg text-white hover:shadow-lg transition-all font-medium"
+                    aria-label="Confirm save">
+                    <i class="fas fa-check mr-2"></i>Save
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Added 2024-10-05: Drag and Drop Workflow Builder
+        // MOCK DATA - Replace in production
+        // TODO: Connect to API endpoint /api/workflows
+
+        const stepTypes = [
+            // Input & Data Collection
+            { id: 'form-input', name: 'Form Submission', icon: 'fa-file-alt', color: 'from-blue-400 to-cyan-500', category: 'input', description: 'Collect data via forms' },
+            { id: 'document-upload', name: 'Document Upload', icon: 'fa-cloud-upload-alt', color: 'from-blue-500 to-blue-600', category: 'input', description: 'Upload required documents' },
+            { id: 'data-entry', name: 'Manual Data Entry', icon: 'fa-keyboard', color: 'from-cyan-500 to-teal-500', category: 'input', description: 'Manual information input' },
+            { id: 'api-input', name: 'API Data Fetch', icon: 'fa-plug', color: 'from-indigo-500 to-blue-500', category: 'input', description: 'Retrieve data from external API' },
+
+            // Validation & Verification
+            { id: 'validation', name: 'Data Validation', icon: 'fa-check-circle', color: 'from-green-400 to-emerald-500', category: 'validation', description: 'Validate data accuracy' },
+            { id: 'compliance-check', name: 'Compliance Check', icon: 'fa-shield-alt', color: 'from-green-500 to-green-600', category: 'validation', description: 'Verify regulatory compliance' },
+            { id: 'duplicate-check', name: 'Duplicate Detection', icon: 'fa-copy', color: 'from-teal-500 to-green-500', category: 'validation', description: 'Check for duplicates' },
+            { id: 'background-check', name: 'Background Verification', icon: 'fa-user-shield', color: 'from-emerald-500 to-teal-600', category: 'validation', description: 'FBI/CJIS background check' },
+
+            // Routing & Assignment
+            { id: 'auto-route', name: 'Auto-Route', icon: 'fa-route', color: 'from-purple-400 to-purple-500', category: 'routing', description: 'Automatically route by rules' },
+            { id: 'assignment', name: 'Task Assignment', icon: 'fa-user-tag', color: 'from-purple-500 to-purple-600', category: 'routing', description: 'Assign to user or team' },
+            { id: 'load-balance', name: 'Load Balancing', icon: 'fa-balance-scale', color: 'from-violet-500 to-purple-500', category: 'routing', description: 'Distribute workload evenly' },
+
+            // Approvals & Reviews
+            { id: 'single-approval', name: 'Single Approval', icon: 'fa-user-check', color: 'from-pink-400 to-rose-500', category: 'approval', description: 'One person approval' },
+            { id: 'multi-approval', name: 'Multi-Level Approval', icon: 'fa-users-cog', color: 'from-pink-500 to-pink-600', category: 'approval', description: 'Sequential approvals' },
+            { id: 'parallel-approval', name: 'Parallel Approval', icon: 'fa-project-diagram', color: 'from-rose-500 to-pink-600', category: 'approval', description: 'Simultaneous approvals' },
+            { id: 'conditional-approval', name: 'Conditional Approval', icon: 'fa-filter', color: 'from-fuchsia-500 to-pink-500', category: 'approval', description: 'Approval based on criteria' },
+
+            // Decision Logic
+            { id: 'if-then', name: 'If/Then Logic', icon: 'fa-code-branch', color: 'from-amber-400 to-orange-500', category: 'logic', description: 'Conditional branching' },
+            { id: 'threshold-check', name: 'Threshold Check', icon: 'fa-chart-line', color: 'from-yellow-500 to-amber-600', category: 'logic', description: 'Compare against threshold' },
+            { id: 'scoring', name: 'Risk Scoring', icon: 'fa-calculator', color: 'from-orange-500 to-red-500', category: 'logic', description: 'Calculate risk score' },
+            { id: 'ai-decision', name: 'AI Decision', icon: 'fa-brain', color: 'from-indigo-400 to-purple-500', category: 'logic', description: 'AI-powered decision' },
+
+            // Notifications & Alerts
+            { id: 'email', name: 'Email Notification', icon: 'fa-envelope', color: 'from-sky-400 to-blue-500', category: 'notification', description: 'Send email alerts' },
+            { id: 'sms', name: 'SMS Alert', icon: 'fa-mobile-alt', color: 'from-blue-500 to-indigo-500', category: 'notification', description: 'Send text message' },
+            { id: 'push', name: 'Push Notification', icon: 'fa-bell', color: 'from-cyan-500 to-blue-600', category: 'notification', description: 'Mobile push notification' },
+            { id: 'slack', name: 'Slack Message', icon: 'fa-slack', color: 'from-teal-500 to-cyan-500', category: 'notification', description: 'Post to Slack channel' },
+
+            // Time-based Actions
+            { id: 'timer', name: 'Wait Timer', icon: 'fa-hourglass-half', color: 'from-slate-400 to-gray-500', category: 'timing', description: 'Pause for specified time' },
+            { id: 'deadline', name: 'Set Deadline', icon: 'fa-calendar-alt', color: 'from-gray-500 to-slate-600', category: 'timing', description: 'Define due date' },
+            { id: 'escalation', name: 'Auto-Escalation', icon: 'fa-level-up-alt', color: 'from-orange-400 to-red-500', category: 'timing', description: 'Escalate if overdue' },
+            { id: 'reminder', name: 'Reminder', icon: 'fa-clock', color: 'from-yellow-400 to-orange-500', category: 'timing', description: 'Send reminder alerts' },
+
+            // Data Operations
+            { id: 'database-write', name: 'Save to Database', icon: 'fa-database', color: 'from-emerald-400 to-green-500', category: 'data', description: 'Store in database' },
+            { id: 'update-record', name: 'Update Record', icon: 'fa-edit', color: 'from-green-500 to-teal-500', category: 'data', description: 'Modify existing data' },
+            { id: 'archive', name: 'Archive Data', icon: 'fa-archive', color: 'from-teal-500 to-cyan-600', category: 'data', description: 'Move to archive' },
+            { id: 'export', name: 'Export Data', icon: 'fa-download', color: 'from-blue-500 to-indigo-500', category: 'data', description: 'Export to file' },
+
+            // Integration & External
+            { id: 'api-call', name: 'API Request', icon: 'fa-exchange-alt', color: 'from-violet-400 to-purple-500', category: 'integration', description: 'Call external API' },
+            { id: 'webhook', name: 'Webhook Trigger', icon: 'fa-link', color: 'from-purple-500 to-fuchsia-500', category: 'integration', description: 'Trigger webhook event' },
+            { id: 'ftp-upload', name: 'FTP Transfer', icon: 'fa-server', color: 'from-indigo-500 to-violet-500', category: 'integration', description: 'Transfer via FTP' },
+            { id: 'fedram-sync', name: 'FedRAMP Sync', icon: 'fa-sync', color: 'from-blue-600 to-indigo-600', category: 'integration', description: 'Sync with FedRAMP system' },
+
+            // Completion & Reporting
+            { id: 'generate-report', name: 'Generate Report', icon: 'fa-file-pdf', color: 'from-red-400 to-pink-500', category: 'completion', description: 'Create PDF report' },
+            { id: 'audit-log', name: 'Audit Trail', icon: 'fa-history', color: 'from-slate-500 to-gray-600', category: 'completion', description: 'Log audit trail' },
+            { id: 'completion', name: 'Mark Complete', icon: 'fa-flag-checkered', color: 'from-green-500 to-emerald-600', category: 'completion', description: 'Workflow completion' },
+            { id: 'close-ticket', name: 'Close Ticket', icon: 'fa-check-double', color: 'from-teal-500 to-green-600', category: 'completion', description: 'Close and archive' }
+        ];
+
+        let currentWorkflow = [];
+        let savedWorkflowsList = [];
+
+        // Initialize step library with categories
+        function initializeStepLibrary() {
+            const library = document.getElementById('stepLibrary');
+
+            if (!library) {
+                console.error('stepLibrary element not found!');
+                return;
+            }
+
+            console.log('Initializing step library with', stepTypes.length, 'step types');
+
+            // Group steps by category
+            const categories = {
+                'input': { name: 'Input & Collection', icon: 'fa-inbox', color: 'from-blue-500 to-cyan-500' },
+                'validation': { name: 'Validation & Compliance', icon: 'fa-check-circle', color: 'from-green-500 to-emerald-500' },
+                'routing': { name: 'Routing & Assignment', icon: 'fa-route', color: 'from-purple-500 to-violet-500' },
+                'approval': { name: 'Approvals & Reviews', icon: 'fa-user-check', color: 'from-pink-500 to-rose-500' },
+                'logic': { name: 'Decision Logic', icon: 'fa-brain', color: 'from-amber-500 to-orange-500' },
+                'notification': { name: 'Notifications', icon: 'fa-bell', color: 'from-sky-500 to-blue-500' },
+                'timing': { name: 'Time-based Actions', icon: 'fa-clock', color: 'from-gray-500 to-slate-500' },
+                'data': { name: 'Data Operations', icon: 'fa-database', color: 'from-teal-500 to-cyan-500' },
+                'integration': { name: 'Integration & External', icon: 'fa-plug', color: 'from-violet-500 to-purple-500' },
+                'completion': { name: 'Completion & Reports', icon: 'fa-flag-checkered', color: 'from-emerald-500 to-green-500' }
+            };
+
+            let html = '';
+
+            Object.entries(categories).forEach(([catKey, catData]) => {
+                const categorySteps = stepTypes.filter(s => s.category === catKey);
+
+                if (categorySteps.length > 0) {
+                    html += `
+                        <div class="mb-4">
+                            <div class="flex items-center gap-2 mb-2 px-2">
+                                <div class="w-6 h-6 rounded-lg bg-gradient-to-r ${catData.color} flex items-center justify-center flex-shrink-0">
+                                    <i class="fas ${catData.icon} text-white text-xs"></i>
+                                </div>
+                                <h4 class="text-xs font-bold text-white/80 uppercase tracking-wide">${catData.name}</h4>
+                            </div>
+                            <div class="space-y-1">
+                                ${categorySteps.map(step => `
+                                    <div
+                                        class="workflow-step glass rounded-lg p-2 flex items-center gap-2 group hover:bg-white/20 cursor-move"
+                                        draggable="true"
+                                        data-step-id="${step.id}"
+                                        role="button"
+                                        tabindex="0"
+                                        aria-label="Drag ${step.name} step">
+                                        <div class="w-8 h-8 rounded-lg bg-gradient-to-r ${step.color} flex items-center justify-center flex-shrink-0 shadow-lg">
+                                            <i class="fas ${step.icon} text-white text-sm"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="text-white font-medium text-sm truncate">${step.name}</div>
+                                            <div class="text-white/50 text-xs truncate">${step.description}</div>
+                                        </div>
+                                        <i class="fas fa-grip-vertical text-white/30 group-hover:text-white/60 transition-all"></i>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            library.innerHTML = html;
+
+            console.log('Step library HTML populated, found', document.querySelectorAll('.workflow-step').length, 'workflow steps');
+
+            // Add drag event listeners
+            document.querySelectorAll('.workflow-step').forEach(step => {
+                step.addEventListener('dragstart', handleDragStart);
+                step.addEventListener('dragend', handleDragEnd);
+
+                // Keyboard support
+                step.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        addStepToWorkflow(e.currentTarget.dataset.stepId);
+                    }
+                });
+            });
+        }
+
+        // Drag and drop handlers
+        function handleDragStart(e) {
+            e.currentTarget.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('stepId', e.currentTarget.dataset.stepId);
+        }
+
+        function handleDragEnd(e) {
+            e.currentTarget.classList.remove('dragging');
+        }
+
+        // Drop zone handlers
+        const dropZone = document.getElementById('dropZone');
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const stepId = e.dataTransfer.getData('stepId');
+            if (stepId) {
+                addStepToWorkflow(stepId);
+            }
+        });
+
+        // Add step to workflow
+        function addStepToWorkflow(stepId) {
+            const stepType = stepTypes.find(s => s.id === stepId);
+            if (!stepType) return;
+
+            const stepData = {
+                id: Date.now(),
+                typeId: stepId,
+                name: stepType.name,
+                icon: stepType.icon,
+                color: stepType.color
+            };
+
+            currentWorkflow.push(stepData);
+            renderWorkflow();
+        }
+
+        // Render workflow
+        function renderWorkflow() {
+            const container = document.getElementById('workflowSteps');
+            const emptyState = document.getElementById('emptyState');
+
+            if (currentWorkflow.length === 0) {
+                emptyState.classList.remove('hidden');
+                container.innerHTML = '';
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            container.innerHTML = currentWorkflow.map((step, index) => `
+                <div class="glass rounded-lg p-4 flex items-center gap-4" role="listitem">
+                    <div class="text-white/50 font-bold">${index + 1}</div>
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-r ${step.color} flex items-center justify-center flex-shrink-0">
+                        <i class="fas ${step.icon} text-white"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-white font-medium">${step.name}</div>
+                    </div>
+                    <button
+                        class="text-red-400 hover:text-red-300 transition-all p-2"
+                        onclick="removeStep(${step.id})"
+                        aria-label="Remove ${step.name} step">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Remove step
+        function removeStep(stepId) {
+            currentWorkflow = currentWorkflow.filter(s => s.id !== stepId);
+            renderWorkflow();
+        }
+
+        // Clear workflow
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            if (currentWorkflow.length === 0) return;
+            if (confirm('Clear all steps?')) {
+                currentWorkflow = [];
+                renderWorkflow();
+            }
+        });
+
+        // Save workflow
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            if (currentWorkflow.length === 0) {
+                showStatus('error', 'Add at least one step to save');
+                return;
+            }
+
+            // Open save modal
+            document.getElementById('workflowName').value = '';
+            document.getElementById('saveModal').classList.remove('hidden');
+            delete document.getElementById('saveModal').dataset.editId;
+        });
+
+        // Confirm save workflow
+        document.getElementById('confirmSave').addEventListener('click', () => {
+            const workflowName = document.getElementById('workflowName').value.trim();
+            if (!workflowName) {
+                showStatus('error', 'Please enter a workflow name');
+                return;
+            }
+
+            const modal = document.getElementById('saveModal');
+            const editId = modal.dataset.editId;
+
+            if (editId) {
+                // Update existing workflow
+                const workflow = savedWorkflowsList.find(w => w.id == editId);
+                if (workflow) {
+                    workflow.name = workflowName;
+                    workflow.steps = [...currentWorkflow];
+                    workflow.updatedAt = new Date().toISOString(); // ISO 8601 format per RULES.md
+                    showStatus('success', `Workflow "${workflowName}" updated!`);
+                }
+            } else {
+                // Create new workflow
+                const workflow = {
+                    id: Date.now(),
+                    name: workflowName,
+                    steps: [...currentWorkflow],
+                    createdAt: new Date().toISOString() // ISO 8601 format per RULES.md
+                };
+                savedWorkflowsList.push(workflow);
+                showStatus('success', `Workflow "${workflowName}" saved!`);
+            }
+
+            renderSavedWorkflows();
+            modal.classList.add('hidden');
+
+            // TODO: Send to API endpoint /api/workflows
+        });
+
+        // Cancel save
+        document.getElementById('cancelSave').addEventListener('click', () => {
+            document.getElementById('saveModal').classList.add('hidden');
+            delete document.getElementById('saveModal').dataset.editId;
+        });
+
+        // AI Generate workflow
+        document.getElementById('generateBtn').addEventListener('click', () => {
+            const input = document.getElementById('aiWorkflowInput').value.trim();
+
+            if (!input) {
+                showStatus('error', 'Please describe your workflow');
+                return;
+            }
+
+            showStatus('loading', 'AI is generating your workflow...');
+
+            // TODO: Connect to AI API endpoint
+            // Simulated AI processing
+            setTimeout(() => {
+                const generatedSteps = parseWorkflowFromText(input);
+                currentWorkflow = generatedSteps;
+                renderWorkflow();
+                showStatus('success', `Generated ${generatedSteps.length} workflow steps!`);
+            }, 1500);
+        });
+
+        // Advanced AI workflow parser - maps natural language to comprehensive step library
+        function parseWorkflowFromText(text) {
+            const lower = text.toLowerCase();
+            const steps = [];
+
+            // Input & Data Collection Detection
+            if (lower.includes('form') || lower.includes('application') || lower.includes('submit')) {
+                steps.push(createStepFromType('form-input'));
+            }
+            if (lower.includes('upload') || lower.includes('document') || lower.includes('attach') || lower.includes('file')) {
+                steps.push(createStepFromType('document-upload'));
+            }
+            if (lower.includes('manual') || lower.includes('data entry') || lower.includes('input data')) {
+                steps.push(createStepFromType('data-entry'));
+            }
+            if (lower.includes('api') || lower.includes('fetch') || lower.includes('retrieve') || lower.includes('pull data')) {
+                steps.push(createStepFromType('api-input'));
+            }
+
+            // Validation & Verification Detection
+            if (lower.includes('validat') || lower.includes('check data') || lower.includes('verify data')) {
+                steps.push(createStepFromType('validation'));
+            }
+            if (lower.includes('complian') || lower.includes('regulation') || lower.includes('fedramp') || lower.includes('fisma') || lower.includes('cjis')) {
+                steps.push(createStepFromType('compliance-check'));
+            }
+            if (lower.includes('duplicate') || lower.includes('already exist') || lower.includes('check exist')) {
+                steps.push(createStepFromType('duplicate-check'));
+            }
+            if (lower.includes('background') || lower.includes('fbi') || lower.includes('criminal') || lower.includes('security clearance')) {
+                steps.push(createStepFromType('background-check'));
+            }
+
+            // Routing & Assignment Detection
+            if (lower.includes('route') || lower.includes('assign based on') || lower.includes('automatically assign')) {
+                steps.push(createStepFromType('auto-route'));
+            }
+            if (lower.includes('assign to') || lower.includes('assign user') || lower.includes('assign team') || lower.includes('assign department')) {
+                steps.push(createStepFromType('assignment'));
+            }
+            if (lower.includes('load balanc') || lower.includes('distribute') || lower.includes('evenly assign') || lower.includes('balance workload')) {
+                steps.push(createStepFromType('load-balance'));
+            }
+
+            // Approval & Review Detection
+            if (lower.includes('single approval') || lower.includes('one approval') || (lower.includes('approval') && !lower.includes('multi') && !lower.includes('parallel'))) {
+                steps.push(createStepFromType('single-approval'));
+            }
+            if (lower.includes('multi') && lower.includes('approval') || lower.includes('sequential') || lower.includes('chain of approval')) {
+                steps.push(createStepFromType('multi-approval'));
+            }
+            if (lower.includes('parallel approval') || lower.includes('simultaneous approval') || lower.includes('concurrent approval')) {
+                steps.push(createStepFromType('parallel-approval'));
+            }
+            if (lower.includes('conditional approval') || lower.includes('approval if') || lower.includes('approval based on') ||
+                lower.match(/approval.*\$\d+/) || lower.match(/if.*\$\d+.*approval/)) {
+                steps.push(createStepFromType('conditional-approval'));
+            }
+
+            // Decision Logic Detection
+            if (lower.includes('if') && lower.includes('then') || lower.includes('condition') || lower.includes('branch')) {
+                steps.push(createStepFromType('if-then'));
+            }
+            if (lower.includes('threshold') || lower.includes('amount') || lower.includes('over $') || lower.includes('under $') ||
+                lower.match(/\$\d+/) || lower.includes('greater than') || lower.includes('less than')) {
+                steps.push(createStepFromType('threshold-check'));
+            }
+            if (lower.includes('score') || lower.includes('risk') || lower.includes('calculate') || lower.includes('rating')) {
+                steps.push(createStepFromType('scoring'));
+            }
+            if (lower.includes('ai decision') || lower.includes('machine learning') || lower.includes('intelligent') || lower.includes('ai determine')) {
+                steps.push(createStepFromType('ai-decision'));
+            }
+
+            // Notification Detection
+            if (lower.includes('email') || lower.includes('send notification') || lower.includes('notify via email')) {
+                steps.push(createStepFromType('email'));
+            }
+            if (lower.includes('sms') || lower.includes('text message') || lower.includes('text alert') || lower.includes('mobile message')) {
+                steps.push(createStepFromType('sms'));
+            }
+            if (lower.includes('push notification') || lower.includes('mobile notification') || lower.includes('app notification')) {
+                steps.push(createStepFromType('push'));
+            }
+            if (lower.includes('slack') || lower.includes('teams') || lower.includes('chat notification')) {
+                steps.push(createStepFromType('slack'));
+            }
+
+            // Time-based Actions Detection
+            if (lower.includes('wait') || lower.includes('delay') || lower.includes('pause') || lower.includes('hold for')) {
+                steps.push(createStepFromType('timer'));
+            }
+            if (lower.includes('deadline') || lower.includes('due date') || lower.includes('must complete by') || lower.includes('sla')) {
+                steps.push(createStepFromType('deadline'));
+            }
+            if (lower.includes('escalat') || lower.includes('overdue') || lower.includes('no response') ||
+                lower.match(/after \d+ (hour|day|week)/i)) {
+                steps.push(createStepFromType('escalation'));
+            }
+            if (lower.includes('remind') || lower.includes('follow up') || lower.includes('send reminder')) {
+                steps.push(createStepFromType('reminder'));
+            }
+
+            // Data Operations Detection
+            if (lower.includes('save') || lower.includes('store') || lower.includes('database') || lower.includes('persist')) {
+                steps.push(createStepFromType('database-write'));
+            }
+            if (lower.includes('update') || lower.includes('modify') || lower.includes('change record')) {
+                steps.push(createStepFromType('update-record'));
+            }
+            if (lower.includes('archive') || lower.includes('historical') || lower.includes('move to archive')) {
+                steps.push(createStepFromType('archive'));
+            }
+            if (lower.includes('export') || lower.includes('download') || lower.includes('csv') || lower.includes('excel')) {
+                steps.push(createStepFromType('export'));
+            }
+
+            // Integration & External Detection
+            if (lower.includes('api call') || lower.includes('external api') || lower.includes('third party')) {
+                steps.push(createStepFromType('api-call'));
+            }
+            if (lower.includes('webhook') || lower.includes('trigger event') || lower.includes('send to')) {
+                steps.push(createStepFromType('webhook'));
+            }
+            if (lower.includes('ftp') || lower.includes('sftp') || lower.includes('file transfer')) {
+                steps.push(createStepFromType('ftp-upload'));
+            }
+            if (lower.includes('fedramp') || lower.includes('federal') || lower.includes('government sync')) {
+                steps.push(createStepFromType('fedram-sync'));
+            }
+
+            // Completion & Reporting Detection
+            if (lower.includes('report') || lower.includes('pdf') || lower.includes('generate document')) {
+                steps.push(createStepFromType('generate-report'));
+            }
+            if (lower.includes('audit') || lower.includes('trail') || lower.includes('log') || lower.includes('track changes')) {
+                steps.push(createStepFromType('audit-log'));
+            }
+            if (lower.includes('close') || lower.includes('ticket') || lower.includes('case')) {
+                steps.push(createStepFromType('close-ticket'));
+            }
+
+            // Always end with completion if no explicit close action
+            if (!steps.find(s => s.typeId === 'close-ticket' || s.typeId === 'completion')) {
+                steps.push(createStepFromType('completion'));
+            }
+
+            // If no steps detected, provide a helpful default workflow
+            if (steps.length === 0) {
+                steps.push(createStepFromType('form-input'));
+                steps.push(createStepFromType('validation'));
+                steps.push(createStepFromType('single-approval'));
+                steps.push(createStepFromType('email'));
+                steps.push(createStepFromType('completion'));
+            }
+
+            return steps;
+        }
+
+        function createStepFromType(typeId) {
+            const stepType = stepTypes.find(s => s.id === typeId);
+            return {
+                id: Date.now() + Math.random(),
+                typeId: typeId,
+                name: stepType.name,
+                icon: stepType.icon,
+                color: stepType.color
+            };
+        }
+
+        // Show status messages (error/loading/success states per RULES.md)
+        function showStatus(type, message) {
+            const statusDiv = document.getElementById('aiStatus');
+            statusDiv.classList.remove('hidden');
+
+            const colors = {
+                loading: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+                success: 'bg-green-500/20 text-green-300 border-green-500/30',
+                error: 'bg-red-500/20 text-red-300 border-red-500/30'
+            };
+
+            const icons = {
+                loading: 'fa-spinner fa-spin',
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle'
+            };
+
+            statusDiv.className = `mt-4 p-3 rounded-lg border ${colors[type]}`;
+            statusDiv.innerHTML = `
+                <i class="fas ${icons[type]} mr-2"></i>${message}
+            `;
+
+            if (type !== 'loading') {
+                setTimeout(() => statusDiv.classList.add('hidden'), 3000);
+            }
+        }
+
+        // Render saved workflows as buttons
+        function renderSavedWorkflows() {
+            const container = document.getElementById('savedWorkflows');
+
+            if (savedWorkflowsList.length === 0) {
+                container.innerHTML = '<div class="text-white/50 text-sm text-center py-4">No saved workflows yet</div>';
+                return;
+            }
+
+            container.innerHTML = savedWorkflowsList.map(workflow => `
+                <div class="saved-workflow-card w-full glass rounded-lg p-3 hover:bg-white/10 transition-all">
+                    <div class="flex items-center justify-between">
+                        <button
+                            class="flex-1 text-left"
+                            onclick="loadWorkflow(${workflow.id})"
+                            aria-label="Load ${workflow.name} workflow">
+                            <div class="text-white font-medium">${workflow.name}</div>
+                            <div class="text-white/50 text-xs">${workflow.steps.length} steps</div>
+                        </button>
+                        <div class="flex gap-2 ml-3">
+                            <button
+                                class="action-btn p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 transition-all"
+                                onclick="editWorkflow(${workflow.id})"
+                                aria-label="Edit workflow"
+                                title="Edit">
+                                <i class="fas fa-edit text-sm"></i>
+                            </button>
+                            <button
+                                class="action-btn p-2 rounded-lg bg-green-500/20 hover:bg-green-500/40 text-green-300 transition-all"
+                                onclick="duplicateWorkflow(${workflow.id})"
+                                aria-label="Duplicate workflow"
+                                title="Duplicate">
+                                <i class="fas fa-copy text-sm"></i>
+                            </button>
+                            <button
+                                class="action-btn p-2 rounded-lg bg-red-500/20 hover:bg-red-500/40 text-red-300 transition-all"
+                                onclick="deleteWorkflow(${workflow.id})"
+                                aria-label="Delete workflow"
+                                title="Delete">
+                                <i class="fas fa-trash text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load saved workflow
+        function loadWorkflow(id) {
+            const workflow = savedWorkflowsList.find(w => w.id === id);
+            if (workflow) {
+                currentWorkflow = [...workflow.steps];
+                renderWorkflow();
+                showStatus('success', `Loaded "${workflow.name}"`);
+            }
+        }
+
+        // Edit workflow - loads workflow and opens modal with name pre-filled
+        function editWorkflow(id) {
+            const workflow = savedWorkflowsList.find(w => w.id === id);
+            if (workflow) {
+                currentWorkflow = [...workflow.steps];
+                renderWorkflow();
+
+                // Open save modal with existing name
+                document.getElementById('workflowName').value = workflow.name;
+                document.getElementById('saveModal').classList.remove('hidden');
+
+                // Store the ID so we can update instead of create new
+                document.getElementById('saveModal').dataset.editId = id;
+
+                showStatus('success', `Editing "${workflow.name}"`);
+            }
+        }
+
+        // Duplicate workflow - creates a copy with "(Copy)" appended
+        function duplicateWorkflow(id) {
+            const workflow = savedWorkflowsList.find(w => w.id === id);
+            if (workflow) {
+                const duplicatedWorkflow = {
+                    id: Date.now(),
+                    name: `${workflow.name} (Copy)`,
+                    steps: workflow.steps.map(step => ({
+                        ...step,
+                        id: Date.now() + Math.random()
+                    }))
+                };
+
+                savedWorkflowsList.push(duplicatedWorkflow);
+                renderSavedWorkflows();
+                showStatus('success', `Duplicated "${workflow.name}"`);
+            }
+        }
+
+        // Delete workflow - with confirmation
+        function deleteWorkflow(id) {
+            const workflow = savedWorkflowsList.find(w => w.id === id);
+            if (workflow) {
+                if (confirm(`Delete workflow "${workflow.name}"? This cannot be undone.`)) {
+                    savedWorkflowsList = savedWorkflowsList.filter(w => w.id !== id);
+                    renderSavedWorkflows();
+                    showStatus('success', `Deleted "${workflow.name}"`);
+                }
+            }
+        }
+
+        // Initialize on load
+        initializeStepLibrary();
+    </script>
+</body>
+</html>

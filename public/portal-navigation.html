@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Govli AI - Portal Navigation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #0a1628 0%, #0c2340 25%, #0e3a5f 50%, #1e3a5f 75%, #164e7f 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(6, 182, 212, 0.25);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .portal-card {
+            transition: all 0.3s ease;
+        }
+
+        .portal-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 16px 48px rgba(6, 182, 212, 0.3);
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <div class="min-h-screen flex items-center justify-center px-6 py-12">
+        <div class="max-w-6xl w-full">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-bold text-white mb-4">
+                    <i class="fas fa-robot text-cyan-400 mr-4"></i>
+                    Govli AI Platform
+                </h1>
+                <p class="text-xl text-gray-400">Intelligent Government Services Automation</p>
+            </div>
+
+            <!-- Portal Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Citizen Portal -->
+                <a href="citizen-permits-portal.html" class="portal-card glass rounded-xl p-8 block hover:border-green-500/50">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-green-500/20 mb-6">
+                        <i class="fas fa-user text-3xl text-green-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-2">Citizen Portal</h2>
+                    <p class="text-gray-400">Submit and track your permit applications</p>
+                </a>
+
+                <!-- Admin Portal -->
+                <a href="admin-permits-portal.html" class="portal-card glass rounded-xl p-8 block hover:border-blue-500/50">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-blue-500/20 mb-6">
+                        <i class="fas fa-user-shield text-3xl text-blue-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-2">Admin Portal</h2>
+                    <p class="text-gray-400">Manage permits and oversee operations</p>
+                </a>
+
+                <!-- Staff Tasks -->
+                <a href="staff-tasks-portal.html" class="portal-card glass rounded-xl p-8 block hover:border-cyan-500/50">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-cyan-500/20 mb-6">
+                        <i class="fas fa-tasks text-3xl text-cyan-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-2">Staff Tasks</h2>
+                    <p class="text-gray-400">Review and complete assigned workflow tasks</p>
+                </a>
+
+                <!-- Workflow Admin -->
+                <a href="workflow-admin-portal.html" class="portal-card glass rounded-xl p-8 block hover:border-purple-500/50">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-purple-500/20 mb-6">
+                        <i class="fas fa-project-diagram text-3xl text-purple-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-2">Workflow Admin</h2>
+                    <p class="text-gray-400">Monitor and manage workflow automation</p>
+                </a>
+
+                <!-- Workflow Builder -->
+                <a href="workflow-builder-test.html" class="portal-card glass rounded-xl p-8 block hover:border-orange-500/50">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-orange-500/20 mb-6">
+                        <i class="fas fa-hammer text-3xl text-orange-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-2">Workflow Builder</h2>
+                    <p class="text-gray-400">Design and configure workflow templates</p>
+                </a>
+
+                <!-- Analytics -->
+                <a href="analytics-dashboard-portal.html" class="portal-card glass rounded-xl p-8 block hover:border-teal-500/50">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-teal-500/20 mb-6">
+                        <i class="fas fa-chart-line text-3xl text-teal-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-2">Analytics Dashboard</h2>
+                    <p class="text-gray-400">Real-time analytics and performance metrics</p>
+                </a>
+
+                <!-- Document Manager -->
+                <a href="document-upload-portal.html" class="portal-card glass rounded-xl p-8 block hover:border-yellow-500/50">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-yellow-500/20 mb-6">
+                        <i class="fas fa-folder-open text-3xl text-yellow-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-2">Document Manager</h2>
+                    <p class="text-gray-400">Upload and manage permit documents</p>
+                </a>
+
+                <!-- Payment Management -->
+                <a href="payments-admin-dashboard.html" class="portal-card glass rounded-xl p-8 block hover:border-emerald-500/50">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 mb-6">
+                        <i class="fas fa-money-bill-wave text-3xl text-emerald-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-2">Payment Management</h2>
+                    <p class="text-gray-400">Process and manage all payments</p>
+                </a>
+
+                <!-- Citizen Payments -->
+                <a href="citizen-payment-portal.html" class="portal-card glass rounded-xl p-8 block hover:border-green-500/50">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-green-500/20 mb-6">
+                        <i class="fas fa-wallet text-3xl text-green-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-2">My Payments</h2>
+                    <p class="text-gray-400">View payment history and pay fees</p>
+                </a>
+
+                <!-- Grants Search -->
+                <a href="grants-search.html" class="portal-card glass rounded-xl p-8 block hover:border-indigo-500/50">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-indigo-500/20 mb-6">
+                        <i class="fas fa-search-dollar text-3xl text-indigo-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-2">Grant Search</h2>
+                    <p class="text-gray-400">Discover funding opportunities</p>
+                </a>
+
+                <!-- Grants Admin -->
+                <a href="grants-admin-dashboard.html" class="portal-card glass rounded-xl p-8 block hover:border-violet-500/50">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-violet-500/20 mb-6">
+                        <i class="fas fa-hand-holding-usd text-3xl text-violet-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-2">Grants Management</h2>
+                    <p class="text-gray-400">Manage grant applications and awards</p>
+                </a>
+
+                <!-- CRM Dashboard -->
+                <a href="crm-dashboard.html" class="portal-card glass rounded-xl p-8 block hover:border-sky-500/50">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-sky-500/20 mb-6">
+                        <i class="fas fa-users text-3xl text-sky-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-2">CRM Dashboard</h2>
+                    <p class="text-gray-400">Manage contacts and relationships</p>
+                </a>
+
+                <!-- Inspections Dashboard -->
+                <a href="inspections-dashboard.html" class="portal-card glass rounded-xl p-8 block hover:border-amber-500/50">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/20 mb-6">
+                        <i class="fas fa-clipboard-check text-3xl text-amber-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-2">Inspections</h2>
+                    <p class="text-gray-400">Schedule and manage inspections</p>
+                </a>
+
+                <!-- Notifications Center -->
+                <a href="notifications-center.html" class="portal-card glass rounded-xl p-8 block hover:border-rose-500/50">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-rose-500/20 mb-6">
+                        <i class="fas fa-bell text-3xl text-rose-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-2">Notifications</h2>
+                    <p class="text-gray-400">View and manage your notifications</p>
+                </a>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center mt-12">
+                <p class="text-gray-500">
+                    <i class="fas fa-shield-alt mr-2"></i>
+                    Secure • Intelligent • Automated
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth scripts -->
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        // Check authentication on page load
+        if (!Auth.isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+
+        // Display user info if logged in
+        const user = Auth.getUser();
+        if (user) {
+            console.log('Logged in as:', user.email, '| Role:', user.role);
+        }
+    </script>
+</body>
+</html>

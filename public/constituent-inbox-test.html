@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Constituent Inbox - Govli AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%);
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .message-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .message-card:hover {
+            transform: translateX(4px);
+        }
+
+        .message-card.unread {
+            border-left: 4px solid #3b82f6;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .channel-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sentiment-bar {
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sentiment-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .classification-chip {
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+
+        .filter-chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-chip.active {
+            background: rgba(59, 130, 246, 0.3);
+            border: 1px solid #3b82f6;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 30px;
+            bottom: -10px;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 0;
+            top: 8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="glass rounded-xl p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-white mb-2">
+                        <i class="fas fa-inbox mr-3"></i>Universal Constituent Inbox
+                    </h1>
+                    <p class="text-white/70">AI-powered message ingestion, classification, and routing</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span class="badge bg-green-500/20 text-green-400">
+                        <i class="fas fa-shield-alt mr-1"></i>CJIS Compliant
+                    </span>
+                    <span class="badge bg-blue-500/20 text-blue-400">
+                        <i class="fas fa-check-circle mr-1"></i>FedRAMP Authorized
+                    </span>
+                    <span class="badge bg-purple-500/20 text-purple-400">
+                        <i class="fas fa-lock mr-1"></i>FISMA Certified
+                    </span>
+                </div>
+            </div>
+
+            <!-- Stats Dashboard -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div class="glass rounded-lg p-4">
+                    <div class="text-white/70 text-sm mb-1">Total Messages</div>
+                    <div class="text-2xl font-bold text-white">1,847</div>
+                    <div class="text-green-400 text-sm mt-1"><i class="fas fa-arrow-up mr-1"></i>23% today</div>
+                </div>
+                <div class="glass rounded-lg p-4">
+                    <div class="text-white/70 text-sm mb-1">Unread</div>
+                    <div class="text-2xl font-bold text-blue-400">142</div>
+                    <div class="text-white/60 text-sm mt-1"><i class="fas fa-clock mr-1"></i>Needs attention</div>
+                </div>
+                <div class="glass rounded-lg p-4">
+                    <div class="text-white/70 text-sm mb-1">Auto-Classified</div>
+                    <div class="text-2xl font-bold text-purple-400">96.8%</div>
+                    <div class="text-green-400 text-sm mt-1"><i class="fas fa-robot mr-1"></i>AI Processing</div>
+                </div>
+                <div class="glass rounded-lg p-4">
+                    <div class="text-white/70 text-sm mb-1">Avg Response Time</div>
+                    <div class="text-2xl font-bold text-green-400">2.4h</div>
+                    <div class="text-green-400 text-sm mt-1"><i class="fas fa-bolt mr-1"></i>Fast</div>
+                </div>
+                <div class="glass rounded-lg p-4">
+                    <div class="text-white/70 text-sm mb-1">Channels Active</div>
+                    <div class="text-2xl font-bold text-yellow-400">6</div>
+                    <div class="text-white/60 text-sm mt-1"><i class="fas fa-plug mr-1"></i>All systems</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column: Inbox -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Filters & Tabs -->
+                <div class="glass rounded-xl p-6">
+                    <div class="flex flex-wrap items-center gap-3 mb-4">
+                        <button class="tab-button active" data-tab="all" onclick="filterMessages('all')">
+                            <i class="fas fa-inbox mr-2"></i>All Messages
+                        </button>
+                        <button class="tab-button" data-tab="unread" onclick="filterMessages('unread')">
+                            <i class="fas fa-envelope mr-2"></i>Unread (142)
+                        </button>
+                        <button class="tab-button" data-tab="urgent" onclick="filterMessages('urgent')">
+                            <i class="fas fa-exclamation-circle mr-2"></i>Urgent
+                        </button>
+                        <button class="tab-button" data-tab="assigned" onclick="filterMessages('assigned')">
+                            <i class="fas fa-user-check mr-2"></i>Assigned to Me
+                        </button>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-white/60 text-sm">Filter by:</span>
+                        <button class="filter-chip glass" data-filter="email" onclick="toggleFilter('email')">
+                            <i class="fas fa-envelope mr-1"></i>Email
+                        </button>
+                        <button class="filter-chip glass" data-filter="web" onclick="toggleFilter('web')">
+                            <i class="fas fa-globe mr-1"></i>Web Form
+                        </button>
+                        <button class="filter-chip glass" data-filter="social" onclick="toggleFilter('social')">
+                            <i class="fas fa-comments mr-1"></i>Social Media
+                        </button>
+                        <button class="filter-chip glass" data-filter="sms" onclick="toggleFilter('sms')">
+                            <i class="fas fa-sms mr-1"></i>SMS
+                        </button>
+                        <div class="ml-auto">
+                            <input type="text" id="searchInput" placeholder="Search messages..."
+                                   class="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages List -->
+                <div id="messagesList" class="space-y-3">
+                    <!-- Messages will be inserted here -->
+                </div>
+
+                <!-- Pagination -->
+                <div class="glass rounded-xl p-4 flex items-center justify-between">
+                    <div class="text-white/70 text-sm">Showing 1-20 of 142 messages</div>
+                    <div class="flex items-center gap-2">
+                        <button class="glass px-3 py-2 rounded-lg text-white hover:bg-white/20 transition">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="glass px-3 py-2 rounded-lg text-white bg-blue-500/30">1</button>
+                        <button class="glass px-3 py-2 rounded-lg text-white hover:bg-white/20 transition">2</button>
+                        <button class="glass px-3 py-2 rounded-lg text-white hover:bg-white/20 transition">3</button>
+                        <button class="glass px-3 py-2 rounded-lg text-white hover:bg-white/20 transition">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Message Detail & Analytics -->
+            <div class="space-y-6">
+                <!-- Message Detail -->
+                <div class="glass rounded-xl p-6" id="messageDetail">
+                    <div class="text-center py-12">
+                        <i class="fas fa-envelope-open-text text-6xl text-white/20 mb-4"></i>
+                        <p class="text-white/60">Select a message to view details</p>
+                    </div>
+                </div>
+
+                <!-- Channel Performance -->
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4">
+                        <i class="fas fa-chart-pie mr-2"></i>Channel Performance
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="channel-icon bg-blue-500/20">
+                                        <i class="fas fa-envelope text-blue-400"></i>
+                                    </div>
+                                    <span class="text-white text-sm">Email</span>
+                                </div>
+                                <span class="text-white/80 text-sm font-semibold">847</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-2">
+                                <div class="bg-blue-500 h-2 rounded-full" style="width: 46%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="channel-icon bg-green-500/20">
+                                        <i class="fas fa-globe text-green-400"></i>
+                                    </div>
+                                    <span class="text-white text-sm">Web Form</span>
+                                </div>
+                                <span class="text-white/80 text-sm font-semibold">623</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-2">
+                                <div class="bg-green-500 h-2 rounded-full" style="width: 34%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="channel-icon bg-purple-500/20">
+                                        <i class="fas fa-comments text-purple-400"></i>
+                                    </div>
+                                    <span class="text-white text-sm">Social Media</span>
+                                </div>
+                                <span class="text-white/80 text-sm font-semibold">267</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-2">
+                                <div class="bg-purple-500 h-2 rounded-full" style="width: 14%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="channel-icon bg-yellow-500/20">
+                                        <i class="fas fa-sms text-yellow-400"></i>
+                                    </div>
+                                    <span class="text-white text-sm">SMS</span>
+                                </div>
+                                <span class="text-white/80 text-sm font-semibold">110</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-2">
+                                <div class="bg-yellow-500 h-2 rounded-full" style="width: 6%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Department Distribution -->
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4">
+                        <i class="fas fa-sitemap mr-2"></i>Department Distribution
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-white/80 text-sm">Building & Safety</span>
+                            <span class="badge bg-orange-500/20 text-orange-400">412</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-white/80 text-sm">Public Works</span>
+                            <span class="badge bg-blue-500/20 text-blue-400">328</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-white/80 text-sm">Parks & Recreation</span>
+                            <span class="badge bg-green-500/20 text-green-400">267</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-white/80 text-sm">Code Enforcement</span>
+                            <span class="badge bg-red-500/20 text-red-400">198</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-white/80 text-sm">Finance Department</span>
+                            <span class="badge bg-purple-500/20 text-purple-400">156</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-white/80 text-sm">Other</span>
+                            <span class="badge bg-gray-500/20 text-gray-400">486</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Detail Modal -->
+    <div id="messageModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4" style="display: none;">
+        <div class="glass rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold text-white">Message Details</h3>
+                <button onclick="closeMessageModal()" class="text-white/60 hover:text-white text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div id="modalContent">
+                <!-- Content will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // MOCK DATA - Replace in production
+        // TODO: Connect to constituent inbox API endpoint
+        // TODO: Connect to CRM API endpoint for constituent profiles
+        // SECURITY TODO: Validate all constituent data before processing
+
+        // Added 2024-10-30: Enhanced constituent profiles with CRM integration
+        const MOCK_MESSAGES = [
+            {
+                id: 'MSG-2024-001847',
+                channel: 'email',
+                from: 'sarah.johnson@email.com',
+                name: 'Sarah Johnson',
+                subject: 'Question about building permit timeline',
+                preview: 'I submitted a building permit application two weeks ago (Permit #RES-2024-00184) and wanted to check on the status...',
+                timestamp: new Date('2024-10-27T09:23:00'),
+                unread: true,
+                intent: 'inquiry',
+                department: 'Building & Safety',
+                urgency: 'low',
+                sentiment: 0.72,
+                confidence: 98.5,
+                tags: ['permit', 'status check', 'residential'],
+                // Enhanced CRM Profile Data
+                constituentProfile: {
+                    id: 'CRM-2024-4721',
+                    phone: '(555) 847-2910',
+                    address: '1847 Oak Street, Springfield, IL 62701',
+                    residency: '3 years',
+                    previousContacts: 2,
+                    totalRequests: 3,
+                    avgResponseTime: '1.2 days',
+                    satisfactionScore: 4.5,
+                    lastContact: new Date('2024-09-15T14:30:00'),
+                    preferredChannel: 'email',
+                    language: 'English',
+                    demographics: {
+                        age: '35-44',
+                        householdSize: 4,
+                        propertyOwner: true
+                    }
+                },
+                // Relationship Intelligence
+                relationshipData: {
+                    lifetimeValue: 'High',
+                    engagementLevel: 'Active',
+                    riskScore: 'Low',
+                    activeServices: ['Building Permit', 'Property Tax'],
+                    associatedRecords: [
+                        { type: 'Permit', id: 'RES-2024-00184', status: 'Under Review', date: '2024-10-13' },
+                        { type: 'Tax Payment', id: 'TAX-2024-7821', status: 'Paid', date: '2024-08-01' }
+                    ],
+                    relatedContacts: [
+                        { name: 'John Johnson', relationship: 'Spouse', phone: '(555) 847-2911' }
+                    ],
+                    interactionHistory: [
+                        { date: '2024-09-15', type: 'Phone Call', topic: 'Permit Requirements', duration: '12 min' },
+                        { date: '2024-08-22', type: 'Email', topic: 'Property Tax Question', responded: true }
+                    ]
+                }
+            },
+            {
+                id: 'MSG-2024-001846',
+                channel: 'web',
+                from: 'contact-form',
+                name: 'Michael Rodriguez',
+                subject: 'Pothole on Elm Street needs urgent repair',
+                preview: 'There is a large pothole at the intersection of Elm Street and 5th Avenue that is causing damage to vehicles...',
+                timestamp: new Date('2024-10-27T08:45:00'),
+                unread: true,
+                intent: 'complaint',
+                department: 'Public Works',
+                urgency: 'high',
+                sentiment: 0.35,
+                confidence: 96.2,
+                tags: ['pothole', 'road repair', 'urgent'],
+                // Enhanced CRM Profile Data
+                constituentProfile: {
+                    id: 'CRM-2024-8473',
+                    phone: '(555) 293-8471',
+                    address: '892 Maple Drive, Springfield, IL 62704',
+                    residency: '7 years',
+                    previousContacts: 5,
+                    totalRequests: 8,
+                    avgResponseTime: '3.1 days',
+                    satisfactionScore: 3.2,
+                    lastContact: new Date('2024-09-28T11:15:00'),
+                    preferredChannel: 'web',
+                    language: 'English',
+                    demographics: {
+                        age: '45-54',
+                        householdSize: 3,
+                        propertyOwner: true
+                    }
+                },
+                // Relationship Intelligence
+                relationshipData: {
+                    lifetimeValue: 'Medium',
+                    engagementLevel: 'Frequent',
+                    riskScore: 'Medium',
+                    activeServices: ['Public Works Requests'],
+                    associatedRecords: [
+                        { type: 'Service Request', id: 'PW-2024-3847', status: 'In Progress', date: '2024-10-27' },
+                        { type: 'Service Request', id: 'PW-2024-2193', status: 'Completed', date: '2024-09-28' },
+                        { type: 'Service Request', id: 'PW-2024-1056', status: 'Completed', date: '2024-07-15' }
+                    ],
+                    relatedContacts: [],
+                    interactionHistory: [
+                        { date: '2024-09-28', type: 'Web Form', topic: 'Street Light Outage', responded: true },
+                        { date: '2024-07-15', type: 'Web Form', topic: 'Sidewalk Repair', responded: true },
+                        { date: '2024-05-02', type: 'Phone Call', topic: 'Trash Schedule', duration: '5 min' }
+                    ]
+                }
+            },
+            {
+                id: 'MSG-2024-001845',
+                channel: 'social',
+                from: '@springfield_resident',
+                name: 'Jennifer Lee',
+                subject: 'Park hours extension request',
+                preview: 'Would it be possible to extend the hours at Central Park? Many families would benefit from evening access during summer...',
+                timestamp: new Date('2024-10-27T07:12:00'),
+                unread: true,
+                intent: 'request',
+                department: 'Parks & Recreation',
+                urgency: 'low',
+                sentiment: 0.88,
+                confidence: 94.7,
+                tags: ['park', 'hours', 'community request']
+            },
+            {
+                id: 'MSG-2024-001844',
+                channel: 'email',
+                from: 'robert.chen@business.com',
+                name: 'Dr. Robert Chen',
+                subject: 'Business license renewal - payment issue',
+                preview: 'I attempted to renew my business license online but the payment portal is showing an error. License #BUS-2024-8473...',
+                timestamp: new Date('2024-10-27T06:54:00'),
+                unread: false,
+                intent: 'complaint',
+                department: 'Finance Department',
+                urgency: 'medium',
+                sentiment: 0.42,
+                confidence: 97.8,
+                tags: ['business license', 'payment', 'technical issue']
+            },
+            {
+                id: 'MSG-2024-001843',
+                channel: 'sms',
+                from: '+1-555-234-5678',
+                name: 'Maria Garcia',
+                subject: 'Trash pickup missed this week',
+                preview: 'Our trash was not picked up on our scheduled day (Tuesday). Address: 892 Oak Drive...',
+                timestamp: new Date('2024-10-26T18:32:00'),
+                unread: false,
+                intent: 'complaint',
+                department: 'Public Works',
+                urgency: 'medium',
+                sentiment: 0.51,
+                confidence: 95.3,
+                tags: ['trash', 'missed pickup', 'sanitation']
+            },
+            {
+                id: 'MSG-2024-001842',
+                channel: 'web',
+                from: 'contact-form',
+                name: 'David Thompson',
+                subject: 'Request for public records',
+                preview: 'I would like to request copies of all building permits issued on my street (Maple Avenue) in the last 6 months...',
+                timestamp: new Date('2024-10-26T16:18:00'),
+                unread: false,
+                intent: 'request',
+                department: 'City Clerk',
+                urgency: 'low',
+                sentiment: 0.78,
+                confidence: 99.1,
+                tags: ['public records', 'FOIA', 'permits']
+            },
+            {
+                id: 'MSG-2024-001841',
+                channel: 'email',
+                from: 'concerned.citizen@email.com',
+                name: 'Anonymous',
+                subject: 'Noise complaint - ongoing construction',
+                preview: 'There has been construction noise starting at 6 AM every morning for the past week at 1500 Commerce Blvd...',
+                timestamp: new Date('2024-10-26T14:45:00'),
+                unread: false,
+                intent: 'complaint',
+                department: 'Code Enforcement',
+                urgency: 'medium',
+                sentiment: 0.28,
+                confidence: 93.6,
+                tags: ['noise', 'construction', 'code violation']
+            },
+            {
+                id: 'MSG-2024-001840',
+                channel: 'social',
+                from: '@local_business_owner',
+                name: 'James Wilson',
+                subject: 'Thank you for quick permit approval!',
+                preview: 'Just wanted to say thanks to the Building & Safety team for processing my sign permit so quickly. Great service!',
+                timestamp: new Date('2024-10-26T13:22:00'),
+                unread: false,
+                intent: 'inquiry',
+                department: 'Building & Safety',
+                urgency: 'low',
+                sentiment: 0.95,
+                confidence: 98.9,
+                tags: ['positive feedback', 'permit', 'appreciation']
+            }
+        ];
+
+        let currentFilter = 'all';
+        let activeChannelFilters = new Set();
+        let selectedMessage = null;
+
+        function initializeInbox() {
+            renderMessages();
+            setupSearch();
+        }
+
+        function renderMessages() {
+            const container = document.getElementById('messagesList');
+            let filteredMessages = MOCK_MESSAGES;
+
+            // Apply tab filter
+            if (currentFilter === 'unread') {
+                filteredMessages = filteredMessages.filter(m => m.unread);
+            } else if (currentFilter === 'urgent') {
+                filteredMessages = filteredMessages.filter(m => m.urgency === 'high');
+            }
+
+            // Apply channel filters
+            if (activeChannelFilters.size > 0) {
+                filteredMessages = filteredMessages.filter(m => activeChannelFilters.has(m.channel));
+            }
+
+            const messagesHTML = filteredMessages.map(msg => {
+                const channelIcons = {
+                    email: { icon: 'fa-envelope', color: 'blue' },
+                    web: { icon: 'fa-globe', color: 'green' },
+                    social: { icon: 'fa-comments', color: 'purple' },
+                    sms: { icon: 'fa-sms', color: 'yellow' }
+                };
+
+                const urgencyColors = {
+                    high: 'red',
+                    medium: 'yellow',
+                    low: 'green'
+                };
+
+                const intentIcons = {
+                    request: 'fa-hand-holding-heart',
+                    complaint: 'fa-exclamation-triangle',
+                    inquiry: 'fa-question-circle'
+                };
+
+                const channel = channelIcons[msg.channel];
+                const urgencyColor = urgencyColors[msg.urgency];
+                const timeAgo = getTimeAgo(msg.timestamp);
+
+                return `
+                    <div class="message-card glass rounded-xl p-4 ${msg.unread ? 'unread' : ''}" onclick="viewMessage('${msg.id}')">
+                        <div class="flex items-start gap-4">
+                            <div class="channel-icon bg-${channel.color}-500/20 flex-shrink-0">
+                                <i class="fas ${channel.icon} text-${channel.color}-400"></i>
+                            </div>
+
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-white font-semibold">${msg.name}</span>
+                                            ${msg.unread ? '<span class="pulse-dot bg-blue-400"></span>' : ''}
+                                        </div>
+                                        <h4 class="text-white/90 font-medium mb-1">${msg.subject}</h4>
+                                        <p class="text-white/60 text-sm line-clamp-2">${msg.preview}</p>
+                                    </div>
+                                    <span class="text-white/50 text-xs ml-2 flex-shrink-0">${timeAgo}</span>
+                                </div>
+
+                                <div class="flex flex-wrap items-center gap-2 mt-3">
+                                    <span class="classification-chip bg-${urgencyColor}-500/20 text-${urgencyColor}-400">
+                                        <i class="fas fa-flag"></i>${msg.urgency}
+                                    </span>
+                                    <span class="classification-chip bg-blue-500/20 text-blue-400">
+                                        <i class="fas ${intentIcons[msg.intent]}"></i>${msg.intent}
+                                    </span>
+                                    <span class="classification-chip bg-purple-500/20 text-purple-400">
+                                        <i class="fas fa-building"></i>${msg.department}
+                                    </span>
+                                    <span class="classification-chip bg-green-500/20 text-green-400">
+                                        <i class="fas fa-robot"></i>${msg.confidence}% AI
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = messagesHTML || '<div class="glass rounded-xl p-12 text-center"><p class="text-white/60">No messages found</p></div>';
+        }
+
+        function filterMessages(tab) {
+            currentFilter = tab;
+
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.tab === tab) {
+                    btn.classList.add('active');
+                }
+            });
+
+            renderMessages();
+        }
+
+        function toggleFilter(channel) {
+            const btn = document.querySelector(`[data-filter="${channel}"]`);
+
+            if (activeChannelFilters.has(channel)) {
+                activeChannelFilters.delete(channel);
+                btn.classList.remove('active');
+            } else {
+                activeChannelFilters.add(channel);
+                btn.classList.add('active');
+            }
+
+            renderMessages();
+        }
+
+        function viewMessage(messageId) {
+            const message = MOCK_MESSAGES.find(m => m.id === messageId);
+            if (!message) return;
+
+            selectedMessage = message;
+
+            // Mark as read
+            message.unread = false;
+            renderMessages();
+
+            // Show modal with details
+            const sentimentColor = message.sentiment >= 0.7 ? 'green' : message.sentiment >= 0.4 ? 'yellow' : 'red';
+            const sentimentLabel = message.sentiment >= 0.7 ? 'Positive' : message.sentiment >= 0.4 ? 'Neutral' : 'Negative';
+
+            const channelLabels = {
+                email: 'Email',
+                web: 'Web Form',
+                social: 'Social Media',
+                sms: 'SMS'
+            };
+
+            const modalContent = `
+                <div class="space-y-6">
+                    <!-- Header Info -->
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="text-white/60 text-sm mb-1">${channelLabels[message.channel]} • ${message.id}</div>
+                            <h4 class="text-xl font-bold text-white mb-2">${message.subject}</h4>
+                            <div class="flex items-center gap-3 text-sm text-white/80">
+                                <span><i class="fas fa-user mr-1"></i>${message.name}</span>
+                                <span><i class="fas fa-envelope mr-1"></i>${message.from}</span>
+                                <span><i class="fas fa-clock mr-1"></i>${message.timestamp.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Classification Results -->
+                    <div class="glass rounded-lg p-4 bg-gradient-to-r from-purple-600/10 to-blue-600/10">
+                        <h5 class="text-white font-semibold mb-3 flex items-center">
+                            <i class="fas fa-brain text-purple-400 mr-2"></i>
+                            AI Classification Results
+                            <span class="ml-auto text-green-400 text-sm">${message.confidence}% Confidence</span>
+                        </h5>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="glass rounded p-3">
+                                <div class="text-white/60 text-xs mb-1">Intent</div>
+                                <div class="text-white font-semibold capitalize">${message.intent}</div>
+                            </div>
+                            <div class="glass rounded p-3">
+                                <div class="text-white/60 text-xs mb-1">Department</div>
+                                <div class="text-white font-semibold">${message.department}</div>
+                            </div>
+                            <div class="glass rounded p-3">
+                                <div class="text-white/60 text-xs mb-1">Urgency</div>
+                                <div class="text-white font-semibold capitalize">${message.urgency}</div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-white/80 text-sm">Sentiment Analysis</span>
+                                <span class="text-${sentimentColor}-400 text-sm font-semibold">${sentimentLabel} (${Math.round(message.sentiment * 100)}%)</span>
+                            </div>
+                            <div class="sentiment-bar">
+                                <div class="sentiment-fill bg-${sentimentColor}-500" style="width: ${message.sentiment * 100}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            ${message.tags.map(tag => `<span class="badge bg-white/10 text-white/80">#${tag}</span>`).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Message Content -->
+                    <div class="glass rounded-lg p-4">
+                        <h5 class="text-white font-semibold mb-3">Message Content</h5>
+                        <p class="text-white/80 leading-relaxed">${message.preview}</p>
+                    </div>
+
+                    ${message.constituentProfile ? renderConstituentProfile(message.constituentProfile) : ''}
+                    ${message.relationshipData ? renderRelationshipIntelligence(message.relationshipData) : ''}
+
+                    <!-- Suggested Actions -->
+                    <div class="glass rounded-lg p-4">
+                        <h5 class="text-white font-semibold mb-3 flex items-center">
+                            <i class="fas fa-lightbulb text-yellow-400 mr-2"></i>
+                            Suggested Actions
+                        </h5>
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-400"></i>
+                                <span class="text-white/80 text-sm">Route to ${message.department}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-robot text-blue-400"></i>
+                                <span class="text-white/80 text-sm">Auto-response available for this message type</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-user-plus text-purple-400"></i>
+                                <span class="text-white/80 text-sm">Assign to Sarah Martinez (available)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="assignMessage()" class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-3 rounded-lg text-white font-semibold hover:shadow-lg transition">
+                            <i class="fas fa-paper-plane mr-2"></i>Send Auto-Response
+                        </button>
+                        <button onclick="routeMessage()" class="flex-1 glass px-6 py-3 rounded-lg text-white font-semibold hover:bg-white/20 transition">
+                            <i class="fas fa-route mr-2"></i>Route to Department
+                        </button>
+                        <button onclick="assignMessage()" class="glass px-6 py-3 rounded-lg text-white font-semibold hover:bg-white/20 transition">
+                            <i class="fas fa-user-check mr-2"></i>Assign
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContent').innerHTML = modalContent;
+            document.getElementById('messageModal').style.display = 'flex';
+        }
+
+        function closeMessageModal() {
+            document.getElementById('messageModal').style.display = 'none';
+        }
+
+        // Added 2024-10-30: Enhanced constituent profile rendering
+        function renderConstituentProfile(profile) {
+            const satisfactionStars = '★'.repeat(Math.floor(profile.satisfactionScore)) + '☆'.repeat(5 - Math.floor(profile.satisfactionScore));
+
+            return `
+                <div class="glass rounded-lg p-4 bg-gradient-to-r from-blue-600/10 to-purple-600/10">
+                    <h5 class="text-white font-semibold mb-3 flex items-center">
+                        <i class="fas fa-user-circle text-blue-400 mr-2"></i>
+                        Constituent Profile
+                        <span class="ml-auto text-white/60 text-sm">${profile.id}</span>
+                    </h5>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="glass rounded p-3">
+                            <div class="text-white/60 text-xs mb-1">Contact Info</div>
+                            <div class="text-white text-sm">${profile.phone}</div>
+                            <div class="text-white/80 text-xs mt-1">${profile.address}</div>
+                        </div>
+                        <div class="glass rounded p-3">
+                            <div class="text-white/60 text-xs mb-1">Engagement</div>
+                            <div class="text-white font-semibold">${profile.previousContacts} contacts</div>
+                            <div class="text-white/80 text-xs mt-1">${profile.totalRequests} total requests</div>
+                        </div>
+                        <div class="glass rounded p-3">
+                            <div class="text-white/60 text-xs mb-1">Satisfaction</div>
+                            <div class="text-yellow-400">${satisfactionStars}</div>
+                            <div class="text-white/80 text-xs mt-1">${profile.satisfactionScore}/5.0</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="text-center">
+                            <div class="text-white/60 text-xs">Residency</div>
+                            <div class="text-white font-semibold text-sm">${profile.residency}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-white/60 text-xs">Avg Response</div>
+                            <div class="text-green-400 font-semibold text-sm">${profile.avgResponseTime}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-white/60 text-xs">Preferred Channel</div>
+                            <div class="text-blue-400 font-semibold text-sm capitalize">${profile.preferredChannel}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-white/60 text-xs">Language</div>
+                            <div class="text-white font-semibold text-sm">${profile.language}</div>
+                        </div>
+                    </div>
+
+                    ${profile.demographics ? `
+                        <div class="mt-3 pt-3 border-t border-white/10">
+                            <div class="text-white/60 text-xs mb-2">Demographics</div>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="badge bg-white/10 text-white/80">Age: ${profile.demographics.age}</span>
+                                <span class="badge bg-white/10 text-white/80">Household: ${profile.demographics.householdSize}</span>
+                                <span class="badge bg-white/10 text-white/80">${profile.demographics.propertyOwner ? 'Property Owner' : 'Renter'}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Added 2024-10-30: Relationship intelligence rendering
+        function renderRelationshipIntelligence(data) {
+            const valueColors = {
+                'High': 'green',
+                'Medium': 'yellow',
+                'Low': 'red'
+            };
+            const engagementColors = {
+                'Active': 'green',
+                'Frequent': 'blue',
+                'Occasional': 'yellow',
+                'Inactive': 'red'
+            };
+            const riskColors = {
+                'Low': 'green',
+                'Medium': 'yellow',
+                'High': 'red'
+            };
+
+            const valueColor = valueColors[data.lifetimeValue] || 'gray';
+            const engagementColor = engagementColors[data.engagementLevel] || 'gray';
+            const riskColor = riskColors[data.riskScore] || 'gray';
+
+            return `
+                <div class="glass rounded-lg p-4 bg-gradient-to-r from-purple-600/10 to-pink-600/10">
+                    <h5 class="text-white font-semibold mb-3 flex items-center">
+                        <i class="fas fa-project-diagram text-purple-400 mr-2"></i>
+                        Relationship Intelligence
+                    </h5>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="glass rounded p-3">
+                            <div class="text-white/60 text-xs mb-1">Lifetime Value</div>
+                            <div class="badge bg-${valueColor}-500/20 text-${valueColor}-400">${data.lifetimeValue}</div>
+                        </div>
+                        <div class="glass rounded p-3">
+                            <div class="text-white/60 text-xs mb-1">Engagement Level</div>
+                            <div class="badge bg-${engagementColor}-500/20 text-${engagementColor}-400">${data.engagementLevel}</div>
+                        </div>
+                        <div class="glass rounded p-3">
+                            <div class="text-white/60 text-xs mb-1">Risk Score</div>
+                            <div class="badge bg-${riskColor}-500/20 text-${riskColor}-400">${data.riskScore}</div>
+                        </div>
+                    </div>
+
+                    ${data.activeServices && data.activeServices.length > 0 ? `
+                        <div class="mb-4">
+                            <div class="text-white/80 text-sm font-semibold mb-2">Active Services</div>
+                            <div class="flex flex-wrap gap-2">
+                                ${data.activeServices.map(service => `<span class="badge bg-blue-500/20 text-blue-400">${service}</span>`).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${data.associatedRecords && data.associatedRecords.length > 0 ? `
+                        <div class="mb-4">
+                            <div class="text-white/80 text-sm font-semibold mb-2">Associated Records</div>
+                            <div class="space-y-2">
+                                ${data.associatedRecords.map(record => {
+                                    const statusColor = record.status === 'Completed' || record.status === 'Paid' ? 'green' :
+                                                       record.status === 'In Progress' || record.status === 'Under Review' ? 'yellow' : 'blue';
+                                    return `
+                                        <div class="glass rounded p-2 flex items-center justify-between">
+                                            <div>
+                                                <span class="text-white text-sm">${record.type}: ${record.id}</span>
+                                                <span class="text-white/60 text-xs ml-2">${record.date}</span>
+                                            </div>
+                                            <span class="badge bg-${statusColor}-500/20 text-${statusColor}-400 text-xs">${record.status}</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${data.relatedContacts && data.relatedContacts.length > 0 ? `
+                        <div class="mb-4">
+                            <div class="text-white/80 text-sm font-semibold mb-2">Related Contacts</div>
+                            <div class="space-y-2">
+                                ${data.relatedContacts.map(contact => `
+                                    <div class="glass rounded p-2 flex items-center justify-between">
+                                        <div>
+                                            <span class="text-white text-sm">${contact.name}</span>
+                                            <span class="text-white/60 text-xs ml-2">(${contact.relationship})</span>
+                                        </div>
+                                        <span class="text-white/60 text-xs">${contact.phone}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${data.interactionHistory && data.interactionHistory.length > 0 ? `
+                        <div>
+                            <div class="text-white/80 text-sm font-semibold mb-2">Recent Interactions</div>
+                            <div class="space-y-2">
+                                ${data.interactionHistory.map((interaction, index) => `
+                                    <div class="timeline-item ${index === data.interactionHistory.length - 1 ? '' : ''}">
+                                        <div class="timeline-dot bg-purple-500 border-purple-400"></div>
+                                        <div class="glass rounded p-2">
+                                            <div class="flex items-center justify-between mb-1">
+                                                <span class="text-white text-sm">${interaction.type} - ${interaction.topic}</span>
+                                                ${interaction.duration ? `<span class="text-white/60 text-xs">${interaction.duration}</span>` : ''}
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-white/60 text-xs">${interaction.date}</span>
+                                                ${interaction.responded ? '<span class="badge bg-green-500/20 text-green-400 text-xs">Responded</span>' : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function assignMessage() {
+            showNotification('Message assigned successfully', 'success');
+            closeMessageModal();
+        }
+
+        function routeMessage() {
+            showNotification('Message routed to department', 'success');
+            closeMessageModal();
+        }
+
+        function setupSearch() {
+            const searchInput = document.getElementById('searchInput');
+            let debounceTimer;
+
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    const query = e.target.value.toLowerCase();
+                    // TODO: Implement search functionality
+                    console.log('Searching for:', query);
+                }, 300);
+            });
+        }
+
+        function getTimeAgo(timestamp) {
+            const seconds = Math.floor((new Date() - timestamp) / 1000);
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+            return `${Math.floor(seconds / 86400)}d ago`;
+        }
+
+        function showNotification(message, type = 'success') {
+            const colors = { success: 'green', error: 'red', info: 'blue' };
+            const color = colors[type] || 'blue';
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 glass rounded-lg p-4 text-white bg-${color}-500/20 border border-${color}-400 z-50`;
+            notification.innerHTML = `<i class="fas fa-check-circle mr-2"></i>${message}`;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // Close modal on ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeMessageModal();
+        });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initializeInbox);
+    </script>
+</body>
+</html>

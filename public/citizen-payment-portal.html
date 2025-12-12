@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Payments - Govli AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --deep-ocean: #0a1628;
+            --ocean-dark: #0c4a6e;
+            --ocean-primary: #0369a1;
+            --azure-blue: #0284c7;
+            --sky-blue: #0ea5e9;
+            --cyan-bright: #06b6d4;
+            --teal-accent: #14b8a6;
+        }
+
+        body {
+            background: linear-gradient(135deg,
+                #0a1628 0%,
+                #0c2340 25%,
+                #0e3a5f 50%,
+                #1e3a5f 75%,
+                #164e7f 100%);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--cyan-bright), var(--teal-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--azure-blue), var(--ocean-primary));
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(6, 182, 212, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(20, 184, 166, 0.1));
+            border: 1px solid rgba(6, 182, 212, 0.2);
+        }
+
+        .payment-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .payment-card:hover {
+            transform: translateX(4px);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #0a1628, #0e3a5f);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem 0.5rem 0 0;
+            border: 1px solid transparent;
+            color: rgba(255, 255, 255, 0.6);
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: rgba(6, 182, 212, 0.3);
+            border-bottom-color: transparent;
+            color: var(--cyan-bright);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: rgba(255, 255, 255, 0.2);
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Navigation Bar -->
+    <nav class="glass-card mx-4 mt-4 mb-6">
+        <div class="flex items-center justify-between p-4">
+            <div class="flex items-center gap-4">
+                <button onclick="window.location.href='index.html'" class="text-cyan-400 hover:text-cyan-300">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <h1 class="text-2xl font-bold gradient-text">My Payments</h1>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-gray-300 text-sm">Total Paid:</span>
+                <span class="text-2xl font-bold text-cyan-400" id="totalPaidAmount">$0.00</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto px-4 pb-8">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="glass-card stat-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm mb-1">Total Paid</p>
+                        <h3 class="text-2xl font-bold text-white" id="completedTotal">$0.00</h3>
+                        <p class="text-cyan-400 text-xs mt-1" id="completedCount">0 payments</p>
+                    </div>
+                    <div class="text-green-400 text-3xl">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card stat-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm mb-1">Pending</p>
+                        <h3 class="text-2xl font-bold text-white" id="pendingTotal">$0.00</h3>
+                        <p class="text-yellow-400 text-xs mt-1" id="pendingCount">0 payments</p>
+                    </div>
+                    <div class="text-yellow-400 text-3xl">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card stat-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm mb-1">This Year</p>
+                        <h3 class="text-2xl font-bold text-white" id="yearTotal">$0.00</h3>
+                        <p class="text-cyan-400 text-xs mt-1" id="yearCount">0 payments</p>
+                    </div>
+                    <div class="text-cyan-400 text-3xl">
+                        <i class="fas fa-calendar"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="glass-card mb-6">
+            <div class="flex border-b border-gray-600">
+                <button class="tab-button active" onclick="switchTab('all')">All Payments</button>
+                <button class="tab-button" onclick="switchTab('pending')">Pending</button>
+                <button class="tab-button" onclick="switchTab('completed')">Completed</button>
+                <button class="tab-button" onclick="switchTab('refunded')">Refunded</button>
+            </div>
+
+            <!-- All Payments Tab -->
+            <div id="all-tab" class="tab-content active p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-white">All Payments</h2>
+                    <select id="yearFilter" class="bg-gray-800 text-white border border-gray-600 rounded px-3 py-2" onchange="filterByYear()">
+                        <option value="all">All Time</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="2022">2022</option>
+                    </select>
+                </div>
+                <div id="allPaymentsList" class="space-y-3"></div>
+            </div>
+
+            <!-- Pending Tab -->
+            <div id="pending-tab" class="tab-content p-6">
+                <h2 class="text-xl font-bold text-white mb-4">Pending Payments</h2>
+                <div id="pendingPaymentsList" class="space-y-3"></div>
+            </div>
+
+            <!-- Completed Tab -->
+            <div id="completed-tab" class="tab-content p-6">
+                <h2 class="text-xl font-bold text-white mb-4">Completed Payments</h2>
+                <div id="completedPaymentsList" class="space-y-3"></div>
+            </div>
+
+            <!-- Refunded Tab -->
+            <div id="refunded-tab" class="tab-content p-6">
+                <h2 class="text-xl font-bold text-white mb-4">Refunded Payments</h2>
+                <div id="refundedPaymentsList" class="space-y-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Details Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold gradient-text">Payment Details</h2>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div id="paymentDetailsContent"></div>
+        </div>
+    </div>
+
+    <!-- Mock Payment Modal -->
+    <div id="mockPaymentModal" class="modal">
+        <div class="modal-content p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold gradient-text">Make Payment</h2>
+                <button onclick="closeModal('mockPaymentModal')" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div class="glass-card p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-gray-300">Amount to Pay:</span>
+                        <span class="text-3xl font-bold text-cyan-400" id="mockPaymentAmount">$0.00</span>
+                    </div>
+                    <div class="text-sm text-gray-400 mb-4">
+                        Receipt #: <span id="mockReceiptNumber" class="font-mono text-cyan-400"></span>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 text-yellow-300 text-sm">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    This is a mock payment interface. In production, this would integrate with a real payment gateway like Stripe.
+                </div>
+
+                <div class="space-y-3">
+                    <label class="block">
+                        <span class="text-gray-300 text-sm mb-2 block">Payment Method</span>
+                        <select id="mockPaymentMethod" class="w-full bg-gray-800 border border-gray-600 rounded px-4 py-3 text-white">
+                            <option value="credit_card">Credit Card</option>
+                            <option value="debit_card">Debit Card</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                        </select>
+                    </label>
+
+                    <div class="glass-card p-4">
+                        <div class="text-sm text-gray-300 mb-2">
+                            <i class="fas fa-shield-alt text-green-400 mr-2"></i>
+                            Secure Payment
+                        </div>
+                        <div class="text-xs text-gray-400">
+                            Your payment information is encrypted and secure. We do not store your card details.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 mt-6">
+                    <button onclick="closeModal('mockPaymentModal')" class="btn-secondary flex-1">Cancel</button>
+                    <button onclick="processMockPayment()" class="btn-primary flex-1">
+                        <i class="fas fa-lock mr-2"></i>Pay Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="payments.js"></script>
+    <script>
+        let allPayments = [];
+        let currentPaymentId = null;
+
+        // Initialize portal
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadUserPayments();
+        });
+
+        // Load user's payments
+        async function loadUserPayments() {
+            try {
+                const response = await PaymentAPI.getPayments({ limit: 100 });
+                allPayments = response.payments || [];
+
+                calculateSummaries();
+                renderAllPayments();
+                renderPendingPayments();
+                renderCompletedPayments();
+                renderRefundedPayments();
+            } catch (error) {
+                console.error('Error loading payments:', error);
+            }
+        }
+
+        // Calculate summary statistics
+        function calculateSummaries() {
+            const completed = allPayments.filter(p => p.status === 'completed');
+            const pending = allPayments.filter(p => p.status === 'pending');
+            const currentYear = new Date().getFullYear();
+            const thisYear = allPayments.filter(p => new Date(p.createdAt).getFullYear() === currentYear);
+
+            const completedTotal = completed.reduce((sum, p) => sum + (p.amount || 0), 0);
+            const pendingTotal = pending.reduce((sum, p) => sum + (p.amount || 0), 0);
+            const yearTotal = thisYear.reduce((sum, p) => sum + (p.status === 'completed' ? p.amount : 0), 0);
+
+            document.getElementById('totalPaidAmount').textContent = PaymentAPI.formatCurrency(completedTotal);
+            document.getElementById('completedTotal').textContent = PaymentAPI.formatCurrency(completedTotal);
+            document.getElementById('completedCount').textContent = `${completed.length} payment${completed.length !== 1 ? 's' : ''}`;
+            document.getElementById('pendingTotal').textContent = PaymentAPI.formatCurrency(pendingTotal);
+            document.getElementById('pendingCount').textContent = `${pending.length} payment${pending.length !== 1 ? 's' : ''}`;
+            document.getElementById('yearTotal').textContent = PaymentAPI.formatCurrency(yearTotal);
+            document.getElementById('yearCount').textContent = `${thisYear.filter(p => p.status === 'completed').length} payment${thisYear.filter(p => p.status === 'completed').length !== 1 ? 's' : ''}`;
+        }
+
+        // Render payment card
+        function renderPaymentCard(payment) {
+            return `
+                <div class="glass-card payment-card p-4" onclick="viewPaymentDetails('${payment.id}')">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="status-badge ${PaymentAPI.getStatusBadgeClass(payment.status)}">
+                                    ${payment.status}
+                                </span>
+                                <span class="text-sm text-gray-400">
+                                    ${new Date(payment.createdAt).toLocaleDateString()}
+                                </span>
+                            </div>
+                            <h3 class="text-lg font-semibold text-white mb-1">
+                                ${PaymentAPI.getPaymentTypeLabel(payment.paymentType)}
+                            </h3>
+                            <p class="text-sm text-gray-400">
+                                Receipt: <span class="font-mono text-cyan-400">${payment.receiptNumber || 'N/A'}</span>
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-cyan-400 mb-1">
+                                ${PaymentAPI.formatCurrency(payment.amount)}
+                            </div>
+                            <div class="flex items-center gap-2 justify-end">
+                                ${payment.status === 'pending' ? `
+                                    <button onclick="event.stopPropagation(); showPaymentModal('${payment.id}', ${payment.amount}, '${payment.receiptNumber}')" class="text-xs btn-primary py-1 px-3">
+                                        Pay Now
+                                    </button>
+                                ` : payment.status === 'completed' ? `
+                                    <button onclick="event.stopPropagation(); downloadReceipt('${payment.id}')" class="text-cyan-400 hover:text-cyan-300" title="Download Receipt">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                ` : ''}
+                                <i class="fas fa-chevron-right text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render all payments
+        function renderAllPayments(yearFilter = 'all') {
+            const container = document.getElementById('allPaymentsList');
+            let filtered = allPayments;
+
+            if (yearFilter !== 'all') {
+                filtered = allPayments.filter(p => new Date(p.createdAt).getFullYear() === parseInt(yearFilter));
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-receipt"></i>
+                        <p class="text-gray-400">No payments found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(payment => renderPaymentCard(payment)).join('');
+        }
+
+        // Render pending payments
+        function renderPendingPayments() {
+            const container = document.getElementById('pendingPaymentsList');
+            const pending = allPayments.filter(p => p.status === 'pending');
+
+            if (pending.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle"></i>
+                        <p class="text-gray-400">No pending payments</p>
+                        <p class="text-sm text-gray-500">You're all caught up!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = pending.map(payment => renderPaymentCard(payment)).join('');
+        }
+
+        // Render completed payments
+        function renderCompletedPayments() {
+            const container = document.getElementById('completedPaymentsList');
+            const completed = allPayments.filter(p => p.status === 'completed');
+
+            if (completed.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-history"></i>
+                        <p class="text-gray-400">No completed payments</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = completed.map(payment => renderPaymentCard(payment)).join('');
+        }
+
+        // Render refunded payments
+        function renderRefundedPayments() {
+            const container = document.getElementById('refundedPaymentsList');
+            const refunded = allPayments.filter(p => p.status === 'refunded');
+
+            if (refunded.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-undo"></i>
+                        <p class="text-gray-400">No refunded payments</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = refunded.map(payment => renderPaymentCard(payment)).join('');
+        }
+
+        // Tab switching
+        function switchTab(tab) {
+            // Update buttons
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`${tab}-tab`).classList.add('active');
+        }
+
+        // Filter by year
+        function filterByYear() {
+            const year = document.getElementById('yearFilter').value;
+            renderAllPayments(year);
+        }
+
+        // View payment details
+        async function viewPaymentDetails(paymentId) {
+            try {
+                const payment = await PaymentAPI.getPayment(paymentId);
+
+                const content = document.getElementById('paymentDetailsContent');
+                content.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="glass-card p-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-gray-400 text-sm">Receipt Number</p>
+                                    <p class="text-white font-mono">${payment.receiptNumber || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Status</p>
+                                    <span class="status-badge ${PaymentAPI.getStatusBadgeClass(payment.status)}">${payment.status}</span>
+                                </div>
+                                <div class="col-span-2">
+                                    <p class="text-gray-400 text-sm">Amount</p>
+                                    <p class="text-white font-semibold text-2xl">${PaymentAPI.formatCurrency(payment.amount)}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Payment Type</p>
+                                    <p class="text-white">${PaymentAPI.getPaymentTypeLabel(payment.paymentType)}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Payment Method</p>
+                                    <p class="text-white">
+                                        <i class="fas ${PaymentAPI.getPaymentMethodIcon(payment.paymentMethod)} mr-2"></i>
+                                        ${payment.paymentMethod.replace('_', ' ')}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Date</p>
+                                    <p class="text-white">${new Date(payment.createdAt).toLocaleString()}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Transaction ID</p>
+                                    <p class="text-white font-mono text-sm">${payment.transactionId || 'Pending'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${payment.refundedAt ? `
+                            <div class="glass-card p-4 border-red-500/30">
+                                <h3 class="text-lg font-semibold text-red-400 mb-3">Refund Information</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-gray-400 text-sm">Refund Amount</p>
+                                        <p class="text-white font-semibold">${PaymentAPI.formatCurrency(payment.refundAmount)}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-400 text-sm">Refunded Date</p>
+                                        <p class="text-white">${new Date(payment.refundedAt).toLocaleDateString()}</p>
+                                    </div>
+                                    ${payment.refundReason ? `
+                                        <div class="col-span-2">
+                                            <p class="text-gray-400 text-sm">Reason</p>
+                                            <p class="text-white">${payment.refundReason}</p>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div class="flex gap-4 mt-6">
+                            ${payment.status === 'pending' ? `
+                                <button onclick="closeModal(); showPaymentModal('${payment.id}', ${payment.amount}, '${payment.receiptNumber}')" class="btn-primary flex-1">
+                                    <i class="fas fa-credit-card mr-2"></i>Pay Now
+                                </button>
+                            ` : payment.status === 'completed' ? `
+                                <button onclick="downloadReceipt('${payment.id}')" class="btn-primary flex-1">
+                                    <i class="fas fa-download mr-2"></i>Download Receipt
+                                </button>
+                            ` : ''}
+                            <button onclick="closeModal()" class="btn-secondary flex-1">Close</button>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('paymentModal').classList.add('active');
+            } catch (error) {
+                console.error('Error fetching payment details:', error);
+                alert('Error loading payment details');
+            }
+        }
+
+        // Show mock payment modal
+        function showPaymentModal(paymentId, amount, receiptNumber) {
+            currentPaymentId = paymentId;
+            document.getElementById('mockPaymentAmount').textContent = PaymentAPI.formatCurrency(amount);
+            document.getElementById('mockReceiptNumber').textContent = receiptNumber;
+            document.getElementById('mockPaymentModal').classList.add('active');
+        }
+
+        // Process mock payment
+        async function processMockPayment() {
+            const paymentMethod = document.getElementById('mockPaymentMethod').value;
+
+            try {
+                // Generate a mock transaction ID
+                const transactionId = 'TXN-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+
+                // Process the payment
+                await PaymentAPI.processPayment(currentPaymentId, {
+                    transactionId,
+                    metadata: {
+                        paymentMethod,
+                        processedVia: 'Mock Payment Gateway',
+                        note: 'Payment processed via citizen portal'
+                    }
+                });
+
+                closeModal('mockPaymentModal');
+
+                // Show success message
+                alert('Payment processed successfully! Your receipt has been generated.');
+
+                // Reload payments
+                await loadUserPayments();
+            } catch (error) {
+                console.error('Error processing payment:', error);
+                alert('Error processing payment. Please try again.');
+            }
+        }
+
+        // Download receipt
+        function downloadReceipt(paymentId) {
+            window.open(PaymentAPI.getReceiptUrl(paymentId), '_blank');
+        }
+
+        // Modal controls
+        function closeModal(modalId = 'paymentModal') {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Close modal on background click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

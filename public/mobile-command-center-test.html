@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Govli Mobile Command Center</title>
+    <style>
+        /* CJIS COMPLIANCE NOTICE */
+        /* SECURITY TODO: Implement CJIS-compliant security */
+        /* TODO: Implement encrypted local storage (FIPS 140-2) */
+        /* TODO: Add remote wipe capability */
+        /* TODO: Integrate biometric authentication (Touch ID/Face ID) */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            /* Blue Ocean Color Scheme */
+            --primary-blue: #0066CC;
+            --deep-ocean: #003D7A;
+            --sky-blue: #4A90E2;
+            --aqua: #00B4D8;
+            --success-green: #10B981;
+            --warning-yellow: #F59E0B;
+            --danger-red: #EF4444;
+            --syncing-blue: #3B82F6;
+
+            /* Glassmorphism */
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: rgba(0, 0, 0, 0.1);
+
+            /* Dark Mode AMOLED */
+            --bg-dark: #000000;
+            --bg-card: #1A1A1A;
+            --text-primary: #FFFFFF;
+            --text-secondary: #A0A0A0;
+
+            /* Spacing for touch */
+            --spacing-xs: 8px;
+            --spacing-sm: 12px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+
+            /* Touch targets */
+            --touch-min: 44px;
+            --touch-optimal: 56px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--deep-ocean) 100%);
+            color: var(--text-primary);
+            font-size: 16px;
+            line-height: 1.5;
+            max-width: 414px;
+            margin: 0 auto;
+            min-height: 100vh;
+            padding-bottom: 80px;
+            overflow-x: hidden;
+        }
+
+        /* Field Status Bar - Always Visible */
+        .field-status-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(0, 61, 122, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: var(--spacing-sm);
+            box-shadow: 0 4px 12px var(--glass-shadow);
+        }
+
+        .status-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .current-assignment {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .connectivity-status {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-online { background: var(--success-green); }
+        .status-offline { background: var(--warning-yellow); }
+        .status-limited { background: var(--danger-red); }
+        .status-syncing { background: var(--syncing-blue); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-bottom-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .battery-indicator,
+        .secure-mode {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Main Container */
+        .main-container {
+            padding: var(--spacing-md);
+        }
+
+        /* Section Headers */
+        .section-header {
+            font-size: 18px;
+            font-weight: 700;
+            margin: var(--spacing-lg) 0 var(--spacing-md) 0;
+            color: var(--text-primary);
+        }
+
+        /* Quick Action Tiles - 3x2 Grid */
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .action-tile {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: var(--spacing-md);
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .action-tile:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .action-tile-icon {
+            font-size: 32px;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .action-tile-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .tile-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--danger-red);
+            color: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .emergency-tile {
+            background: linear-gradient(135deg, var(--danger-red), #DC2626);
+            border: 2px solid #FCA5A5;
+            grid-column: span 2;
+        }
+
+        /* Active Work Section */
+        .active-work-card {
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.2), rgba(0, 180, 216, 0.2));
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: 0 8px 24px var(--glass-shadow);
+        }
+
+        .work-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .work-card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .work-card-id {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+
+        .work-card-address {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .progress-container {
+            margin: var(--spacing-md) 0;
+        }
+
+        .progress-ring {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .ring-visual {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: conic-gradient(var(--success-green) 0% 42%, rgba(255,255,255,0.1) 42% 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .ring-inner {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .progress-text {
+            flex: 1;
+        }
+
+        .progress-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .progress-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .swipe-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-md);
+        }
+
+        .swipe-btn {
+            flex: 1;
+            min-height: var(--touch-min);
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .swipe-btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-complete {
+            background: var(--success-green);
+            color: white;
+        }
+
+        .btn-skip {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        /* Next Task Preview */
+        .next-task {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: var(--spacing-md);
+            margin-top: var(--spacing-md);
+        }
+
+        .next-task-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .next-task-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .next-task-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .eta-badge {
+            background: var(--sky-blue);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Route Optimization Module */
+        .route-optimizer {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .route-comparison {
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.1), rgba(16, 185, 129, 0.1));
+            border-radius: 12px;
+            padding: var(--spacing-md);
+            margin: var(--spacing-md) 0;
+        }
+
+        .route-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .route-stat {
+            text-align: center;
+        }
+
+        .route-stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .route-stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .route-stat-old {
+            text-decoration: line-through;
+            color: var(--danger-red);
+        }
+
+        .route-stat-new {
+            color: var(--success-green);
+        }
+
+        .savings-banner {
+            background: var(--success-green);
+            color: white;
+            padding: var(--spacing-sm);
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .route-map {
+            background: var(--bg-card);
+            height: 200px;
+            border-radius: 12px;
+            margin: var(--spacing-md) 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .route-stops {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-xs);
+            margin: var(--spacing-md) 0;
+        }
+
+        .route-stop {
+            background: rgba(74, 144, 226, 0.3);
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .btn-navigate {
+            width: 100%;
+            min-height: var(--touch-optimal);
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-navigate:active {
+            transform: scale(0.98);
+            background: var(--deep-ocean);
+        }
+
+        /* Offline Sync Queue */
+        .sync-queue {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .sync-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .sync-icon {
+            font-size: 24px;
+        }
+
+        .sync-info {
+            flex: 1;
+        }
+
+        .sync-type {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .sync-details {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .sync-priority {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .priority-high {
+            background: var(--danger-red);
+            color: white;
+        }
+
+        .priority-normal {
+            background: var(--warning-yellow);
+            color: var(--bg-dark);
+        }
+
+        .storage-info {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: var(--spacing-md);
+            margin-top: var(--spacing-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .storage-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .storage-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Assignments List */
+        .assignments-list {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .assignment-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            position: relative;
+        }
+
+        .assignment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .assignment-type {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .assignment-time {
+            background: var(--sky-blue);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .assignment-address {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .assignment-owner {
+            font-size: 13px;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .assignment-notes {
+            background: rgba(245, 158, 11, 0.2);
+            border-left: 3px solid var(--warning-yellow);
+            padding: var(--spacing-xs);
+            margin-top: var(--spacing-sm);
+            font-size: 12px;
+            color: var(--warning-yellow);
+            border-radius: 4px;
+        }
+
+        .offline-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--success-green);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        /* Document Capture Interface */
+        .document-capture {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .capture-button {
+            width: 100%;
+            min-height: 120px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--aqua));
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .capture-button:active {
+            transform: scale(0.98);
+        }
+
+        .capture-icon {
+            font-size: 48px;
+        }
+
+        .photo-gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-xs);
+        }
+
+        .photo-thumbnail {
+            aspect-ratio: 1;
+            background: var(--bg-card);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .photo-category {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 4px;
+            font-size: 10px;
+            text-align: center;
+        }
+
+        /* Digital Inspection Checklist */
+        .inspection-checklist {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .inspection-type-selector {
+            display: flex;
+            gap: var(--spacing-xs);
+            margin-bottom: var(--spacing-md);
+            overflow-x: auto;
+            padding-bottom: var(--spacing-xs);
+        }
+
+        .inspection-type-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .inspection-type-btn.active {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+        }
+
+        .checklist-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .checklist-item-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .checklist-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .checklist-btn {
+            flex: 1;
+            min-height: var(--touch-min);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-pass {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-green);
+            border-color: var(--success-green);
+        }
+
+        .btn-fail {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-red);
+            border-color: var(--danger-red);
+        }
+
+        .btn-na {
+            background: rgba(160, 160, 160, 0.2);
+            color: var(--text-secondary);
+        }
+
+        .checklist-btn:active {
+            transform: scale(0.95);
+        }
+
+        .checklist-btn.selected {
+            opacity: 1;
+            font-weight: 900;
+        }
+
+        .signature-pad {
+            background: white;
+            border-radius: 12px;
+            height: 150px;
+            margin-top: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Property Intelligence Panel */
+        .property-intel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .intel-section {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .intel-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .intel-value {
+            font-size: 14px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .history-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: var(--spacing-sm);
+            border-radius: 8px;
+            margin-bottom: var(--spacing-xs);
+            font-size: 13px;
+        }
+
+        .ai-prediction {
+            background: linear-gradient(90deg, rgba(74, 144, 226, 0.2), rgba(0, 180, 216, 0.2));
+            border-left: 3px solid var(--sky-blue);
+            padding: var(--spacing-md);
+            border-radius: 8px;
+            margin-top: var(--spacing-md);
+        }
+
+        .ai-label {
+            font-size: 12px;
+            color: var(--sky-blue);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .ai-text {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        /* Emergency Report Button - Fixed */
+        .emergency-fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--danger-red), #DC2626);
+            border-radius: 50%;
+            border: 3px solid #FCA5A5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.5);
+            animation: emergency-pulse 2s infinite;
+            z-index: 999;
+        }
+
+        @keyframes emergency-pulse {
+            0%, 100% {
+                box-shadow: 0 8px 24px rgba(239, 68, 68, 0.5);
+            }
+            50% {
+                box-shadow: 0 8px 32px rgba(239, 68, 68, 0.8);
+                transform: scale(1.05);
+            }
+        }
+
+        .emergency-fab:active {
+            transform: scale(0.95);
+        }
+
+        /* Emergency Modal */
+        .emergency-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            padding: var(--spacing-lg);
+        }
+
+        .emergency-modal.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .emergency-content {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: var(--spacing-xl);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .emergency-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--danger-red);
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .incident-type-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .incident-btn {
+            min-height: var(--touch-optimal);
+            background: rgba(239, 68, 68, 0.2);
+            border: 2px solid var(--danger-red);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .incident-btn:active {
+            background: var(--danger-red);
+            transform: scale(0.95);
+        }
+
+        .btn-cancel-emergency {
+            width: 100%;
+            min-height: var(--touch-min);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Loading Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 375px) {
+            .quick-actions-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .emergency-tile {
+                grid-column: span 2;
+            }
+        }
+
+        /* High Contrast for Sunlight */
+        @media (prefers-contrast: high) {
+            .action-tile,
+            .assignment-card {
+                border: 2px solid var(--text-primary);
+            }
+        }
+
+        /* Mock Data Marker */
+        .mock-data-indicator {
+            position: fixed;
+            top: 50%;
+            left: 0;
+            background: rgba(245, 158, 11, 0.9);
+            color: var(--bg-dark);
+            padding: 4px 12px;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 0 8px 8px 0;
+            z-index: 3000;
+        }
+
+        /* Team Collaboration */
+        .team-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .team-map {
+            background: var(--bg-card);
+            height: 150px;
+            border-radius: 12px;
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+
+        .team-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-sm);
+        }
+
+        .team-btn {
+            min-height: var(--touch-min);
+            background: rgba(74, 144, 226, 0.2);
+            border: 1px solid var(--sky-blue);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .team-btn:active {
+            background: rgba(74, 144, 226, 0.3);
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <!-- Mock Data Indicator -->
+    <div class="mock-data-indicator">MOCK DATA</div>
+
+    <!-- Field Status Bar - Always Visible -->
+    <div class="field-status-bar">
+        <div class="status-top-row">
+            <div class="current-assignment">Building Inspection - 3 of 8 today</div>
+            <div class="connectivity-status">
+                <span class="status-dot status-syncing"></span>
+                <span>Syncing</span>
+            </div>
+        </div>
+        <div class="status-bottom-row">
+            <div class="battery-indicator">
+                <span>🔋</span>
+                <span>6.5 hours remaining</span>
+            </div>
+            <div class="secure-mode">
+                <span>🔒</span>
+                <span>Encrypted Session Active</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Quick Action Tiles -->
+        <h2 class="section-header">Quick Actions</h2>
+        <div class="quick-actions-grid">
+            <div class="action-tile" onclick="showAssignments()">
+                <div class="tile-badge">8</div>
+                <div class="action-tile-icon">📋</div>
+                <div class="action-tile-label">Today's Assignments</div>
+            </div>
+            <div class="action-tile" onclick="quickCapture()">
+                <div class="action-tile-icon">📸</div>
+                <div class="action-tile-label">Quick Capture</div>
+            </div>
+            <div class="action-tile" onclick="showRouteOptimizer()">
+                <div class="action-tile-icon">🗺️</div>
+                <div class="action-tile-label">Route Optimizer</div>
+            </div>
+            <div class="action-tile" onclick="documentScanner()">
+                <div class="action-tile-icon">📄</div>
+                <div class="action-tile-label">Document Scanner</div>
+            </div>
+            <div class="action-tile" onclick="checklistMode()">
+                <div class="action-tile-icon">✅</div>
+                <div class="action-tile-label">Checklist Mode</div>
+            </div>
+            <div class="action-tile emergency-tile" onclick="showEmergencyModal()">
+                <div class="action-tile-icon">🆘</div>
+                <div class="action-tile-label">Emergency Report</div>
+            </div>
+        </div>
+
+        <!-- Active Work Section -->
+        <h2 class="section-header">Active Work</h2>
+        <div class="active-work-card">
+            <div class="work-card-header">
+                <div class="work-card-title">Building Inspection</div>
+                <div class="work-card-id">INSP-2024-00847</div>
+            </div>
+            <div class="work-card-address">📍 123 Oak Street, Springfield, IL 62701</div>
+
+            <div class="progress-container">
+                <div class="progress-ring">
+                    <div class="ring-visual">
+                        <div class="ring-inner">5/12</div>
+                    </div>
+                    <div class="progress-text">
+                        <div class="progress-label">Inspection Progress</div>
+                        <div class="progress-value">5 of 12 points completed</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="swipe-actions">
+                <button class="swipe-btn btn-complete">Complete Current</button>
+                <button class="swipe-btn btn-skip">Skip</button>
+            </div>
+
+            <div class="next-task">
+                <div class="next-task-label">NEXT UP</div>
+                <div class="next-task-info">
+                    <div class="next-task-title">Plumbing Inspection - 456 Maple Ave</div>
+                    <div class="eta-badge">ETA 18 min</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Route Optimization Module -->
+        <h2 class="section-header">Route Optimizer</h2>
+        <div class="route-optimizer">
+            <div class="route-comparison">
+                <div class="route-stats">
+                    <div class="route-stat">
+                        <div class="route-stat-label">Distance</div>
+                        <div class="route-stat-value route-stat-old">47.3 mi</div>
+                        <div class="route-stat-value route-stat-new">35.1 mi</div>
+                    </div>
+                    <div class="route-stat">
+                        <div class="route-stat-label">Time</div>
+                        <div class="route-stat-value route-stat-old">6.5 hrs</div>
+                        <div class="route-stat-value route-stat-new">5.75 hrs</div>
+                    </div>
+                </div>
+                <div class="savings-banner">💡 AI route saves 45 minutes, 12.2 miles</div>
+            </div>
+
+            <div class="route-map">
+                <!-- TODO: Connect to mapping service (Google Maps/Mapbox) -->
+                <div>🗺️ Interactive Map View</div>
+            </div>
+
+            <div class="route-stops">
+                <div class="route-stop">1️⃣ 123 Oak St</div>
+                <div class="route-stop">2️⃣ 789 Pine Rd</div>
+                <div class="route-stop">3️⃣ 321 Birch Ln</div>
+                <div class="route-stop">4️⃣ 456 Maple Ave</div>
+                <div class="route-stop">5️⃣ 654 Cedar Dr</div>
+                <div class="route-stop">6️⃣ 159 Elm St</div>
+                <div class="route-stop">7️⃣ 951 Ash Ct</div>
+                <div class="route-stop">8️⃣ 753 Walnut Pl</div>
+            </div>
+
+            <button class="btn-navigate">🧭 Start Navigation</button>
+        </div>
+
+        <!-- Offline Sync Queue -->
+        <h2 class="section-header">Sync Queue</h2>
+        <div class="sync-queue">
+            <div class="sync-item">
+                <div class="sync-icon">📋</div>
+                <div class="sync-info">
+                    <div class="sync-type">Inspection Complete</div>
+                    <div class="sync-details">12 photos • 2.3 MB</div>
+                </div>
+                <div class="sync-priority priority-normal">Normal</div>
+            </div>
+
+            <div class="sync-item">
+                <div class="sync-icon">⚠️</div>
+                <div class="sync-info">
+                    <div class="sync-type">Violation Issued</div>
+                    <div class="sync-details">3 photos • 456 KB</div>
+                </div>
+                <div class="sync-priority priority-high">High</div>
+            </div>
+
+            <div class="sync-item">
+                <div class="sync-icon">📝</div>
+                <div class="sync-info">
+                    <div class="sync-type">Field Notes</div>
+                    <div class="sync-details">Voice memo • 1.2 MB</div>
+                </div>
+                <div class="sync-priority priority-normal">Normal</div>
+            </div>
+
+            <div class="storage-info">
+                <div>
+                    <div class="storage-label">Cached Data</div>
+                    <div class="storage-value">4.2 GB</div>
+                </div>
+                <div>
+                    <div class="storage-label">Available</div>
+                    <div class="storage-value">10.8 GB</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Assignments -->
+        <h2 class="section-header">Today's Assignments</h2>
+        <div class="assignments-list" id="assignmentsList"></div>
+
+        <!-- Document Capture Interface -->
+        <h2 class="section-header">Document Capture</h2>
+        <div class="document-capture">
+            <button class="capture-button" onclick="openCamera()">
+                <div class="capture-icon">📷</div>
+                <div>Tap to Capture Photo</div>
+                <div style="font-size: 12px; opacity: 0.8;">Camera • Voice • GPS Auto-Tagged</div>
+            </button>
+
+            <div class="photo-gallery">
+                <div class="photo-thumbnail">
+                    <div>📸</div>
+                    <div class="photo-category">Exterior</div>
+                </div>
+                <div class="photo-thumbnail">
+                    <div>📸</div>
+                    <div class="photo-category">Electrical</div>
+                </div>
+                <div class="photo-thumbnail">
+                    <div>📸</div>
+                    <div class="photo-category">Plumbing</div>
+                </div>
+                <div class="photo-thumbnail">
+                    <div>📸</div>
+                    <div class="photo-category">HVAC</div>
+                </div>
+                <div class="photo-thumbnail">
+                    <div>📸</div>
+                    <div class="photo-category">Violation</div>
+                </div>
+                <div class="photo-thumbnail">
+                    <div style="font-size: 24px;">+</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Digital Inspection Checklist -->
+        <h2 class="section-header">Inspection Checklist</h2>
+        <div class="inspection-checklist">
+            <div class="inspection-type-selector">
+                <button class="inspection-type-btn active">Building</button>
+                <button class="inspection-type-btn">Electrical</button>
+                <button class="inspection-type-btn">Plumbing</button>
+                <button class="inspection-type-btn">Fire</button>
+                <button class="inspection-type-btn">Health</button>
+            </div>
+
+            <div class="checklist-item">
+                <div class="checklist-item-title">1. Foundation and Structure</div>
+                <div class="checklist-actions">
+                    <button class="checklist-btn btn-pass">✓ Pass</button>
+                    <button class="checklist-btn btn-fail">✗ Fail</button>
+                    <button class="checklist-btn btn-na">— N/A</button>
+                </div>
+            </div>
+
+            <div class="checklist-item">
+                <div class="checklist-item-title">2. Roof and Drainage</div>
+                <div class="checklist-actions">
+                    <button class="checklist-btn btn-pass">✓ Pass</button>
+                    <button class="checklist-btn btn-fail">✗ Fail</button>
+                    <button class="checklist-btn btn-na">— N/A</button>
+                </div>
+            </div>
+
+            <div class="checklist-item">
+                <div class="checklist-item-title">3. Exterior Walls and Siding</div>
+                <div class="checklist-actions">
+                    <button class="checklist-btn btn-pass">✓ Pass</button>
+                    <button class="checklist-btn btn-fail">✗ Fail</button>
+                    <button class="checklist-btn btn-na">— N/A</button>
+                </div>
+            </div>
+
+            <div class="checklist-item">
+                <div class="checklist-item-title">4. Windows and Doors</div>
+                <div class="checklist-actions">
+                    <button class="checklist-btn btn-pass">✓ Pass</button>
+                    <button class="checklist-btn btn-fail">✗ Fail</button>
+                    <button class="checklist-btn btn-na">— N/A</button>
+                </div>
+            </div>
+
+            <div class="signature-pad">
+                <!-- TODO: Implement digital signature capture -->
+                ✍️ Digital Signature Area
+            </div>
+        </div>
+
+        <!-- Property Intelligence Panel -->
+        <h2 class="section-header">Property Intelligence</h2>
+        <div class="property-intel">
+            <div class="intel-section">
+                <div class="intel-label">Property Owner</div>
+                <div class="intel-value">John Smith</div>
+            </div>
+
+            <div class="intel-section">
+                <div class="intel-label">Contact</div>
+                <div class="intel-value">📞 (217) 555-0100</div>
+            </div>
+
+            <div class="intel-section">
+                <div class="intel-label">Previous Inspections (Last 5 Years)</div>
+                <div class="history-item">2023-03-15: Annual Inspection - Passed</div>
+                <div class="history-item">2022-08-22: Re-Inspection - Passed</div>
+                <div class="history-item">2022-07-10: Building Inspection - Failed (HVAC)</div>
+                <div class="history-item">2021-04-05: Annual Inspection - Passed</div>
+                <div class="history-item">2020-09-30: Electrical Inspection - Passed</div>
+            </div>
+
+            <div class="intel-section">
+                <div class="intel-label">Open Permits</div>
+                <div class="history-item">PERMIT-2024-1247: Residential Addition (Expires: 2024-12-31)</div>
+            </div>
+
+            <div class="intel-section">
+                <div class="intel-label">Violations History</div>
+                <div class="history-item">2022-07: HVAC system non-compliant (Resolved)</div>
+            </div>
+
+            <div class="ai-prediction">
+                <div class="ai-label">🤖 AI Prediction</div>
+                <div class="ai-text">This property type typically has: HVAC issues (67%), Electrical upgrades needed (45%), Plumbing concerns (23%)</div>
+            </div>
+        </div>
+
+        <!-- Team Collaboration -->
+        <h2 class="section-header">Team Collaboration</h2>
+        <div class="team-panel">
+            <div class="team-map">
+                <!-- TODO: Connect to mapping service for team locations -->
+                🗺️ Team Location Map (5 members nearby)
+            </div>
+
+            <div class="team-actions">
+                <button class="team-btn">
+                    <div>📻</div>
+                    <div>Push-to-Talk</div>
+                </button>
+                <button class="team-btn">
+                    <div>💬</div>
+                    <div>Messages</div>
+                </button>
+                <button class="team-btn">
+                    <div>🆘</div>
+                    <div>Request Backup</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency FAB -->
+    <div class="emergency-fab" onclick="showEmergencyModal()">
+        🆘
+    </div>
+
+    <!-- Emergency Modal -->
+    <div class="emergency-modal" id="emergencyModal">
+        <div class="emergency-content">
+            <h2 class="emergency-title">🚨 Report Emergency</h2>
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: var(--spacing-lg); font-size: 14px;">
+                GPS captured • Recording started • Dispatch alerted
+            </p>
+
+            <div class="incident-type-grid">
+                <button class="incident-btn">Immediate Danger</button>
+                <button class="incident-btn">Public Safety</button>
+                <button class="incident-btn">Officer Safety</button>
+                <button class="incident-btn">Medical Emergency</button>
+                <button class="incident-btn">Fire Hazard</button>
+                <button class="incident-btn">Structural Failure</button>
+                <button class="incident-btn">Chemical Spill</button>
+                <button class="incident-btn">Other Emergency</button>
+            </div>
+
+            <button class="btn-cancel-emergency" onclick="closeEmergencyModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        // TODO: Connect to device GPS API
+        // TODO: Implement offline storage (IndexedDB/SQLite)
+        // TODO: Add background sync service worker
+        // TODO: Connect to camera API
+        // TODO: Integrate biometric authentication (Touch ID/Face ID)
+        // TODO: Add push notifications
+        // TODO: Connect to mapping service (Google Maps/Mapbox)
+        // TODO: Implement route optimization algorithm
+        // TODO: Add speech-to-text service
+        // TODO: Connect to OCR service
+        // TODO: Implement encrypted local storage (FIPS 140-2)
+        // TODO: Add remote wipe capability
+
+        // MOCK DATA
+        const TODAYS_ASSIGNMENTS = [
+            {
+                id: 'INSP-2024-00847',
+                type: 'Building Inspection',
+                subtype: 'Final - Residential Addition',
+                address: '123 Oak Street, Springfield, IL 62701',
+                time: '9:00 AM',
+                duration: '45 min',
+                owner: 'John Smith',
+                phone: '(217) 555-0100',
+                notes: 'Large dog on property - call before entering',
+                offline: true
+            },
+            {
+                id: 'INSP-2024-00848',
+                type: 'Plumbing Inspection',
+                subtype: 'Rough-In - Commercial',
+                address: '456 Maple Avenue, Springfield, IL 62702',
+                time: '10:30 AM',
+                duration: '60 min',
+                owner: 'ABC Construction LLC',
+                phone: '(217) 555-0101',
+                notes: 'Meet contractor on site',
+                offline: true
+            },
+            {
+                id: 'INSP-2024-00849',
+                type: 'Electrical Inspection',
+                subtype: 'Service Upgrade - Residential',
+                address: '789 Pine Road, Springfield, IL 62703',
+                time: '12:00 PM',
+                duration: '30 min',
+                owner: 'Sarah Johnson',
+                phone: '(217) 555-0102',
+                notes: '',
+                offline: false
+            },
+            {
+                id: 'INSP-2024-00850',
+                type: 'Fire Safety Inspection',
+                subtype: 'Annual - Restaurant',
+                address: '321 Birch Lane, Springfield, IL 62704',
+                time: '1:30 PM',
+                duration: '90 min',
+                owner: 'Downtown Diner Inc',
+                phone: '(217) 555-0103',
+                notes: 'Previous violation: Fire suppression system',
+                offline: false
+            },
+            {
+                id: 'INSP-2024-00851',
+                type: 'Building Inspection',
+                subtype: 'Re-Inspection',
+                address: '654 Cedar Drive, Springfield, IL 62705',
+                time: '3:30 PM',
+                duration: '30 min',
+                owner: 'Michael Davis',
+                phone: '(217) 555-0104',
+                notes: 'Follow-up on HVAC repairs',
+                offline: false
+            },
+            {
+                id: 'INSP-2024-00852',
+                type: 'Health Inspection',
+                subtype: 'Routine - Grocery Store',
+                address: '159 Elm Street, Springfield, IL 62706',
+                time: '4:30 PM',
+                duration: '75 min',
+                owner: 'Fresh Foods Market',
+                phone: '(217) 555-0105',
+                notes: 'Refrigeration units require attention',
+                offline: false
+            },
+            {
+                id: 'INSP-2024-00853',
+                type: 'Electrical Inspection',
+                subtype: 'Final - New Construction',
+                address: '951 Ash Court, Springfield, IL 62707',
+                time: '6:00 PM',
+                duration: '45 min',
+                owner: 'Green Valley Homes',
+                phone: '(217) 555-0106',
+                notes: 'Final walk-through for occupancy permit',
+                offline: false
+            },
+            {
+                id: 'INSP-2024-00854',
+                type: 'Building Inspection',
+                subtype: 'Complaint - Code Violation',
+                address: '753 Walnut Place, Springfield, IL 62708',
+                time: '7:00 PM',
+                duration: '30 min',
+                owner: 'Robert Williams',
+                phone: '(217) 555-0107',
+                notes: 'Neighbor complaint: Fence height violation',
+                offline: false
+            }
+        ];
+
+        const SYNC_QUEUE = {
+            pending: [
+                { type: 'inspection_complete', photos: 12, size: '2.3 MB', priority: 'normal' },
+                { type: 'violation_issued', photos: 3, size: '456 KB', priority: 'high' },
+                { type: 'field_notes', photos: 0, size: '1.2 MB', priority: 'normal' }
+            ]
+        };
+
+        const ROUTE_OPTIMIZATION = {
+            original: { distance: 47.3, time: 6.5, order: [1,2,3,4,5,6,7,8] },
+            optimized: { distance: 35.1, time: 5.75, order: [1,4,7,2,5,3,8,6], savings: '45 min, 12.2 mi' }
+        };
+
+        // Initialize Assignments
+        function initAssignments() {
+            const assignmentsList = document.getElementById('assignmentsList');
+
+            TODAYS_ASSIGNMENTS.forEach(assignment => {
+                const card = document.createElement('div');
+                card.className = 'assignment-card';
+
+                card.innerHTML = `
+                    ${assignment.offline ? '<div class="offline-badge">CACHED</div>' : ''}
+                    <div class="assignment-header">
+                        <div class="assignment-type">${assignment.type}</div>
+                        <div class="assignment-time">${assignment.time}</div>
+                    </div>
+                    <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">${assignment.subtype}</div>
+                    <div class="assignment-address">${assignment.address}</div>
+                    <div class="assignment-owner">👤 ${assignment.owner} • ${assignment.phone}</div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">⏱️ ${assignment.duration} • ID: ${assignment.id}</div>
+                    ${assignment.notes ? `<div class="assignment-notes">⚠️ Note: ${assignment.notes}</div>` : ''}
+                `;
+
+                assignmentsList.appendChild(card);
+            });
+        }
+
+        // Emergency Modal Functions
+        function showEmergencyModal() {
+            document.getElementById('emergencyModal').classList.add('active');
+            // TODO: Connect to device GPS API
+            // TODO: Start audio/video recording
+            // TODO: Alert dispatch system
+            // Haptic feedback simulation
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+            }
+        }
+
+        function closeEmergencyModal() {
+            document.getElementById('emergencyModal').classList.remove('active');
+        }
+
+        // Quick Action Functions
+        function showAssignments() {
+            document.querySelector('.assignments-list').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function quickCapture() {
+            // TODO: Connect to camera API
+            alert('Quick Capture: Opening camera with GPS auto-tagging and voice notes');
+        }
+
+        function showRouteOptimizer() {
+            document.querySelector('.route-optimizer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function documentScanner() {
+            // TODO: Connect to OCR service
+            alert('Document Scanner: Opening camera with OCR capabilities');
+        }
+
+        function checklistMode() {
+            document.querySelector('.inspection-checklist').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function openCamera() {
+            // TODO: Connect to camera API
+            alert('Opening camera with auto-categorization and GPS tagging');
+        }
+
+        // Connectivity Status Simulation
+        function updateConnectivity() {
+            const statuses = ['online', 'offline', 'limited', 'syncing'];
+            const statusText = ['Online', 'Offline', 'Limited', 'Syncing'];
+            let currentIndex = 3; // Start with syncing
+
+            setInterval(() => {
+                currentIndex = (currentIndex + 1) % statuses.length;
+                const dot = document.querySelector('.status-dot');
+                const text = document.querySelector('.connectivity-status span:last-child');
+
+                dot.className = 'status-dot status-' + statuses[currentIndex];
+                text.textContent = statusText[currentIndex];
+            }, 5000);
+        }
+
+        // Checklist Button Interactions
+        document.addEventListener('DOMContentLoaded', () => {
+            initAssignments();
+            updateConnectivity();
+
+            // Add checklist button interactions
+            document.querySelectorAll('.checklist-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remove selected from siblings
+                    this.parentElement.querySelectorAll('.checklist-btn').forEach(b => {
+                        b.classList.remove('selected');
+                    });
+                    // Add selected to clicked button
+                    this.classList.add('selected');
+
+                    // Haptic feedback simulation
+                    if (navigator.vibrate) {
+                        navigator.vibrate(50);
+                    }
+                });
+            });
+
+            // Inspection type selector
+            document.querySelectorAll('.inspection-type-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.inspection-type-btn').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                });
+            });
+
+            // Service Worker Registration (commented out for demo)
+            // TODO: Add background sync service worker
+            /*
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed'));
+            }
+            */
+        });
+
+        // Prevent pull-to-refresh on mobile
+        document.body.addEventListener('touchmove', (e) => {
+            if (window.scrollY === 0) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Battery API (if available)
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then(battery => {
+                function updateBatteryStatus() {
+                    const level = (battery.level * 100).toFixed(0);
+                    const charging = battery.charging;
+                    const chargingTime = battery.chargingTime;
+                    const dischargingTime = battery.dischargingTime;
+
+                    let timeRemaining = '';
+                    if (charging && chargingTime !== Infinity) {
+                        timeRemaining = `${(chargingTime / 3600).toFixed(1)} hours to full`;
+                    } else if (!charging && dischargingTime !== Infinity) {
+                        timeRemaining = `${(dischargingTime / 3600).toFixed(1)} hours remaining`;
+                    } else {
+                        timeRemaining = '6.5 hours remaining'; // Fallback
+                    }
+
+                    document.querySelector('.battery-indicator span:last-child').textContent = timeRemaining;
+                }
+
+                updateBatteryStatus();
+                battery.addEventListener('levelchange', updateBatteryStatus);
+                battery.addEventListener('chargingchange', updateBatteryStatus);
+            });
+        }
+    </script>
+</body>
+</html>

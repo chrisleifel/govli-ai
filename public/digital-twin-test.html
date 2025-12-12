@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Govli AI - Government Digital Twin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .twin-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .twin-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        .sync-indicator {
+            animation: sync-pulse 2s infinite;
+        }
+
+        @keyframes sync-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .simulation-running {
+            animation: simulation-glow 1.5s ease-in-out infinite;
+        }
+
+        @keyframes simulation-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(139, 92, 246, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.8); }
+        }
+
+        .digital-twin-module-tab {
+            transition: all 0.3s ease;
+        }
+
+        .digital-twin-module-tab.active {
+            background: rgba(59, 130, 246, 0.3);
+            border-bottom: 3px solid #3b82f6;
+        }
+
+        .digital-twin-module-content {
+            display: none;
+        }
+
+        .digital-twin-module-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .flow-connector {
+            stroke: #3b82f6;
+            stroke-width: 2;
+            fill: none;
+            animation: flow 2s linear infinite;
+        }
+
+        @keyframes flow {
+            0% { stroke-dashoffset: 20; }
+            100% { stroke-dashoffset: 0; }
+        }
+
+        .optimization-badge {
+            animation: badge-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes badge-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.5); }
+            50% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.8); }
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <div class="container mx-auto p-6">
+        <!-- Header -->
+        <div class="glass rounded-xl p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-14 h-14 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-project-diagram text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-white">Government Digital Twin</h1>
+                        <p class="text-white/70">Real-Time Simulation • Predictive Modeling • Process Optimization</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-2 bg-green-500/20 px-4 py-2 rounded-lg border border-green-400/30">
+                        <div class="w-3 h-3 bg-green-400 rounded-full sync-indicator"></div>
+                        <span class="text-green-300 text-sm font-semibold">LIVE SYNC</span>
+                    </div>
+                    <div class="text-white/60 text-sm">
+                        <i class="fas fa-server mr-2"></i>12 agencies modeled
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module Navigation -->
+        <div class="glass rounded-xl p-2 mb-6">
+            <div class="flex items-center space-x-2 overflow-x-auto">
+                <button onclick="switchDigitalTwinModule('modeling')" class="digital-twin-module-tab active px-6 py-3 rounded-lg text-white font-medium flex items-center space-x-2 min-w-max">
+                    <i class="fas fa-cube mr-2"></i>Operational Modeling
+                </button>
+                <button onclick="switchDigitalTwinModule('simulation')" class="digital-twin-module-tab px-6 py-3 rounded-lg text-white font-medium flex items-center space-x-2 min-w-max">
+                    <i class="fas fa-play-circle mr-2"></i>Simulation Engine
+                </button>
+                <button onclick="switchDigitalTwinModule('visualization')" class="digital-twin-module-tab px-6 py-3 rounded-lg text-white font-medium flex items-center space-x-2 min-w-max">
+                    <i class="fas fa-chart-network mr-2"></i>Process Visualization
+                </button>
+                <button onclick="switchDigitalTwinModule('optimization')" class="digital-twin-module-tab px-6 py-3 rounded-lg text-white font-medium flex items-center space-x-2 min-w-max">
+                    <i class="fas fa-cogs mr-2"></i>Scenario Testing
+                </button>
+            </div>
+        </div>
+
+        <!-- Module 1: Operational Modeling -->
+        <!-- Added 2024-10-31: Government Digital Twin Module -->
+        <div id="digital-twin-module-modeling" class="digital-twin-module-content active">
+            <!-- Overview Dashboard -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-white/70 text-sm">Digital Replicas</div>
+                        <i class="fas fa-cube text-cyan-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-2">12</div>
+                    <div class="text-xs text-green-400">+3 this month</div>
+                </div>
+
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-white/70 text-sm">Model Accuracy</div>
+                        <i class="fas fa-bullseye text-green-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-2">96.8%</div>
+                    <div class="text-xs text-green-400">+1.2% vs last week</div>
+                </div>
+
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-white/70 text-sm">Data Points</div>
+                        <i class="fas fa-database text-purple-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-2">847K</div>
+                    <div class="text-xs text-white/50">Updated 5 min ago</div>
+                </div>
+
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-white/70 text-sm">Sync Latency</div>
+                        <i class="fas fa-clock text-blue-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-2">287ms</div>
+                    <div class="text-xs text-green-400">-45ms improvement</div>
+                </div>
+            </div>
+
+            <!-- Government Agency Digital Twins -->
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-building text-cyan-400"></i>
+                    Agency Digital Twins
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- DMV Digital Twin -->
+                    <div class="twin-card glass rounded-lg p-5">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
+                                    <i class="fas fa-car text-white text-lg"></i>
+                                </div>
+                                <div>
+                                    <div class="text-white font-semibold">DMV - Motor Vehicles</div>
+                                    <div class="text-white/60 text-xs">State Department</div>
+                                </div>
+                            </div>
+                            <span class="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
+                                <div class="w-2 h-2 bg-green-400 rounded-full sync-indicator"></div>
+                                SYNCED
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mb-3 text-xs">
+                            <div>
+                                <div class="text-white/50">Daily Transactions</div>
+                                <div class="text-white font-semibold">4,287</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Avg Wait Time</div>
+                                <div class="text-cyan-400 font-semibold">18 min</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Active Counters</div>
+                                <div class="text-white font-semibold">24/32</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Staff Utilization</div>
+                                <div class="text-green-400 font-semibold">87%</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="text-white/60">Model Accuracy</span>
+                                <span class="text-green-400 font-semibold">97.2%</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-green-500 to-cyan-500 h-2 rounded-full" style="width: 97.2%"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-1 mt-3">
+                            <span class="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs">License Renewals</span>
+                            <span class="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs">Vehicle Registration</span>
+                            <span class="bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded text-xs">Title Transfers</span>
+                        </div>
+                    </div>
+
+                    <!-- IRS Digital Twin -->
+                    <div class="twin-card glass rounded-lg p-5">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center">
+                                    <i class="fas fa-file-invoice-dollar text-white text-lg"></i>
+                                </div>
+                                <div>
+                                    <div class="text-white font-semibold">IRS - Tax Processing</div>
+                                    <div class="text-white/60 text-xs">Federal Agency</div>
+                                </div>
+                            </div>
+                            <span class="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
+                                <div class="w-2 h-2 bg-green-400 rounded-full sync-indicator"></div>
+                                SYNCED
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mb-3 text-xs">
+                            <div>
+                                <div class="text-white/50">Returns Processed</div>
+                                <div class="text-white font-semibold">12,847/day</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Processing Time</div>
+                                <div class="text-cyan-400 font-semibold">2.3 hrs</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Auditors Active</div>
+                                <div class="text-white font-semibold">156/180</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Accuracy Rate</div>
+                                <div class="text-green-400 font-semibold">99.1%</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="text-white/60">Model Accuracy</span>
+                                <span class="text-green-400 font-semibold">98.5%</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full" style="width: 98.5%"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-1 mt-3">
+                            <span class="bg-green-500/20 text-green-300 px-2 py-1 rounded text-xs">Tax Returns</span>
+                            <span class="bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded text-xs">Refunds</span>
+                            <span class="bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded text-xs">Audits</span>
+                        </div>
+                    </div>
+
+                    <!-- Building Permits Digital Twin -->
+                    <div class="twin-card glass rounded-lg p-5">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 flex items-center justify-center">
+                                    <i class="fas fa-hard-hat text-white text-lg"></i>
+                                </div>
+                                <div>
+                                    <div class="text-white font-semibold">Building Permits</div>
+                                    <div class="text-white/60 text-xs">City Department</div>
+                                </div>
+                            </div>
+                            <span class="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
+                                <div class="w-2 h-2 bg-green-400 rounded-full sync-indicator"></div>
+                                SYNCED
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mb-3 text-xs">
+                            <div>
+                                <div class="text-white/50">Permits/Month</div>
+                                <div class="text-white font-semibold">487</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Approval Time</div>
+                                <div class="text-cyan-400 font-semibold">4.2 days</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Inspectors</div>
+                                <div class="text-white font-semibold">18/24</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Compliance Rate</div>
+                                <div class="text-green-400 font-semibold">94.7%</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="text-white/60">Model Accuracy</span>
+                                <span class="text-green-400 font-semibold">95.8%</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-orange-500 to-amber-500 h-2 rounded-full" style="width: 95.8%"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-1 mt-3">
+                            <span class="bg-orange-500/20 text-orange-300 px-2 py-1 rounded text-xs">Construction</span>
+                            <span class="bg-amber-500/20 text-amber-300 px-2 py-1 rounded text-xs">Renovations</span>
+                            <span class="bg-red-500/20 text-red-300 px-2 py-1 rounded text-xs">Inspections</span>
+                        </div>
+                    </div>
+
+                    <!-- Social Services Digital Twin -->
+                    <div class="twin-card glass rounded-lg p-5">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-pink-500 to-rose-500 flex items-center justify-center">
+                                    <i class="fas fa-hands-helping text-white text-lg"></i>
+                                </div>
+                                <div>
+                                    <div class="text-white font-semibold">Social Services</div>
+                                    <div class="text-white/60 text-xs">State Department</div>
+                                </div>
+                            </div>
+                            <span class="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
+                                <div class="w-2 h-2 bg-green-400 rounded-full sync-indicator"></div>
+                                SYNCED
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mb-3 text-xs">
+                            <div>
+                                <div class="text-white/50">Active Cases</div>
+                                <div class="text-white font-semibold">8,942</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Avg Case Time</div>
+                                <div class="text-cyan-400 font-semibold">12.4 days</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Caseworkers</div>
+                                <div class="text-white font-semibold">67/72</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Resolution Rate</div>
+                                <div class="text-green-400 font-semibold">89.3%</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="text-white/60">Model Accuracy</span>
+                                <span class="text-green-400 font-semibold">94.2%</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-pink-500 to-rose-500 h-2 rounded-full" style="width: 94.2%"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-1 mt-3">
+                            <span class="bg-pink-500/20 text-pink-300 px-2 py-1 rounded text-xs">Benefits</span>
+                            <span class="bg-rose-500/20 text-rose-300 px-2 py-1 rounded text-xs">Family Services</span>
+                            <span class="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs">Child Welfare</span>
+                        </div>
+                    </div>
+
+                    <!-- Employment Services Digital Twin -->
+                    <div class="twin-card glass rounded-lg p-5">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center">
+                                    <i class="fas fa-briefcase text-white text-lg"></i>
+                                </div>
+                                <div>
+                                    <div class="text-white font-semibold">Employment Services</div>
+                                    <div class="text-white/60 text-xs">State Department</div>
+                                </div>
+                            </div>
+                            <span class="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
+                                <div class="w-2 h-2 bg-green-400 rounded-full sync-indicator"></div>
+                                SYNCED
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mb-3 text-xs">
+                            <div>
+                                <div class="text-white/50">Job Placements</div>
+                                <div class="text-white font-semibold">342/month</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Avg Match Time</div>
+                                <div class="text-cyan-400 font-semibold">8.7 days</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Counselors</div>
+                                <div class="text-white font-semibold">28/32</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Success Rate</div>
+                                <div class="text-green-400 font-semibold">76.4%</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="text-white/60">Model Accuracy</span>
+                                <span class="text-green-400 font-semibold">92.1%</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full" style="width: 92.1%"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-1 mt-3">
+                            <span class="bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded text-xs">Job Matching</span>
+                            <span class="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs">Training</span>
+                            <span class="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs">UI Claims</span>
+                        </div>
+                    </div>
+
+                    <!-- Health Services Digital Twin -->
+                    <div class="twin-card glass rounded-lg p-5">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-red-500 to-pink-500 flex items-center justify-center">
+                                    <i class="fas fa-heartbeat text-white text-lg"></i>
+                                </div>
+                                <div>
+                                    <div class="text-white font-semibold">Health Services</div>
+                                    <div class="text-white/60 text-xs">County Department</div>
+                                </div>
+                            </div>
+                            <span class="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
+                                <div class="w-2 h-2 bg-green-400 rounded-full sync-indicator"></div>
+                                SYNCED
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mb-3 text-xs">
+                            <div>
+                                <div class="text-white/50">Daily Patients</div>
+                                <div class="text-white font-semibold">1,247</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Wait Time</div>
+                                <div class="text-cyan-400 font-semibold">32 min</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Medical Staff</div>
+                                <div class="text-white font-semibold">89/96</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Bed Utilization</div>
+                                <div class="text-yellow-400 font-semibold">83.2%</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="text-white/60">Model Accuracy</span>
+                                <span class="text-green-400 font-semibold">96.4%</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-red-500 to-pink-500 h-2 rounded-full" style="width: 96.4%"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-1 mt-3">
+                            <span class="bg-red-500/20 text-red-300 px-2 py-1 rounded text-xs">Emergency</span>
+                            <span class="bg-pink-500/20 text-pink-300 px-2 py-1 rounded text-xs">Outpatient</span>
+                            <span class="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs">Vaccinations</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resource Allocation Model -->
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-sliders-h text-purple-400"></i>
+                    Resource Allocation Model
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="glass rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-white font-medium">Personnel</span>
+                            <span class="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs">456 Staff</span>
+                        </div>
+                        <div class="mb-2">
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="text-white/60">Utilization Rate</span>
+                                <span class="text-cyan-400 font-semibold">84.7%</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-3">
+                                <div class="bg-gradient-to-r from-blue-500 to-cyan-500 h-3 rounded-full" style="width: 84.7%"></div>
+                            </div>
+                        </div>
+                        <div class="text-xs text-white/60 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Optimal range: 75-90%
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-white font-medium">Infrastructure</span>
+                            <span class="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs">124 Assets</span>
+                        </div>
+                        <div class="mb-2">
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="text-white/60">Capacity Usage</span>
+                                <span class="text-cyan-400 font-semibold">67.3%</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-3">
+                                <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full" style="width: 67.3%"></div>
+                            </div>
+                        </div>
+                        <div class="text-xs text-white/60 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            23% growth capacity available
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-white font-medium">Budget</span>
+                            <span class="bg-green-500/20 text-green-300 px-2 py-1 rounded text-xs">$24.7M</span>
+                        </div>
+                        <div class="mb-2">
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="text-white/60">Budget Spent</span>
+                                <span class="text-cyan-400 font-semibold">78.2%</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-3">
+                                <div class="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full" style="width: 78.2%"></div>
+                            </div>
+                        </div>
+                        <div class="text-xs text-white/60 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            $5.4M remaining this quarter
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Module 1 -->
+
+        <!-- Module 2: Simulation Engine -->
+        <!-- Added 2024-10-31: Simulation Engine for What-If Analysis -->
+        <div id="digital-twin-module-simulation" class="digital-twin-module-content hidden">
+            <!-- Simulation Dashboard -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-white/70 text-sm">Active Simulations</div>
+                        <i class="fas fa-play-circle text-purple-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-2">8</div>
+                    <div class="text-xs text-cyan-400">3 running now</div>
+                </div>
+
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-white/70 text-sm">Scenarios Tested</div>
+                        <i class="fas fa-flask text-cyan-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-2">247</div>
+                    <div class="text-xs text-green-400">+42 this week</div>
+                </div>
+
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-white/70 text-sm">Prediction Accuracy</div>
+                        <i class="fas fa-chart-line text-green-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-2">93.4%</div>
+                    <div class="text-xs text-green-400">+2.1% vs baseline</div>
+                </div>
+
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-white/70 text-sm">Est. Cost Savings</div>
+                        <i class="fas fa-dollar-sign text-yellow-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-2">$2.8M</div>
+                    <div class="text-xs text-green-400">From optimizations</div>
+                </div>
+            </div>
+
+            <!-- Running Simulations -->
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-play-circle text-purple-400"></i>
+                    Running Simulations
+                </h3>
+
+                <div class="space-y-4">
+                    <!-- Simulation 1 -->
+                    <div class="glass rounded-lg p-5 simulation-running">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <div class="text-white font-semibold mb-1">DMV Service Counter Optimization</div>
+                                <div class="text-white/60 text-sm">Testing impact of adding 4 service counters during peak hours</div>
+                            </div>
+                            <span class="bg-purple-500/20 text-purple-400 px-3 py-1 rounded text-xs font-semibold flex items-center gap-2">
+                                <div class="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                                RUNNING
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3 text-xs">
+                            <div>
+                                <div class="text-white/50">Scenario Type</div>
+                                <div class="text-white">Resource Addition</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Duration</div>
+                                <div class="text-cyan-400">30 days simulated</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Progress</div>
+                                <div class="text-white">67% (Day 20/30)</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Est. Completion</div>
+                                <div class="text-white">4.2 min</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="w-full bg-white/10 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all" style="width: 67%"></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-3 text-xs">
+                            <div class="bg-green-500/10 border border-green-500/30 rounded p-2">
+                                <div class="text-green-400 font-semibold">-24% Wait Time</div>
+                                <div class="text-white/60">From 18min to 13.7min</div>
+                            </div>
+                            <div class="bg-blue-500/10 border border-blue-500/30 rounded p-2">
+                                <div class="text-blue-400 font-semibold">+18% Throughput</div>
+                                <div class="text-white/60">327 more daily customers</div>
+                            </div>
+                            <div class="bg-yellow-500/10 border border-yellow-500/30 rounded p-2">
+                                <div class="text-yellow-400 font-semibold">+$89K Cost</div>
+                                <div class="text-white/60">Additional staffing</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Simulation 2 -->
+                    <div class="glass rounded-lg p-5 simulation-running">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <div class="text-white font-semibold mb-1">Tax Filing Deadline Extension Impact</div>
+                                <div class="text-white/60 text-sm">Modeling effects of 30-day filing deadline extension on IRS workload</div>
+                            </div>
+                            <span class="bg-purple-500/20 text-purple-400 px-3 py-1 rounded text-xs font-semibold flex items-center gap-2">
+                                <div class="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                                RUNNING
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3 text-xs">
+                            <div>
+                                <div class="text-white/50">Scenario Type</div>
+                                <div class="text-white">Policy Change</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Duration</div>
+                                <div class="text-cyan-400">60 days simulated</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Progress</div>
+                                <div class="text-white">42% (Day 25/60)</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Est. Completion</div>
+                                <div class="text-white">8.7 min</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="w-full bg-white/10 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all" style="width: 42%"></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-3 text-xs">
+                            <div class="bg-green-500/10 border border-green-500/30 rounded p-2">
+                                <div class="text-green-400 font-semibold">-31% Peak Load</div>
+                                <div class="text-white/60">Smoother distribution</div>
+                            </div>
+                            <div class="bg-blue-500/10 border border-blue-500/30 rounded p-2">
+                                <div class="text-blue-400 font-semibold">+12% Quality</div>
+                                <div class="text-white/60">Fewer errors detected</div>
+                            </div>
+                            <div class="bg-green-500/10 border border-green-500/30 rounded p-2">
+                                <div class="text-green-400 font-semibold">-$234K Cost</div>
+                                <div class="text-white/60">Reduced overtime</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Simulation 3 -->
+                    <div class="glass rounded-lg p-5 simulation-running">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <div class="text-white font-semibold mb-1">Digital Permit Submission Rollout</div>
+                                <div class="text-white/60 text-sm">Simulating transition from paper to digital building permit system</div>
+                            </div>
+                            <span class="bg-purple-500/20 text-purple-400 px-3 py-1 rounded text-xs font-semibold flex items-center gap-2">
+                                <div class="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                                RUNNING
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3 text-xs">
+                            <div>
+                                <div class="text-white/50">Scenario Type</div>
+                                <div class="text-white">Process Change</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Duration</div>
+                                <div class="text-cyan-400">90 days simulated</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Progress</div>
+                                <div class="text-white">88% (Day 79/90)</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Est. Completion</div>
+                                <div class="text-white">1.8 min</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="w-full bg-white/10 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all" style="width: 88%"></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-3 text-xs">
+                            <div class="bg-green-500/10 border border-green-500/30 rounded p-2">
+                                <div class="text-green-400 font-semibold">-47% Proc. Time</div>
+                                <div class="text-white/60">From 4.2 to 2.2 days</div>
+                            </div>
+                            <div class="bg-blue-500/10 border border-blue-500/30 rounded p-2">
+                                <div class="text-blue-400 font-semibold">+89% Satisfaction</div>
+                                <div class="text-white/60">Customer feedback</div>
+                            </div>
+                            <div class="bg-green-500/10 border border-green-500/30 rounded p-2">
+                                <div class="text-green-400 font-semibold">-$412K Cost</div>
+                                <div class="text-white/60">Annual paper savings</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- What-If Scenario Builder -->
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-flask text-cyan-400"></i>
+                    What-If Scenario Builder
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="text-white/70 text-sm mb-2 block">Select Agency/Department</label>
+                        <select class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white mb-4">
+                            <option>DMV - Motor Vehicles</option>
+                            <option>IRS - Tax Processing</option>
+                            <option>Building Permits</option>
+                            <option>Social Services</option>
+                            <option>Employment Services</option>
+                            <option>Health Services</option>
+                        </select>
+
+                        <label class="text-white/70 text-sm mb-2 block">Scenario Type</label>
+                        <select class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white mb-4">
+                            <option>Resource Addition/Reduction</option>
+                            <option>Policy Change</option>
+                            <option>Process Modification</option>
+                            <option>Budget Adjustment</option>
+                            <option>Staffing Change</option>
+                            <option>Technology Implementation</option>
+                        </select>
+
+                        <label class="text-white/70 text-sm mb-2 block">Simulation Duration</label>
+                        <select class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white mb-4">
+                            <option>7 days</option>
+                            <option>30 days</option>
+                            <option>60 days</option>
+                            <option>90 days</option>
+                            <option>6 months</option>
+                            <option>1 year</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-white/70 text-sm mb-2 block">Scenario Parameters</label>
+                        <div class="space-y-3 mb-4">
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-white/60">Staff Count Change</span>
+                                    <span class="text-cyan-400">+15%</span>
+                                </div>
+                                <input type="range" class="w-full" min="-50" max="50" value="15">
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-white/60">Budget Adjustment</span>
+                                    <span class="text-cyan-400">+8%</span>
+                                </div>
+                                <input type="range" class="w-full" min="-30" max="30" value="8">
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-white/60">Process Efficiency</span>
+                                    <span class="text-cyan-400">+22%</span>
+                                </div>
+                                <input type="range" class="w-full" min="-20" max="50" value="22">
+                            </div>
+                        </div>
+
+                        <button class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 rounded-lg transition flex items-center justify-center gap-2">
+                            <i class="fas fa-play"></i>
+                            Run Simulation
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-6 bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-info-circle text-blue-400 text-lg mt-1"></i>
+                        <div class="text-sm text-white/80">
+                            <strong class="text-white">AI-Powered Predictions:</strong> Our simulation engine uses machine learning models trained on 5+ years of historical government operations data to predict outcomes with 93.4% accuracy.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Module 2 -->
+
+        <!-- Module 3: Process Visualization -->
+        <!-- Added 2024-10-31: Process Visualization and Flow Analysis -->
+        <div id="digital-twin-module-visualization" class="digital-twin-module-content hidden">
+            <!-- Visualization Dashboard -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-white/70 text-sm">Process Flows</div>
+                        <i class="fas fa-sitemap text-blue-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-2">47</div>
+                    <div class="text-xs text-cyan-400">Across 12 agencies</div>
+                </div>
+
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-white/70 text-sm">Bottlenecks Found</div>
+                        <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-2">14</div>
+                    <div class="text-xs text-yellow-400">6 critical priority</div>
+                </div>
+
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-white/70 text-sm">Avg Flow Efficiency</div>
+                        <i class="fas fa-tachometer-alt text-green-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-2">78.3%</div>
+                    <div class="text-xs text-green-400">+4.7% this month</div>
+                </div>
+
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-white/70 text-sm">Optimization Ideas</div>
+                        <i class="fas fa-lightbulb text-purple-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-2">23</div>
+                    <div class="text-xs text-purple-400">AI-generated</div>
+                </div>
+            </div>
+
+            <!-- Process Flow Visualization -->
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-project-diagram text-blue-400"></i>
+                    Building Permit Approval Process Flow
+                </h3>
+
+                <div class="bg-slate-900/50 rounded-lg p-6 mb-4" style="min-height: 400px;">
+                    <!-- Process Flow Diagram -->
+                    <div class="flex items-center justify-center gap-8">
+                        <!-- Stage 1 -->
+                        <div class="flex flex-col items-center">
+                            <div class="glass rounded-lg p-4 w-40 text-center mb-2">
+                                <div class="text-white font-semibold mb-1">Application</div>
+                                <div class="text-white/60 text-xs mb-2">Submission</div>
+                                <div class="text-green-400 text-sm font-semibold">24 min avg</div>
+                                <div class="text-white/50 text-xs">98.7% complete rate</div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                                <div class="text-xs text-white/60">Fast</div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col items-center">
+                            <i class="fas fa-arrow-right text-blue-400 text-2xl mb-16"></i>
+                        </div>
+
+                        <!-- Stage 2 -->
+                        <div class="flex flex-col items-center">
+                            <div class="glass rounded-lg p-4 w-40 text-center mb-2">
+                                <div class="text-white font-semibold mb-1">Document</div>
+                                <div class="text-white/60 text-xs mb-2">Verification</div>
+                                <div class="text-yellow-400 text-sm font-semibold">2.1 days avg</div>
+                                <div class="text-white/50 text-xs">87.4% complete rate</div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                                <div class="text-xs text-white/60">Bottleneck</div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col items-center">
+                            <i class="fas fa-arrow-right text-blue-400 text-2xl mb-16"></i>
+                        </div>
+
+                        <!-- Stage 3 -->
+                        <div class="flex flex-col items-center">
+                            <div class="glass rounded-lg p-4 w-40 text-center mb-2">
+                                <div class="text-white font-semibold mb-1">Technical</div>
+                                <div class="text-white/60 text-xs mb-2">Review</div>
+                                <div class="text-green-400 text-sm font-semibold">1.4 days avg</div>
+                                <div class="text-white/50 text-xs">94.2% complete rate</div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                                <div class="text-xs text-white/60">Optimal</div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col items-center">
+                            <i class="fas fa-arrow-right text-blue-400 text-2xl mb-16"></i>
+                        </div>
+
+                        <!-- Stage 4 -->
+                        <div class="flex flex-col items-center">
+                            <div class="glass rounded-lg p-4 w-40 text-center mb-2">
+                                <div class="text-white font-semibold mb-1">Final</div>
+                                <div class="text-white/60 text-xs mb-2">Approval</div>
+                                <div class="text-green-400 text-sm font-semibold">0.7 days avg</div>
+                                <div class="text-white/50 text-xs">99.1% complete rate</div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                                <div class="text-xs text-white/60">Excellent</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 text-center">
+                        <div class="text-white/70 text-sm mb-1">Total Process Time</div>
+                        <div class="text-2xl font-bold text-white">4.2 days average</div>
+                        <div class="text-yellow-400 text-xs">Target: 3.0 days • Gap: 1.2 days</div>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-lightbulb text-yellow-400 text-lg mt-1"></i>
+                        <div class="text-sm text-white/80">
+                            <strong class="text-white">AI Recommendation:</strong> Document Verification stage is the main bottleneck. Adding 2 additional reviewers or implementing automated document validation could reduce process time by 35% (to 2.7 days total).
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resource Utilization Heat Map -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-fire text-red-400"></i>
+                        Staff Utilization Heat Map
+                    </h3>
+
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex items-center justify-between text-sm mb-2">
+                                <span class="text-white">Document Review Team</span>
+                                <span class="text-red-400 font-semibold">94.7% utilized</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-4">
+                                <div class="bg-gradient-to-r from-red-500 to-orange-500 h-4 rounded-full" style="width: 94.7%"></div>
+                            </div>
+                            <div class="text-xs text-red-400 mt-1">⚠️ Overutilized - Consider adding staff</div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between text-sm mb-2">
+                                <span class="text-white">Technical Reviewers</span>
+                                <span class="text-green-400 font-semibold">78.3% utilized</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-4">
+                                <div class="bg-gradient-to-r from-green-500 to-emerald-500 h-4 rounded-full" style="width: 78.3%"></div>
+                            </div>
+                            <div class="text-xs text-green-400 mt-1">✓ Optimal range (75-85%)</div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between text-sm mb-2">
+                                <span class="text-white">Final Approvers</span>
+                                <span class="text-cyan-400 font-semibold">67.1% utilized</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-4">
+                                <div class="bg-gradient-to-r from-cyan-500 to-blue-500 h-4 rounded-full" style="width: 67.1%"></div>
+                            </div>
+                            <div class="text-xs text-cyan-400 mt-1">✓ Good capacity available</div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between text-sm mb-2">
+                                <span class="text-white">Customer Service</span>
+                                <span class="text-yellow-400 font-semibold">56.8% utilized</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-4">
+                                <div class="bg-gradient-to-r from-yellow-500 to-amber-500 h-4 rounded-full" style="width: 56.8%"></div>
+                            </div>
+                            <div class="text-xs text-yellow-400 mt-1">⚠️ Underutilized - Could reassign resources</div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between text-sm mb-2">
+                                <span class="text-white">Administrative Support</span>
+                                <span class="text-green-400 font-semibold">81.2% utilized</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-4">
+                                <div class="bg-gradient-to-r from-green-500 to-emerald-500 h-4 rounded-full" style="width: 81.2%"></div>
+                            </div>
+                            <div class="text-xs text-green-400 mt-1">✓ Optimal range</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-area text-purple-400"></i>
+                        Workload Distribution Timeline
+                    </h3>
+
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex items-center justify-between text-sm mb-2">
+                                <span class="text-white">Monday</span>
+                                <span class="text-cyan-400 font-semibold">847 tasks</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-3">
+                                <div class="bg-gradient-to-r from-blue-500 to-cyan-500 h-3 rounded-full" style="width: 71%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between text-sm mb-2">
+                                <span class="text-white">Tuesday</span>
+                                <span class="text-cyan-400 font-semibold">923 tasks</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-3">
+                                <div class="bg-gradient-to-r from-blue-500 to-cyan-500 h-3 rounded-full" style="width: 77%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between text-sm mb-2">
+                                <span class="text-white">Wednesday</span>
+                                <span class="text-red-400 font-semibold">1,147 tasks</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-3">
+                                <div class="bg-gradient-to-r from-red-500 to-orange-500 h-3 rounded-full" style="width: 96%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between text-sm mb-2">
+                                <span class="text-white">Thursday</span>
+                                <span class="text-cyan-400 font-semibold">934 tasks</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-3">
+                                <div class="bg-gradient-to-r from-blue-500 to-cyan-500 h-3 rounded-full" style="width: 78%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between text-sm mb-2">
+                                <span class="text-white">Friday</span>
+                                <span class="text-green-400 font-semibold">712 tasks</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-3">
+                                <div class="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full" style="width: 60%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-xs text-white/80">
+                        <i class="fas fa-info-circle text-blue-400 mr-2"></i>
+                        Peak workload occurs on Wednesdays. Consider load balancing or shift scheduling adjustments.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Identified Bottlenecks -->
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                    Critical Bottlenecks & Recommendations
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="glass rounded-lg p-4 border-l-4 border-red-500">
+                        <div class="flex items-start justify-between mb-2">
+                            <div class="text-white font-semibold">DMV License Renewal Queue</div>
+                            <span class="bg-red-500/20 text-red-400 px-2 py-1 rounded text-xs font-semibold">CRITICAL</span>
+                        </div>
+                        <div class="text-white/60 text-sm mb-3">Avg wait time: 47 minutes (target: 20 min)</div>
+                        <div class="bg-green-500/10 border border-green-500/30 rounded p-3 text-xs text-white/80">
+                            <div class="text-green-400 font-semibold mb-1">💡 AI Recommendation:</div>
+                            Add 3 express lanes for simple renewals. Est. impact: -35% wait time, +$47K annual cost.
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-lg p-4 border-l-4 border-red-500">
+                        <div class="flex items-start justify-between mb-2">
+                            <div class="text-white font-semibold">IRS Audit Assignment Delay</div>
+                            <span class="bg-red-500/20 text-red-400 px-2 py-1 rounded text-xs font-semibold">CRITICAL</span>
+                        </div>
+                        <div class="text-white/60 text-sm mb-3">Avg assignment time: 8.2 days (target: 3 days)</div>
+                        <div class="bg-green-500/10 border border-green-500/30 rounded p-3 text-xs text-white/80">
+                            <div class="text-green-400 font-semibold mb-1">💡 AI Recommendation:</div>
+                            Implement automated case routing algorithm. Est. impact: -62% assignment time, $0 cost.
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-lg p-4 border-l-4 border-yellow-500">
+                        <div class="flex items-start justify-between mb-2">
+                            <div class="text-white font-semibold">Permit Document Verification</div>
+                            <span class="bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded text-xs font-semibold">HIGH</span>
+                        </div>
+                        <div class="text-white/60 text-sm mb-3">Processing time: 2.1 days (target: 1.0 day)</div>
+                        <div class="bg-green-500/10 border border-green-500/30 rounded p-3 text-xs text-white/80">
+                            <div class="text-green-400 font-semibold mb-1">💡 AI Recommendation:</div>
+                            Deploy OCR + AI document validation. Est. impact: -48% processing time, +$124K implementation.
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-lg p-4 border-l-4 border-yellow-500">
+                        <div class="flex items-start justify-between mb-2">
+                            <div class="text-white font-semibold">Social Services Case Assignment</div>
+                            <span class="bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded text-xs font-semibold">HIGH</span>
+                        </div>
+                        <div class="text-white/60 text-sm mb-3">Workload imbalance: 32% variance across caseworkers</div>
+                        <div class="bg-green-500/10 border border-green-500/30 rounded p-3 text-xs text-white/80">
+                            <div class="text-green-400 font-semibold mb-1">💡 AI Recommendation:</div>
+                            Implement AI-powered workload balancing. Est. impact: +24% efficiency, $0 cost.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Module 3 -->
+
+        <!-- Module 4: Scenario Testing & Optimization -->
+        <!-- Added 2024-10-31: Scenario Testing and Optimization Tools -->
+        <div id="digital-twin-module-optimization" class="digital-twin-module-content hidden">
+            <!-- Optimization Dashboard -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-white/70 text-sm">A/B Tests Running</div>
+                        <i class="fas fa-vial text-cyan-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-2">12</div>
+                    <div class="text-xs text-green-400">4 showing improvements</div>
+                </div>
+
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-white/70 text-sm">Optimizations Applied</div>
+                        <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-2">89</div>
+                    <div class="text-xs text-cyan-400">This quarter</div>
+                </div>
+
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-white/70 text-sm">Efficiency Gain</div>
+                        <i class="fas fa-arrow-up text-purple-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-2">+18.7%</div>
+                    <div class="text-xs text-green-400">Across all agencies</div>
+                </div>
+
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-white/70 text-sm">Total Savings</div>
+                        <i class="fas fa-piggy-bank text-yellow-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white mb-2">$4.2M</div>
+                    <div class="text-xs text-green-400">Annual projected</div>
+                </div>
+            </div>
+
+            <!-- Active A/B Tests -->
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-vial text-cyan-400"></i>
+                    Active A/B Tests
+                </h3>
+
+                <div class="space-y-4">
+                    <!-- Test 1 -->
+                    <div class="glass rounded-lg p-5">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <div class="text-white font-semibold mb-1">Online vs. In-Person Permit Applications</div>
+                                <div class="text-white/60 text-sm">Testing user preference and processing efficiency</div>
+                            </div>
+                            <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded text-xs font-semibold">VARIANT A WINNING</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <!-- Variant A -->
+                            <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                                <div class="text-green-400 font-semibold mb-3 flex items-center gap-2">
+                                    <i class="fas fa-crown"></i>
+                                    Variant A: Online Portal
+                                </div>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Completion Rate</span>
+                                        <span class="text-white font-semibold">94.2%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Avg Processing Time</span>
+                                        <span class="text-green-400 font-semibold">2.1 days</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">User Satisfaction</span>
+                                        <span class="text-white font-semibold">4.6/5.0</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Cost per Application</span>
+                                        <span class="text-green-400 font-semibold">$12.40</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Variant B -->
+                            <div class="bg-white/5 border border-white/10 rounded-lg p-4">
+                                <div class="text-white/70 font-semibold mb-3">
+                                    Variant B: In-Person
+                                </div>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Completion Rate</span>
+                                        <span class="text-white font-semibold">89.7%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Avg Processing Time</span>
+                                        <span class="text-white font-semibold">3.8 days</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">User Satisfaction</span>
+                                        <span class="text-white font-semibold">4.1/5.0</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Cost per Application</span>
+                                        <span class="text-white font-semibold">$24.80</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="text-white/60">
+                                <i class="fas fa-users mr-1"></i>
+                                1,247 participants • 28 days duration
+                            </div>
+                            <div class="text-green-400 font-semibold">
+                                Recommendation: Scale online portal to 100% availability
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Test 2 -->
+                    <div class="glass rounded-lg p-5">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <div class="text-white font-semibold mb-1">Automated vs. Manual Tax Return Review</div>
+                                <div class="text-white/60 text-sm">Comparing AI-assisted review accuracy and speed</div>
+                            </div>
+                            <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded text-xs font-semibold">VARIANT A WINNING</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <!-- Variant A -->
+                            <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                                <div class="text-green-400 font-semibold mb-3 flex items-center gap-2">
+                                    <i class="fas fa-crown"></i>
+                                    Variant A: AI-Assisted
+                                </div>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Accuracy Rate</span>
+                                        <span class="text-white font-semibold">99.4%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Avg Review Time</span>
+                                        <span class="text-green-400 font-semibold">1.2 hrs</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Flagged Issues</span>
+                                        <span class="text-white font-semibold">147/1000</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Cost per Review</span>
+                                        <span class="text-green-400 font-semibold">$8.20</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Variant B -->
+                            <div class="bg-white/5 border border-white/10 rounded-lg p-4">
+                                <div class="text-white/70 font-semibold mb-3">
+                                    Variant B: Manual
+                                </div>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Accuracy Rate</span>
+                                        <span class="text-white font-semibold">98.9%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Avg Review Time</span>
+                                        <span class="text-white font-semibold">3.7 hrs</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Flagged Issues</span>
+                                        <span class="text-white font-semibold">134/1000</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Cost per Review</span>
+                                        <span class="text-white font-semibold">$24.60</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="text-white/60">
+                                <i class="fas fa-users mr-1"></i>
+                                2,847 returns reviewed • 14 days duration
+                            </div>
+                            <div class="text-green-400 font-semibold">
+                                Recommendation: Expand AI-assisted review to all returns
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Test 3 -->
+                    <div class="glass rounded-lg p-5">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <div class="text-white font-semibold mb-1">Appointment-Based vs. Walk-In DMV Service</div>
+                                <div class="text-white/60 text-sm">Testing customer wait times and satisfaction</div>
+                            </div>
+                            <span class="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded text-xs font-semibold">INCONCLUSIVE</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <!-- Variant A -->
+                            <div class="bg-white/5 border border-white/10 rounded-lg p-4">
+                                <div class="text-white/70 font-semibold mb-3">
+                                    Variant A: Appointments
+                                </div>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Avg Wait Time</span>
+                                        <span class="text-green-400 font-semibold">8 min</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Satisfaction</span>
+                                        <span class="text-white font-semibold">4.7/5.0</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">No-Show Rate</span>
+                                        <span class="text-red-400 font-semibold">18.2%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Daily Capacity</span>
+                                        <span class="text-white font-semibold">387</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Variant B -->
+                            <div class="bg-white/5 border border-white/10 rounded-lg p-4">
+                                <div class="text-white/70 font-semibold mb-3">
+                                    Variant B: Walk-In
+                                </div>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Avg Wait Time</span>
+                                        <span class="text-red-400 font-semibold">24 min</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Satisfaction</span>
+                                        <span class="text-white font-semibold">3.9/5.0</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">No-Show Rate</span>
+                                        <span class="text-green-400 font-semibold">0%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/60">Daily Capacity</span>
+                                        <span class="text-white font-semibold">524</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="text-white/60">
+                                <i class="fas fa-users mr-1"></i>
+                                847 customers • 21 days duration
+                            </div>
+                            <div class="text-yellow-400 font-semibold">
+                                Recommendation: Extend test duration to 60 days for conclusive results
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Optimization Recommendations -->
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-lightbulb text-purple-400"></i>
+                    AI-Generated Optimization Recommendations
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="glass rounded-lg p-5 optimization-badge">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center">
+                                <i class="fas fa-robot text-white text-lg"></i>
+                            </div>
+                            <span class="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-semibold">HIGH ROI</span>
+                        </div>
+                        <div class="text-white font-semibold mb-2">Automate Routine Verifications</div>
+                        <div class="text-white/60 text-sm mb-3">Deploy AI to verify standard documents across all agencies</div>
+                        <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+                            <div>
+                                <div class="text-white/50">Time Savings</div>
+                                <div class="text-green-400 font-semibold">-42%</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Cost Savings</div>
+                                <div class="text-green-400 font-semibold">$847K/yr</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Implementation</div>
+                                <div class="text-white">$340K</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Payback</div>
+                                <div class="text-green-400 font-semibold">4.8 months</div>
+                            </div>
+                        </div>
+                        <button class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm font-semibold transition">
+                            Review Recommendation
+                        </button>
+                    </div>
+
+                    <div class="glass rounded-lg p-5 optimization-badge">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
+                                <i class="fas fa-calendar-alt text-white text-lg"></i>
+                            </div>
+                            <span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs font-semibold">QUICK WIN</span>
+                        </div>
+                        <div class="text-white font-semibold mb-2">Smart Appointment Scheduling</div>
+                        <div class="text-white/60 text-sm mb-3">AI-optimized scheduling to reduce wait times and no-shows</div>
+                        <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+                            <div>
+                                <div class="text-white/50">Time Savings</div>
+                                <div class="text-cyan-400 font-semibold">-28%</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Cost Savings</div>
+                                <div class="text-cyan-400 font-semibold">$247K/yr</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Implementation</div>
+                                <div class="text-white">$89K</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Payback</div>
+                                <div class="text-cyan-400 font-semibold">4.3 months</div>
+                            </div>
+                        </div>
+                        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-semibold transition">
+                            Review Recommendation
+                        </button>
+                    </div>
+
+                    <div class="glass rounded-lg p-5 optimization-badge">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                                <i class="fas fa-chart-line text-white text-lg"></i>
+                            </div>
+                            <span class="bg-purple-500/20 text-purple-400 px-2 py-1 rounded text-xs font-semibold">MODERATE ROI</span>
+                        </div>
+                        <div class="text-white font-semibold mb-2">Predictive Resource Allocation</div>
+                        <div class="text-white/60 text-sm mb-3">AI forecasting to optimize staffing levels by day/hour</div>
+                        <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+                            <div>
+                                <div class="text-white/50">Time Savings</div>
+                                <div class="text-purple-400 font-semibold">-19%</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Cost Savings</div>
+                                <div class="text-purple-400 font-semibold">$423K/yr</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Implementation</div>
+                                <div class="text-white">$287K</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50">Payback</div>
+                                <div class="text-purple-400 font-semibold">8.1 months</div>
+                            </div>
+                        </div>
+                        <button class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg text-sm font-semibold transition">
+                            Review Recommendation
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Optimization Tracker -->
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-chart-bar text-cyan-400"></i>
+                    Performance Optimization Tracker
+                </h3>
+
+                <div class="space-y-4">
+                    <div class="glass rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <div class="text-white font-semibold">DMV Service Counter Efficiency</div>
+                                <div class="text-white/60 text-sm">Optimization applied: Oct 15, 2024</div>
+                            </div>
+                            <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded text-xs font-semibold">+24% IMPROVEMENT</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 text-sm">
+                            <div>
+                                <div class="text-white/50 text-xs">Before</div>
+                                <div class="text-white font-semibold">18.2 min wait</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50 text-xs">After</div>
+                                <div class="text-green-400 font-semibold">13.8 min wait</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50 text-xs">Annual Savings</div>
+                                <div class="text-yellow-400 font-semibold">$234K</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <div class="text-white font-semibold">IRS Tax Review Automation</div>
+                                <div class="text-white/60 text-sm">Optimization applied: Oct 8, 2024</div>
+                            </div>
+                            <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded text-xs font-semibold">+67% IMPROVEMENT</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 text-sm">
+                            <div>
+                                <div class="text-white/50 text-xs">Before</div>
+                                <div class="text-white font-semibold">3.7 hrs review</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50 text-xs">After</div>
+                                <div class="text-green-400 font-semibold">1.2 hrs review</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50 text-xs">Annual Savings</div>
+                                <div class="text-yellow-400 font-semibold">$1.2M</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <div class="text-white font-semibold">Building Permit Digital Submission</div>
+                                <div class="text-white/60 text-sm">Optimization applied: Sep 28, 2024</div>
+                            </div>
+                            <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded text-xs font-semibold">+47% IMPROVEMENT</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 text-sm">
+                            <div>
+                                <div class="text-white/50 text-xs">Before</div>
+                                <div class="text-white font-semibold">4.2 days process</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50 text-xs">After</div>
+                                <div class="text-green-400 font-semibold">2.2 days process</div>
+                            </div>
+                            <div>
+                                <div class="text-white/50 text-xs">Annual Savings</div>
+                                <div class="text-yellow-400 font-semibold">$412K</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-chart-line text-green-400 text-lg mt-1"></i>
+                        <div class="text-sm text-white/80">
+                            <strong class="text-white">Total Impact:</strong> 89 optimizations applied this quarter resulted in 18.7% average efficiency improvement and $4.2M in projected annual savings across all government agencies.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Module 4 -->
+
+    </div>
+
+    <script>
+        // Added 2024-10-31: Module switching function for Digital Twin
+        function switchDigitalTwinModule(moduleName) {
+            // Hide all modules
+            document.querySelectorAll('.digital-twin-module-content').forEach(module => {
+                module.classList.remove('active');
+                module.classList.add('hidden');
+            });
+
+            // Remove active class from all tabs
+            document.querySelectorAll('.digital-twin-module-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected module
+            const selectedModule = document.getElementById('digital-twin-module-' + moduleName);
+            if (selectedModule) {
+                selectedModule.classList.add('active');
+                selectedModule.classList.remove('hidden');
+            }
+
+            // Add active class to clicked tab
+            event.target.closest('.digital-twin-module-tab').classList.add('active');
+        }
+
+        // MOCK DATA - Replace in production
+        // TODO: Connect to real-time government data feeds
+        // TODO: Integrate with actual simulation engine API
+    </script>
+</body>
+</html>

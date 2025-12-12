@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Govli AI - Workflow Administration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="config.js"></script>
+    <style>
+        :root {
+            --deep-ocean: #0a1628;
+            --glass-bg: rgba(15, 23, 42, 0.75);
+            --glass-border: rgba(6, 182, 212, 0.25);
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #0a1628 0%, #0c2340 25%, #0e3a5f 50%, #1e3a5f 75%, #164e7f 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .workflow-card {
+            transition: all 0.3s ease;
+        }
+
+        .workflow-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-active { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .badge-draft { background: rgba(156, 163, 175, 0.2); color: #9ca3af; }
+        .badge-inactive { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .badge-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        .badge-in-progress { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .badge-completed { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .badge-failed { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .badge-cancelled { background: rgba(156, 163, 175, 0.2); color: #9ca3af; }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab.active {
+            border-bottom-color: #06b6d4;
+            color: #06b6d4;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <!-- Header -->
+    <header class="glass sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <i class="fas fa-project-diagram text-3xl text-cyan-400"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">Workflow Administration</h1>
+                        <p class="text-sm text-gray-400">Monitor and manage workflow automation</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="index.html" class="glass px-4 py-2 rounded-lg text-white hover:bg-white/5 transition">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Back to Portal Hub
+                    </a>
+                    <button onclick="logout()" class="glass px-4 py-2 rounded-lg text-white hover:bg-red-500/20 transition">
+                        <i class="fas fa-sign-out-alt mr-2"></i>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400">Active Workflows</span>
+                    <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                </div>
+                <div class="text-3xl font-bold text-white" id="activeWorkflows">0</div>
+            </div>
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400">Running Executions</span>
+                    <i class="fas fa-spinner text-blue-400 text-xl"></i>
+                </div>
+                <div class="text-3xl font-bold text-blue-400" id="runningExecutions">0</div>
+            </div>
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400">Completed Today</span>
+                    <i class="fas fa-chart-line text-green-400 text-xl"></i>
+                </div>
+                <div class="text-3xl font-bold text-green-400" id="completedToday">0</div>
+            </div>
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400">Success Rate</span>
+                    <i class="fas fa-percentage text-cyan-400 text-xl"></i>
+                </div>
+                <div class="text-3xl font-bold text-cyan-400" id="successRate">0%</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="glass rounded-xl mb-8">
+            <div class="flex border-b border-gray-700">
+                <div class="tab active text-white" onclick="switchTab('workflows')">
+                    <i class="fas fa-sitemap mr-2"></i>
+                    Workflows
+                </div>
+                <div class="tab text-gray-400" onclick="switchTab('executions')">
+                    <i class="fas fa-history mr-2"></i>
+                    Executions
+                </div>
+            </div>
+        </div>
+
+        <!-- Workflows Tab -->
+        <div id="workflowsTab" class="space-y-6">
+            <div id="workflowsList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Workflows will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Executions Tab -->
+        <div id="executionsTab" class="space-y-6 hidden">
+            <!-- Filters -->
+            <div class="glass rounded-xl p-6">
+                <div class="flex flex-wrap gap-4">
+                    <select id="execStatusFilter" class="glass px-4 py-2 rounded-lg text-white border border-cyan-500/30">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="failed">Failed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <button onclick="loadExecutions()" class="px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition">
+                        <i class="fas fa-sync mr-2"></i>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div id="executionsList" class="space-y-4">
+                <!-- Executions will be loaded here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Execution Detail Modal -->
+    <div id="executionModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50" onclick="closeModal(event)">
+        <div class="glass rounded-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="p-6 border-b border-cyan-500/30">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white mb-1" id="modalExecTitle"></h2>
+                        <p class="text-gray-400" id="modalExecPermit"></p>
+                    </div>
+                    <button onclick="closeExecutionModal()" class="text-gray-400 hover:text-white">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <!-- Execution Details -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-gray-400 text-sm">Status</label>
+                        <div id="modalExecStatus" class="mt-1"></div>
+                    </div>
+                    <div>
+                        <label class="text-gray-400 text-sm">Started</label>
+                        <div class="text-white mt-1" id="modalExecStarted"></div>
+                    </div>
+                    <div>
+                        <label class="text-gray-400 text-sm">Duration</label>
+                        <div class="text-white mt-1" id="modalExecDuration"></div>
+                    </div>
+                </div>
+
+                <!-- Step History -->
+                <div>
+                    <label class="text-gray-400 text-sm mb-4 block">Execution Timeline</label>
+                    <div id="modalExecTimeline" class="space-y-4">
+                        <!-- Timeline will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'workflows';
+        let allWorkflows = [];
+        let allExecutions = [];
+
+        window.onload = async function() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = 'citizen-permits-login.html';
+                return;
+            }
+
+            await loadWorkflows();
+            await loadExecutions();
+            updateStats();
+
+            // Auto-refresh every 30 seconds
+            setInterval(async () => {
+                await loadExecutions();
+                updateStats();
+            }, 30000);
+        };
+
+        function switchTab(tab) {
+            currentTab = tab;
+
+            // Update tab styling
+            document.querySelectorAll('.tab').forEach(t => {
+                t.classList.remove('active', 'text-white');
+                t.classList.add('text-gray-400');
+            });
+            event.target.closest('.tab').classList.add('active', 'text-white');
+            event.target.closest('.tab').classList.remove('text-gray-400');
+
+            // Show/hide content
+            if (tab === 'workflows') {
+                document.getElementById('workflowsTab').classList.remove('hidden');
+                document.getElementById('executionsTab').classList.add('hidden');
+            } else {
+                document.getElementById('workflowsTab').classList.add('hidden');
+                document.getElementById('executionsTab').classList.remove('hidden');
+            }
+        }
+
+        async function loadWorkflows() {
+            try {
+                const response = await apiCall(API_CONFIG.ENDPOINTS.WORKFLOWS.LIST);
+                allWorkflows = response.workflows || [];
+                renderWorkflows(allWorkflows);
+            } catch (error) {
+                console.error('Error loading workflows:', error);
+            }
+        }
+
+        async function loadExecutions() {
+            try {
+                const statusFilter = document.getElementById('execStatusFilter')?.value || '';
+                let url = API_CONFIG.ENDPOINTS.WORKFLOWS.EXECUTIONS;
+                if (statusFilter) url += `?status=${statusFilter}`;
+
+                const response = await apiCall(url);
+                allExecutions = response.executions || [];
+                renderExecutions(allExecutions);
+            } catch (error) {
+                console.error('Error loading executions:', error);
+            }
+        }
+
+        function updateStats() {
+            const active = allWorkflows.filter(w => w.status === 'active').length;
+            const running = allExecutions.filter(e => e.status === 'in_progress' || e.status === 'pending').length;
+
+            const today = new Date().toDateString();
+            const completed = allExecutions.filter(e =>
+                e.status === 'completed' &&
+                new Date(e.completedAt).toDateString() === today
+            ).length;
+
+            const totalCompleted = allExecutions.filter(e => e.status === 'completed').length;
+            const totalFailed = allExecutions.filter(e => e.status === 'failed').length;
+            const successRate = totalCompleted + totalFailed > 0
+                ? Math.round((totalCompleted / (totalCompleted + totalFailed)) * 100)
+                : 0;
+
+            document.getElementById('activeWorkflows').textContent = active;
+            document.getElementById('runningExecutions').textContent = running;
+            document.getElementById('completedToday').textContent = completed;
+            document.getElementById('successRate').textContent = successRate + '%';
+        }
+
+        function renderWorkflows(workflows) {
+            const container = document.getElementById('workflowsList');
+
+            container.innerHTML = workflows.map(workflow => `
+                <div class="workflow-card glass rounded-xl p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="text-lg font-semibold text-white">${workflow.name}</h3>
+                                <span class="badge badge-${workflow.status}">${workflow.status}</span>
+                            </div>
+                            <p class="text-gray-400 text-sm mb-3">${workflow.description || ''}</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-400">Type:</span>
+                            <span class="text-white ml-2">${workflow.type}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">Trigger:</span>
+                            <span class="text-white ml-2">${workflow.triggerType}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">Steps:</span>
+                            <span class="text-white ml-2">${workflow.steps?.length || 0}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">Conditions:</span>
+                            <span class="text-white ml-2">${workflow.triggerConditions ? JSON.stringify(workflow.triggerConditions) : 'None'}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderExecutions(executions) {
+            const container = document.getElementById('executionsList');
+
+            if (executions.length === 0) {
+                container.innerHTML = `
+                    <div class="glass rounded-xl p-12 text-center">
+                        <i class="fas fa-history text-6xl text-gray-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-white mb-2">No Executions Found</h3>
+                        <p class="text-gray-400">No workflow executions match your filters.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = executions.map(exec => `
+                <div class="glass rounded-xl p-6 cursor-pointer hover:bg-white/5 transition"
+                     onclick="showExecutionDetail('${exec.id}')">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="text-lg font-semibold text-white">${exec.Workflow?.name || 'Workflow'}</h3>
+                                <span class="badge badge-${exec.status}">${exec.status.replace('_', ' ')}</span>
+                            </div>
+                            <div class="flex items-center gap-4 text-sm text-gray-400">
+                                <span><i class="fas fa-file-alt mr-2"></i>${exec.Permit?.permitNumber || 'N/A'}</span>
+                                <span><i class="fas fa-clock mr-2"></i>${formatDate(exec.startedAt)}</span>
+                                ${exec.completedAt ? `<span><i class="fas fa-check mr-2"></i>${formatDate(exec.completedAt)}</span>` : ''}
+                            </div>
+                        </div>
+                        <button class="glass px-4 py-2 rounded-lg text-cyan-400 hover:text-cyan-300 transition">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function showExecutionDetail(executionId) {
+            try {
+                const response = await apiCall(API_CONFIG.ENDPOINTS.WORKFLOWS.EXECUTION_GET(executionId));
+                const execution = response.execution;
+
+                document.getElementById('modalExecTitle').textContent = execution.Workflow?.name || 'Workflow Execution';
+                document.getElementById('modalExecPermit').textContent = `Permit: ${execution.Permit?.permitNumber || 'N/A'}`;
+                document.getElementById('modalExecStatus').innerHTML = `<span class="badge badge-${execution.status}">${execution.status.replace('_', ' ')}</span>`;
+                document.getElementById('modalExecStarted').textContent = formatDate(execution.startedAt);
+
+                const duration = execution.completedAt
+                    ? Math.round((new Date(execution.completedAt) - new Date(execution.startedAt)) / 60000)
+                    : Math.round((new Date() - new Date(execution.startedAt)) / 60000);
+                document.getElementById('modalExecDuration').textContent = `${duration} minutes`;
+
+                // Render timeline
+                const steps = execution.stepHistory || [];
+                const timeline = document.getElementById('modalExecTimeline');
+                timeline.innerHTML = steps.map((step, index) => `
+                    <div class="flex items-start gap-4 ${index < steps.length - 1 ? 'pb-4 border-b border-gray-700' : ''}">
+                        <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                            step.skipped ? 'bg-yellow-500/20 text-yellow-400' : 'bg-green-500/20 text-green-400'
+                        }">
+                            ${step.skipped ? '<i class="fas fa-forward text-xs"></i>' : '<i class="fas fa-check text-xs"></i>'}
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-1">
+                                <h4 class="text-white font-semibold">${step.stepName}</h4>
+                                ${step.skipped ? '<span class="text-xs text-yellow-400">Skipped</span>' : '<span class="text-xs text-green-400">Completed</span>'}
+                            </div>
+                            <p class="text-sm text-gray-400">${step.stepType}</p>
+                            <p class="text-xs text-gray-500 mt-1">${formatDate(step.timestamp)}</p>
+                        </div>
+                    </div>
+                `).join('');
+
+                document.getElementById('executionModal').classList.remove('hidden');
+                document.getElementById('executionModal').classList.add('flex');
+            } catch (error) {
+                console.error('Error loading execution detail:', error);
+            }
+        }
+
+        function closeExecutionModal() {
+            document.getElementById('executionModal').classList.add('hidden');
+            document.getElementById('executionModal').classList.remove('flex');
+        }
+
+        function closeModal(event) {
+            if (event.target.id === 'executionModal') {
+                closeExecutionModal();
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleString();
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userInfo');
+            window.location.href = 'citizen-permits-login.html';
+        }
+
+        document.getElementById('execStatusFilter')?.addEventListener('change', loadExecutions);
+    </script>
+</body>
+</html>

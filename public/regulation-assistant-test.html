@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regulation Assistant - Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        /* Glassmorphism styles */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+        }
+
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Chat bubble styles */
+        .chat-bubble-user {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            border-radius: 18px 18px 4px 18px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .chat-bubble-assistant {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 18px 18px 18px 4px;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
+        }
+
+        /* Typing indicator animation */
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #8b5cf6;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.7;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        /* Sample question cards */
+        .sample-question {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .sample-question:hover {
+            background: rgba(139, 92, 246, 0.2);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+            transform: translateY(-2px);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+
+        /* Visual indicators */
+        .indicator-allowed {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .indicator-not-allowed {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .indicator-permit {
+            color: #f59e0b;
+            font-weight: 600;
+        }
+
+        /* Info cards within responses */
+        .info-card {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+
+        .contact-card {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+
+        .link-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+        }
+
+        .link-button:hover {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* Smooth scrolling for chat */
+        .chat-container {
+            scroll-behavior: smooth;
+        }
+
+        .chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.5);
+            border-radius: 4px;
+        }
+
+        /* Prominent card pulse effect */
+        @keyframes cardPulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(59, 130, 246, 0.5);
+            }
+        }
+
+        .prominent-card {
+            animation: cardPulse 3s infinite;
+        }
+
+        /* Icon styles */
+        .icon-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Category badges */
+        .category-badge {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            color: #93c5fd;
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+
+        /* Scroll buttons */
+        .scroll-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(59, 130, 246, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .scroll-btn:hover {
+            background: rgba(59, 130, 246, 1);
+            box-shadow: 0 6px 25px rgba(59, 130, 246, 0.5);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .scroll-btn-left {
+            left: 8px;
+        }
+
+        .scroll-btn-right {
+            right: 8px;
+        }
+
+        .scroll-btn.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .questions-container {
+            position: relative;
+        }
+
+        .questions-scroll {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-6xl mx-auto">
+        <!-- Compact Header Card -->
+        <div class="glass p-5 mb-4">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h2 class="text-xl font-bold text-white">Ask About City Regulations</h2>
+                    <p class="text-white/70 text-sm">Get instant answers about permits and city requirements</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compact Sample Questions (horizontal scroll) -->
+        <div class="glass p-4 mb-4">
+            <p class="text-white/70 text-xs mb-2 font-semibold">Popular Questions:</p>
+            <div class="questions-container">
+                <!-- Left scroll button -->
+                <button id="scrollLeft" class="scroll-btn scroll-btn-left hidden" onclick="scrollQuestions('left')" aria-label="Scroll left">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+
+                <!-- Right scroll button -->
+                <button id="scrollRight" class="scroll-btn scroll-btn-right" onclick="scrollQuestions('right')" aria-label="Scroll right">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+
+                <div id="questionsScroll" class="questions-scroll flex gap-2 overflow-x-auto pb-2 pr-2" style="scrollbar-width: thin; -webkit-overflow-scrolling: touch;">
+                    <button class="sample-question whitespace-nowrap flex-shrink-0 text-xs px-3 py-2" onclick="askQuestion('Do I need a permit to build a fence?')">
+                        🏡 Fence Permit?
+                    </button>
+                    <button class="sample-question whitespace-nowrap flex-shrink-0 text-xs px-3 py-2" onclick="askQuestion('How do I start a home business?')">
+                        💼 Home Business?
+                    </button>
+                    <button class="sample-question whitespace-nowrap flex-shrink-0 text-xs px-3 py-2" onclick="askQuestion('What are the rules for keeping chickens?')">
+                        🐔 Keeping Chickens?
+                    </button>
+                    <button class="sample-question whitespace-nowrap flex-shrink-0 text-xs px-3 py-2" onclick="askQuestion('Do I need a permit to add a deck?')">
+                        🔨 Deck Permit?
+                    </button>
+                    <button class="sample-question whitespace-nowrap flex-shrink-0 text-xs px-3 py-2" onclick="askQuestion('How do I get a business license?')">
+                        📋 Business License?
+                    </button>
+                    <button class="sample-question whitespace-nowrap flex-shrink-0 text-xs px-3 py-2" onclick="askQuestion('Can I park an RV in my driveway?')">
+                        🚐 RV Parking?
+                    </button>
+                    <button class="sample-question whitespace-nowrap flex-shrink-0 text-xs px-3 py-2" onclick="askQuestion('What permits do I need for a block party?')">
+                        🎉 Block Party?
+                    </button>
+                    <button class="sample-question whitespace-nowrap flex-shrink-0 text-xs px-3 py-2" onclick="askQuestion('Can I cut down a tree on my property?')">
+                        🌲 Tree Removal?
+                    </button>
+                    <button class="sample-question whitespace-nowrap flex-shrink-0 text-xs px-3 py-2" onclick="askQuestion('What are the rules for short-term rentals?')">
+                        🏠 Airbnb Rules?
+                    </button>
+                    <button class="sample-question whitespace-nowrap flex-shrink-0 text-xs px-3 py-2" onclick="askQuestion('Do I need a permit for a garage sale?')">
+                        🛒 Garage Sale?
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compact Chat Interface -->
+        <div class="glass p-4 mb-4 h-[400px] overflow-y-auto chat-container" id="chatContainer">
+            <div id="chatMessages">
+                <!-- Welcome message -->
+                <div class="flex items-start mb-4">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center mr-2 flex-shrink-0">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                    <div class="chat-bubble-assistant p-3 max-w-[85%]">
+                        <p class="text-white font-semibold mb-1 text-sm">👋 Hi! I'm your Regulation Assistant</p>
+                        <p class="text-white/90 text-sm">Ask me about permits, licenses, property rules, or click a question above!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compact Input Area -->
+        <div class="glass p-3">
+            <div class="flex gap-2">
+                <input
+                    type="text"
+                    id="questionInput"
+                    class="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-sm placeholder-white/50 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
+                    placeholder="Ask your question here..."
+                    onkeypress="if(event.key === 'Enter') sendMessage()"
+                    aria-label="Question input"
+                >
+                <button onclick="sendMessage()" class="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all" aria-label="Send message">
+                    Send
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Added 2025-10-07: Regulation Assistant for Citizen Portal
+        // MOCK DATA - Replace in production
+        // TODO: Connect to city regulations API endpoint
+
+        let conversationHistory = [];
+
+        // Mock regulation database with citizen-friendly responses
+        const regulationDatabase = {
+            'fence': {
+                question: 'Do I need a permit to build a fence?',
+                answer: `Great question! Here's what you need to know about building a fence:
+
+<strong>⚠️ Permit Required</strong> for fences over 6 feet tall
+
+<strong>✓ No Permit Needed</strong> for fences 6 feet or shorter
+
+<strong>Important Rules:</strong>
+• Front yard fences: Maximum 4 feet tall
+• Side/back yard fences: Maximum 8 feet tall
+• Must be 2 feet from property line (unless on the line with neighbor's agreement)
+• Corner lots: Special visibility requirements apply
+• HOA approval may be required in some neighborhoods
+
+<strong>Estimated Timeline:</strong> Permit approval takes 5-7 business days`,
+                department: 'Building & Safety Department',
+                phone: '(555) 123-4567',
+                email: 'building@cityname.gov',
+                forms: ['Fence Permit Application', 'Property Survey'],
+                citation: 'City Code § 18.42.090 - Fence Regulations'
+            },
+            'home business': {
+                question: 'How do I start a home business?',
+                answer: `Starting a home business is easier than you think! Here's what you need:
+
+<strong>✓ Home Occupation Permit</strong> (Required for all home businesses)
+
+<strong>Requirements:</strong>
+• Business must be conducted entirely indoors
+• No employees visiting your home (family members OK)
+• No signs visible from the street
+• No increased traffic or parking issues
+• Business activities shouldn't disturb neighbors
+
+<strong>⚠️ Also Need:</strong>
+• Business license ($50-$200 depending on business type)
+• Zoning clearance (free, usually approved same day)
+• Sales tax permit (if selling goods)
+
+<strong>Not Allowed from Home:</strong>
+✗ Auto repair shops
+✗ Restaurants or food service
+✗ Retail stores with foot traffic
+
+<strong>Processing Time:</strong> 2-3 weeks for full approval`,
+                department: 'Economic Development Office',
+                phone: '(555) 234-5678',
+                email: 'business@cityname.gov',
+                forms: ['Home Occupation Permit Application', 'Business License Application'],
+                citation: 'City Code § 17.228.330 - Home Occupations'
+            },
+            'chickens': {
+                question: 'What are the rules for keeping chickens?',
+                answer: `You can keep chickens in the city! Here are the rules:
+
+<strong>✓ Allowed</strong> - Hens only (up to 6)
+
+<strong>✗ Not Allowed</strong> - Roosters (due to noise)
+
+<strong>Requirements:</strong>
+• Maximum 6 hens per property
+• Coop must be at least 20 feet from any neighboring home
+• Coop must be clean, sanitary, and secure from predators
+• Lot size must be at least 6,000 square feet
+• Free-range chickens OK, but must stay on your property
+
+<strong>⚠️ Permit Required:</strong>
+• Urban Chicken Permit (one-time fee: $35)
+• Annual inspection may be required
+
+<strong>Good to Know:</strong>
+• Chickens are quiet and make great pets
+• Fresh eggs daily!
+• Many neighbors won't even notice
+
+<strong>Processing Time:</strong> Permit issued same day if requirements met`,
+                department: 'Animal Control Services',
+                phone: '(555) 345-6789',
+                email: 'animals@cityname.gov',
+                forms: ['Urban Chicken Permit Application', 'Coop Specifications Form'],
+                citation: 'Municipal Code § 6.04.115 - Keeping of Chickens'
+            },
+            'deck': {
+                question: 'Do I need a permit to add a deck?',
+                answer: `Yes, most decks require a permit. Here's the breakdown:
+
+<strong>⚠️ Permit Required</strong> for decks that are:
+• More than 30 inches above ground
+• Attached to your house
+• Larger than 200 square feet
+
+<strong>✓ No Permit Needed</strong> for:
+• Ground-level decks (less than 30 inches high)
+• Smaller than 200 square feet
+• Not attached to house
+
+<strong>What You'll Need:</strong>
+• Site plan showing deck location
+• Deck design drawings with dimensions
+• Foundation details
+• Railing plans (required for decks over 30" high)
+
+<strong>Important:</strong>
+• Inspections required during construction
+• Must meet current building codes
+• Setback requirements apply (usually 5 feet from property line)
+
+<strong>Processing Time:</strong> 7-10 business days
+<strong>Permit Cost:</strong> $150-$400 (based on deck size)`,
+                department: 'Building & Safety Department',
+                phone: '(555) 123-4567',
+                email: 'building@cityname.gov',
+                forms: ['Building Permit Application', 'Deck Plan Requirements'],
+                citation: 'Building Code § 105.2 - Deck Construction Permits'
+            },
+            'business license': {
+                question: 'How do I get a business license?',
+                answer: `Getting a business license is straightforward! Here's the process:
+
+<strong>Step 1: Determine Your Business Type</strong>
+Different businesses have different fees ($50-$500 annually)
+
+<strong>Step 2: Gather Documents</strong>
+• Valid ID or driver's license
+• Business name and address
+• Owner's Social Security Number or Federal EIN
+• Zoning clearance (for physical locations)
+
+<strong>Step 3: Apply</strong>
+• Online: cityname.gov/business-license (fastest!)
+• In-person: City Hall, 2nd floor
+• By mail: Business License Office, 123 Main St.
+
+<strong>⚠️ Additional Requirements May Include:</strong>
+• Sellers permit (for retail)
+• Health permit (for food businesses)
+• Professional licenses (contractors, etc.)
+• Fire inspection (for restaurants, retail)
+
+<strong>Processing Time:</strong>
+• Online: 1-2 business days
+• In-person: Same day
+• Mail: 5-7 business days
+
+<strong>Good to Know:</strong> Licenses renew annually every January`,
+                department: 'City Clerk\'s Office',
+                phone: '(555) 456-7890',
+                email: 'clerk@cityname.gov',
+                forms: ['Business License Application', 'Zoning Clearance Form'],
+                citation: 'Municipal Code § 5.02 - Business Licenses'
+            },
+            'rv parking': {
+                question: 'Can I park an RV in my driveway?',
+                answer: `The rules for RV parking depend on how long you plan to keep it there:
+
+<strong>✓ Allowed (Short-term):</strong>
+• Park in your driveway for up to 72 hours for loading/unloading
+• Must be actively preparing for a trip or just returned
+
+<strong>⚠️ Long-term Storage Rules:</strong>
+• RVs cannot be parked on street for more than 72 consecutive hours
+• Driveway storage OK if:
+  - Vehicle is fully on your property (not blocking sidewalk)
+  - Not being used as living space
+  - Properly registered and operational
+
+<strong>✗ Not Allowed:</strong>
+• Living in an RV on residential property
+• Parking on front lawn
+• Blocking sidewalk or street access
+• Commercial RV storage on residential property
+
+<strong>Alternative:</strong>
+Many homeowners use side yards (if wide enough) or rent storage spaces at RV facilities.
+
+<strong>⚠️ Violation Fine:</strong> $100 for first offense
+
+<strong>Good to Know:</strong> HOA rules may be stricter than city rules`,
+                department: 'Code Enforcement',
+                phone: '(555) 567-8901',
+                email: 'code@cityname.gov',
+                forms: ['RV Parking Appeal Form'],
+                citation: 'Zoning Code § 20.48.060 - Vehicle Parking Standards'
+            },
+            'block party': {
+                question: 'What permits do I need for a block party?',
+                answer: `Block parties are a great way to build community! Here's what you need:
+
+<strong>⚠️ Required Permits:</strong>
+
+<strong>1. Street Closure Permit (Free!)</strong>
+• Apply at least 14 days before event
+• Requires signatures from 75% of affected residents
+• Usually approved for 4-6 hours
+
+<strong>2. Special Event Permit</strong>
+• Free for non-commercial neighborhood events
+• Required if you're:
+  - Using amplified music
+  - Setting up tents or structures
+  - Expecting more than 100 people
+
+<strong>✓ No Permit Needed for:</strong>
+• Small gatherings (under 25 people) in yards or parks
+• Events that don't block streets
+
+<strong>What the City Provides:</strong>
+• Barricades and "Street Closed" signs
+• Help with traffic routing
+• Police notification (for safety)
+
+<strong>Your Responsibilities:</strong>
+• Keep emergency access clear
+• Clean up after event
+• Respect noise curfew (10 PM weekdays, 11 PM weekends)
+
+<strong>Processing Time:</strong> 7-10 business days
+<strong>Pro Tip:</strong> Apply early during summer - permits go fast!`,
+                department: 'Special Events Office',
+                phone: '(555) 678-9012',
+                email: 'events@cityname.gov',
+                forms: ['Street Closure Application', 'Neighborhood Signature Sheet'],
+                citation: 'Municipal Code § 12.32 - Street Closures for Events'
+            },
+            'tree': {
+                question: 'Can I cut down a tree on my property?',
+                answer: `Tree removal rules protect our urban forest. Here's what you need to know:
+
+<strong>⚠️ Permit Required</strong> for removing:
+• Trees with trunk diameter over 8 inches (measured 4.5 feet from ground)
+• Any heritage trees (over 50 years old)
+• Trees in protected areas
+
+<strong>✓ No Permit Needed</strong> for:
+• Small trees (trunk under 8 inches diameter)
+• Dead or dangerous trees posing immediate hazard
+• Trimming and pruning (within reason)
+
+<strong>Application Process:</strong>
+• Submit photos of tree from 4 angles
+• Arborist report (required for trees over 24" diameter)
+• Reason for removal
+• Replacement tree plan (usually 2 new trees required)
+
+<strong>Valid Reasons for Removal:</strong>
+• Tree is diseased or dying
+• Causing structural damage to home
+• Creating safety hazard
+• Interfering with approved construction
+
+<strong>✗ Not Valid Reasons:</strong>
+• "Too many leaves"
+• Blocking view
+• Don't like it
+
+<strong>Processing Time:</strong> 15-30 days
+<strong>Permit Cost:</strong> $75-$250
+<strong>Emergency Removals:</strong> Call 24/7 hotline for dangerous trees`,
+                department: 'Urban Forestry Division',
+                phone: '(555) 789-0123',
+                email: 'trees@cityname.gov',
+                forms: ['Tree Removal Permit Application', 'Arborist Report Template'],
+                citation: 'Tree Protection Ordinance § 12.36.080'
+            },
+            'short-term rental': {
+                question: 'What are the rules for short-term rentals?',
+                answer: `Short-term rentals (like Airbnb) are regulated to balance tourism and neighborhood quality. Here's what's allowed:
+
+<strong>⚠️ Permit Required</strong> - Short-Term Rental License ($500/year)
+
+<strong>✓ Allowed (with permit):</strong>
+• Renting your primary residence while you're away
+• Renting a room while you're home (home-share)
+• Maximum 180 days per year (for full-unit rentals)
+
+<strong>Requirements:</strong>
+• Must be your primary residence (live there 275+ days/year)
+• Register with city and pay TOT tax (12%)
+• $1 million liability insurance required
+• Post emergency contact info for guests
+• Respond to complaints within 60 minutes
+• Maximum 2 guests per bedroom + 2
+
+<strong>✗ Not Allowed:</strong>
+• Converting apartments/condos to hotels
+• Renting out investment properties short-term
+• Operating multiple short-term rentals
+
+<strong>Good Neighbor Rules:</strong>
+• No parties or events
+• Quiet hours 10 PM - 8 AM
+• Provide parking for guests
+• Keep accurate guest records
+
+<strong>Penalties:</strong>
+• Operating without permit: $1,000/day fine
+• Repeat violations: License revocation
+
+<strong>Processing Time:</strong> 3-4 weeks`,
+                department: 'Planning & Zoning',
+                phone: '(555) 890-1234',
+                email: 'planning@cityname.gov',
+                forms: ['Short-Term Rental Application', 'Good Neighbor Agreement'],
+                citation: 'Zoning Ordinance § 5.35 - Short-Term Residential Occupancy'
+            },
+            'garage sale': {
+                question: 'Do I need a permit for a garage sale?',
+                answer: `Good news - garage sales are easy!
+
+<strong>✓ No Permit Required!</strong>
+
+You can have a garage sale without a permit, but there are some rules:
+
+<strong>Rules:</strong>
+• Maximum 3 garage sales per year at your home
+• Each sale can last up to 3 consecutive days
+• Hours: 7 AM - 7 PM only
+• Must be at your residence (items from your home)
+
+<strong>✓ Allowed:</strong>
+• Yard signs on your property
+• One temporary sign at nearest intersection (remove after sale)
+• Selling personal household items
+• Multi-family sales with neighbors
+
+<strong>✗ Not Allowed:</strong>
+• Selling new merchandise
+• Operating as a business (buying items to resell)
+• Signs on utility poles or public property
+• Blocking sidewalks or streets
+
+<strong>Signs:</strong>
+• Must be removed within 24 hours after sale
+• Maximum size: 6 square feet
+• Must be secured (can't blow away)
+
+<strong>Pro Tips:</strong>
+• Advertise on free community boards online
+• Team up with neighbors for more traffic
+• Price items to sell (remember, people are looking for deals!)
+• Have small bills for change
+
+<strong>⚠️ What if I want more than 3 sales per year?</strong>
+You'd need a business license (then it becomes a business, not a garage sale).`,
+                department: 'Code Enforcement',
+                phone: '(555) 567-8901',
+                email: 'code@cityname.gov',
+                forms: ['No forms needed!'],
+                citation: 'Municipal Code § 5.80.020 - Garage Sales'
+            }
+        };
+
+        // Match questions to database
+        function findRegulation(question) {
+            const lowerQuestion = question.toLowerCase();
+
+            if (lowerQuestion.includes('fence')) return regulationDatabase['fence'];
+            if (lowerQuestion.includes('home business') || lowerQuestion.includes('work from home')) return regulationDatabase['home business'];
+            if (lowerQuestion.includes('chicken') || lowerQuestion.includes('poultry')) return regulationDatabase['chickens'];
+            if (lowerQuestion.includes('deck') || lowerQuestion.includes('patio')) return regulationDatabase['deck'];
+            if (lowerQuestion.includes('business license')) return regulationDatabase['business license'];
+            if (lowerQuestion.includes('rv') || lowerQuestion.includes('motor home') || lowerQuestion.includes('park')) return regulationDatabase['rv parking'];
+            if (lowerQuestion.includes('block party') || lowerQuestion.includes('street party') || lowerQuestion.includes('event permit')) return regulationDatabase['block party'];
+            if (lowerQuestion.includes('tree') || lowerQuestion.includes('cut down')) return regulationDatabase['tree'];
+            if (lowerQuestion.includes('short-term rental') || lowerQuestion.includes('airbnb') || lowerQuestion.includes('vrbo')) return regulationDatabase['short-term rental'];
+            if (lowerQuestion.includes('garage sale') || lowerQuestion.includes('yard sale')) return regulationDatabase['garage sale'];
+
+            // Default response
+            return {
+                question: question,
+                answer: `I'd be happy to help you with that question! While I don't have specific information about that topic in my database yet, here's what I can do:
+
+<strong>I can help you with questions about:</strong>
+• Building permits (fences, decks, additions)
+• Business licenses and home businesses
+• Property regulations (trees, parking, structures)
+• Pet ownership rules (chickens, dogs, etc.)
+• Event permits (block parties, garage sales)
+• Zoning questions (short-term rentals, home businesses)
+
+Please try asking one of the sample questions on the left, or rephrase your question to match one of these topics!`,
+                department: 'City Information Desk',
+                phone: '(555) 311-CITY',
+                email: 'info@cityname.gov',
+                forms: [],
+                citation: 'For specific regulations, please contact the appropriate department'
+            };
+        }
+
+        // Ask predefined question
+        function askQuestion(question) {
+            document.getElementById('questionInput').value = question;
+            sendMessage();
+        }
+
+        // Send message function
+        function sendMessage() {
+            const input = document.getElementById('questionInput');
+            const question = input.value.trim();
+
+            if (!question) return;
+
+            // Add user message to chat
+            addUserMessage(question);
+            input.value = '';
+
+            // Show typing indicator
+            showTypingIndicator();
+
+            // Simulate processing delay (400-700ms for realism)
+            setTimeout(() => {
+                hideTypingIndicator();
+                const regulation = findRegulation(question);
+                addAssistantMessage(regulation);
+            }, 400 + Math.random() * 300);
+        }
+
+        // Add user message to chat
+        function addUserMessage(text) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex items-start mb-4 justify-end';
+            messageDiv.innerHTML = `
+                <div class="chat-bubble-user p-3 max-w-[85%]">
+                    <p class="text-white text-sm">${text}</p>
+                </div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+
+            conversationHistory.push({
+                role: 'user',
+                content: text,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        // Add assistant message to chat
+        function addAssistantMessage(regulation) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex items-start mb-4';
+
+            // Format the answer with visual indicators
+            const formattedAnswer = regulation.answer
+                .replace(/✓/g, '<span class="indicator-allowed">✓</span>')
+                .replace(/✗/g, '<span class="indicator-not-allowed">✗</span>')
+                .replace(/⚠️/g, '<span class="indicator-permit">⚠️</span>');
+
+            const formsHTML = regulation.forms && regulation.forms.length > 0
+                ? `<div class="info-card">
+                    <p class="text-blue-300 font-semibold text-xs mb-1">📋 Required Forms:</p>
+                    ${regulation.forms.map(form => `<p class="text-white/80 text-xs">• ${form}</p>`).join('')}
+                    <a href="#" class="link-button text-xs px-3 py-1 mt-2">Download Forms</a>
+                </div>`
+                : '';
+
+            messageDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center mr-2 flex-shrink-0">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <div class="chat-bubble-assistant p-3 max-w-[85%]">
+                    <div class="text-white/90 text-sm leading-relaxed mb-3 whitespace-pre-line">${formattedAnswer}</div>
+
+                    ${formsHTML}
+
+                    <div class="contact-card">
+                        <p class="text-purple-300 font-semibold text-xs mb-1">📞 Need Help?</p>
+                        <p class="text-white/90 text-xs font-semibold">${regulation.department}</p>
+                        <p class="text-white/70 text-xs">${regulation.phone} • ${regulation.email}</p>
+                    </div>
+
+                    ${regulation.citation ? `
+                        <div class="mt-2 text-white/50 text-xs">
+                            📖 ${regulation.citation}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+
+            conversationHistory.push({
+                role: 'assistant',
+                content: regulation.answer,
+                department: regulation.department,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        // Typing indicator
+        function showTypingIndicator() {
+            const chatMessages = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'flex items-start mb-4';
+            typingDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center mr-2 flex-shrink-0">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <div class="chat-bubble-assistant p-3">
+                    <div class="typing-indicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+
+        // Scroll to bottom of chat
+        function scrollToBottom() {
+            const container = document.getElementById('chatContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Focus input with '/'
+            if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+                e.preventDefault();
+                document.getElementById('questionInput').focus();
+            }
+        });
+
+        // Scroll questions function
+        function scrollQuestions(direction) {
+            const container = document.getElementById('questionsScroll');
+            const scrollAmount = 300;
+
+            if (direction === 'left') {
+                container.scrollLeft -= scrollAmount;
+            } else {
+                container.scrollLeft += scrollAmount;
+            }
+
+            // Update button visibility after scroll
+            setTimeout(updateScrollButtons, 100);
+        }
+
+        // Update scroll button visibility
+        function updateScrollButtons() {
+            const container = document.getElementById('questionsScroll');
+            const leftBtn = document.getElementById('scrollLeft');
+            const rightBtn = document.getElementById('scrollRight');
+
+            // Show/hide left button
+            if (container.scrollLeft <= 10) {
+                leftBtn.classList.add('hidden');
+            } else {
+                leftBtn.classList.remove('hidden');
+            }
+
+            // Show/hide right button
+            const maxScroll = container.scrollWidth - container.clientWidth;
+            if (container.scrollLeft >= maxScroll - 10) {
+                rightBtn.classList.add('hidden');
+            } else {
+                rightBtn.classList.remove('hidden');
+            }
+        }
+
+        // Initialize scroll buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('questionsScroll');
+
+            // Update buttons on scroll
+            container.addEventListener('scroll', updateScrollButtons);
+
+            // Update buttons on resize
+            window.addEventListener('resize', updateScrollButtons);
+
+            // Initial update
+            updateScrollButtons();
+        });
+
+        // Initialize
+        console.log('Regulation Assistant initialized');
+        console.log('Mock regulation database loaded with', Object.keys(regulationDatabase).length, 'topics');
+    </script>
+</body>
+</html>

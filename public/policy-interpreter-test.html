@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Natural Language Policy Interpreter - Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        /* Glassmorphism styles */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+        }
+
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Chat bubble styles */
+        .chat-bubble-user {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            border-radius: 18px 18px 4px 18px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .chat-bubble-ai {
+            background: rgba(139, 92, 246, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 18px 18px 18px 4px;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
+        }
+
+        /* Typing indicator animation */
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #8b5cf6;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.7;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        /* Confidence meter */
+        .confidence-meter {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease, background 0.3s ease;
+        }
+
+        .confidence-high {
+            background: linear-gradient(90deg, #10b981, #34d399);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+        }
+
+        .confidence-medium {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+        }
+
+        .confidence-low {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+        }
+
+        /* Syntax highlighting for legal text */
+        .legal-text {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 3px solid #8b5cf6;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+
+        .legal-section {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+
+        .legal-citation {
+            color: #60a5fa;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .legal-citation:hover {
+            color: #93c5fd;
+        }
+
+        .legal-keyword {
+            color: #34d399;
+            font-weight: 600;
+        }
+
+        /* Voice input animation */
+        .voice-pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 20px rgba(239, 68, 68, 0);
+            }
+        }
+
+        /* Conflict mapping */
+        .conflict-line {
+            stroke: #ef4444;
+            stroke-width: 2;
+            stroke-dasharray: 5, 5;
+            animation: dash 1s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -10;
+            }
+        }
+
+        /* Citation badge */
+        .citation-badge {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            color: #93c5fd;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .citation-badge:hover {
+            background: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* Smooth scrolling for chat */
+        .chat-container {
+            scroll-behavior: smooth;
+        }
+
+        /* Quick query buttons */
+        .quick-query {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            color: #c4b5fd;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin: 4px;
+        }
+
+        .quick-query:hover {
+            background: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Side panel for citations */
+        .citation-panel {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .citation-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .citation-panel::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .citation-panel::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.5);
+            border-radius: 3px;
+        }
+
+        /* Comparison view */
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .comparison-divider {
+            width: 2px;
+            background: linear-gradient(180deg, transparent, #ef4444, transparent);
+            min-height: 100%;
+        }
+
+        /* Export button */
+        .export-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .export-btn:hover {
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="glass p-6 mb-6">
+            <h1 class="text-3xl font-bold text-white mb-2">Natural Language Policy Interpreter</h1>
+            <p class="text-white/70">Ask policy questions in plain English and get AI-powered interpretations with citations</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Chat Interface (2/3 width) -->
+            <div class="lg:col-span-2">
+                <!-- Quick Query Suggestions -->
+                <div class="glass p-4 mb-4">
+                    <p class="text-white/70 text-sm mb-3">Quick Queries:</p>
+                    <div class="flex flex-wrap">
+                        <button class="quick-query" onclick="askQuestion('What are the requirements for a building permit?')">
+                            Building Permit Requirements
+                        </button>
+                        <button class="quick-query" onclick="askQuestion('Does this policy comply with ADA requirements?')">
+                            ADA Compliance Check
+                        </button>
+                        <button class="quick-query" onclick="askQuestion('What are OSHA workplace safety regulations?')">
+                            OSHA Safety Regulations
+                        </button>
+                        <button class="quick-query" onclick="askQuestion('Environmental impact assessment requirements')">
+                            Environmental Requirements
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chat Container -->
+                <div class="glass p-6 mb-4 h-[500px] overflow-y-auto chat-container" id="chatContainer">
+                    <div id="chatMessages">
+                        <!-- Welcome message -->
+                        <div class="flex items-start mb-4">
+                            <div class="chat-bubble-ai p-4 max-w-[80%]">
+                                <div class="flex items-center mb-2">
+                                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center mr-2">
+                                        <span class="text-white font-bold text-sm">AI</span>
+                                    </div>
+                                    <span class="text-white/70 text-sm">Policy Assistant</span>
+                                </div>
+                                <p class="text-white">Hello! I'm your AI-powered policy interpreter. Ask me any question about federal, state, or local regulations, and I'll provide you with relevant information, citations, and compliance guidance.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="glass p-4">
+                    <div class="flex gap-3">
+                        <button id="voiceBtn" class="px-4 py-3 rounded-lg bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 transition-all" onclick="toggleVoiceInput()" aria-label="Voice input">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                            </svg>
+                        </button>
+                        <input
+                            type="text"
+                            id="policyQuestion"
+                            class="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
+                            placeholder="Ask a policy question..."
+                            onkeypress="if(event.key === 'Enter') sendMessage()"
+                            aria-label="Policy question input"
+                        >
+                        <button onclick="sendMessage()" class="px-6 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all" aria-label="Send message">
+                            Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar - Citations & Tools -->
+            <div class="lg:col-span-1">
+                <!-- Citation Panel -->
+                <div class="glass p-6 mb-4">
+                    <h3 class="text-white font-bold mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Source Citations
+                    </h3>
+                    <div id="citationPanel" class="citation-panel">
+                        <p class="text-white/50 text-sm">Citations will appear here as you ask questions</p>
+                    </div>
+                </div>
+
+                <!-- Tools -->
+                <div class="glass p-6 mb-4">
+                    <h3 class="text-white font-bold mb-4">Tools</h3>
+                    <button onclick="showComplianceChecker()" class="w-full mb-3 px-4 py-3 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-300 hover:bg-blue-500/30 transition-all">
+                        <div class="flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Compliance Checker
+                        </div>
+                    </button>
+                    <button onclick="showConflictDetector()" class="w-full mb-3 px-4 py-3 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/30 transition-all">
+                        <div class="flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                            Conflict Detector
+                        </div>
+                    </button>
+                    <button onclick="exportToPDF()" class="w-full px-4 py-3 rounded-lg bg-green-500/20 border border-green-500/40 text-green-300 hover:bg-green-500/30 transition-all">
+                        <div class="flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Export to PDF
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Compliance Badges -->
+                <div class="glass p-6">
+                    <h3 class="text-white font-bold mb-4">Compliance Standards</h3>
+                    <div class="space-y-2">
+                        <div class="px-3 py-2 rounded-lg bg-green-500/20 border border-green-500/40 text-green-300 text-sm">
+                            ✓ ADA Compliant
+                        </div>
+                        <div class="px-3 py-2 rounded-lg bg-green-500/20 border border-green-500/40 text-green-300 text-sm">
+                            ✓ OSHA Standards
+                        </div>
+                        <div class="px-3 py-2 rounded-lg bg-green-500/20 border border-green-500/40 text-green-300 text-sm">
+                            ✓ EPA Regulations
+                        </div>
+                        <div class="px-3 py-2 rounded-lg bg-green-500/20 border border-green-500/40 text-green-300 text-sm">
+                            ✓ HIPAA Privacy
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Compliance Checker -->
+    <div id="complianceModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50" onclick="if(event.target === this) closeModal('complianceModal')">
+        <div class="glass p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Policy Compliance Checker</h2>
+                <button onclick="closeModal('complianceModal')" class="text-white/70 hover:text-white" aria-label="Close modal">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="mb-6">
+                <label class="text-white/70 block mb-2">Paste your policy text:</label>
+                <textarea id="policyText" class="w-full h-40 px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-purple-500" placeholder="Enter policy text to check compliance..."></textarea>
+            </div>
+
+            <button onclick="runComplianceCheck()" class="w-full px-6 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:shadow-lg hover:shadow-blue-500/50 transition-all mb-6">
+                Run Compliance Check
+            </button>
+
+            <div id="complianceResults" class="hidden">
+                <!-- Results will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Conflict Detector -->
+    <div id="conflictModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50" onclick="if(event.target === this) closeModal('conflictModal')">
+        <div class="glass p-8 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Policy Conflict Detector</h2>
+                <button onclick="closeModal('conflictModal')" class="text-white/70 hover:text-white" aria-label="Close modal">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div id="conflictResults">
+                <!-- Conflict visualization will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div id="tooltip" class="tooltip"></div>
+
+    <script>
+        // Added 2025-10-06: Natural Language Policy Interpreter
+        // MOCK DATA - Replace in production
+        // TODO: Connect to real legal database API
+
+        let conversationHistory = [];
+        let isVoiceActive = false;
+
+        // Mock legal database with realistic federal/state regulations
+        const legalDatabase = {
+            'building permit': {
+                title: 'Building Permit Requirements',
+                citation: '29 CFR § 1926.850 - OSHA Construction Standards',
+                content: `<span class="legal-section">Section 1926.850</span> - <span class="legal-keyword">General Requirements</span> for construction permits:\n\n1. All construction projects exceeding $5,000 in value <span class="legal-keyword">must obtain</span> a valid building permit from the local municipality.\n\n2. Applications <span class="legal-keyword">shall include</span>:\n   a) Detailed architectural plans\n   b) Structural engineering certification\n   c) Environmental impact assessment\n   d) Proof of liability insurance\n\n3. Permits are valid for 180 days from issuance date.\n\nRelated: <span class="legal-citation" onclick="showCitation('ada')">ADA Title III §36.401</span>, <span class="legal-citation" onclick="showCitation('ibc')">International Building Code 2021</span>`,
+                confidence: 95,
+                relatedRegulations: ['ADA Title III', 'IBC 2021', 'EPA NEPA Guidelines']
+            },
+            'ada': {
+                title: 'Americans with Disabilities Act Requirements',
+                citation: '42 U.S.C. § 12101 - ADA Title III',
+                content: `<span class="legal-section">Title III §36.401</span> - <span class="legal-keyword">New Construction and Alterations</span>\n\n1. All newly constructed facilities <span class="legal-keyword">must be</span> readily accessible to and usable by individuals with disabilities.\n\n2. <span class="legal-keyword">Required accommodations include</span>:\n   a) Wheelchair-accessible entrances and exits\n   b) Accessible parking spaces (2% of total, minimum 1)\n   c) Accessible routes throughout facility\n   d) Accessible restrooms with proper clearances\n   e) Visual and audible alarm systems\n\n3. Compliance <span class="legal-keyword">must be certified</span> by licensed accessibility consultant.\n\nSee also: <span class="legal-citation" onclick="showCitation('adaag')">ADA Accessibility Guidelines (ADAAG)</span>`,
+                confidence: 98,
+                relatedRegulations: ['ADAAG', 'Section 504 Rehab Act', 'FHA']
+            },
+            'osha': {
+                title: 'OSHA Workplace Safety Regulations',
+                citation: '29 CFR § 1910.1200 - Hazard Communication',
+                content: `<span class="legal-section">Section 1910.1200</span> - <span class="legal-keyword">Hazard Communication Standard</span>\n\n1. Employers <span class="legal-keyword">must maintain</span> Safety Data Sheets (SDS) for all hazardous chemicals.\n\n2. <span class="legal-keyword">Required training</span>:\n   a) Annual safety training for all employees\n   b) Job-specific hazard training\n   c) Emergency response procedures\n   d) Personal protective equipment (PPE) usage\n\n3. Workplace inspections <span class="legal-keyword">must occur</span> quarterly.\n\n4. Incident reporting: All injuries requiring medical attention <span class="legal-keyword">must be reported</span> within 24 hours.\n\nRelated: <span class="legal-citation" onclick="showCitation('osha-ppe')">29 CFR § 1910.132 (PPE)</span>`,
+                confidence: 97,
+                relatedRegulations: ['OSHA 1910.132', 'OSHA 1904', 'NIOSH Guidelines']
+            },
+            'environmental': {
+                title: 'Environmental Impact Assessment Requirements',
+                citation: '40 CFR § 1502 - EPA NEPA Guidelines',
+                content: `<span class="legal-section">Section 1502</span> - <span class="legal-keyword">Environmental Impact Statement</span>\n\n1. Projects with significant environmental impact <span class="legal-keyword">must file</span> Environmental Impact Statement (EIS).\n\n2. <span class="legal-keyword">Assessment must include</span>:\n   a) Air quality impact analysis\n   b) Water resource impact\n   c) Wildlife habitat assessment\n   d) Noise pollution study\n   e) Mitigation strategies\n\n3. Public comment period: <span class="legal-keyword">Minimum 30 days required</span>.\n\n4. Federal projects: <span class="legal-keyword">Must comply</span> with National Environmental Policy Act (NEPA).\n\nSee also: <span class="legal-citation" onclick="showCitation('clean-water')">Clean Water Act §404</span>, <span class="legal-citation" onclick="showCitation('clean-air')">Clean Air Act</span>`,
+                confidence: 93,
+                relatedRegulations: ['NEPA', 'Clean Water Act', 'Clean Air Act', 'ESA']
+            }
+        };
+
+        // Mock AI responses for natural language queries
+        function generateAIResponse(question) {
+            const lowerQuestion = question.toLowerCase();
+            let response = {
+                text: '',
+                citations: [],
+                confidence: 0,
+                legalText: ''
+            };
+
+            // Determine which regulation to cite based on question
+            if (lowerQuestion.includes('building') || lowerQuestion.includes('permit') || lowerQuestion.includes('construction')) {
+                const reg = legalDatabase['building permit'];
+                response.text = `Based on federal regulations, building permits are required for most construction projects. Here's what you need to know:\n\n**Key Requirements:**\n• Projects over $5,000 must obtain permits\n• Must include architectural plans and engineering certification\n• Environmental impact assessment required\n• Permits valid for 180 days\n\n**Compliance:** Your project must also meet ADA accessibility requirements and local building codes.`;
+                response.citations = ['29 CFR § 1926.850', 'ADA Title III §36.401', 'IBC 2021'];
+                response.confidence = reg.confidence;
+                response.legalText = reg.content;
+            } else if (lowerQuestion.includes('ada') || lowerQuestion.includes('accessibility') || lowerQuestion.includes('disabled')) {
+                const reg = legalDatabase['ada'];
+                response.text = `The Americans with Disabilities Act (ADA) sets comprehensive accessibility requirements:\n\n**Key Requirements:**\n• All new construction must be fully accessible\n• Wheelchair-accessible entrances required\n• Minimum 2% accessible parking (at least 1 space)\n• Accessible restrooms with proper clearances\n• Visual and audible alarm systems\n\n**Compliance Certification:** Must be verified by licensed accessibility consultant.`;
+                response.citations = ['42 U.S.C. § 12101', 'ADA Title III §36.401', 'ADAAG'];
+                response.confidence = reg.confidence;
+                response.legalText = reg.content;
+            } else if (lowerQuestion.includes('osha') || lowerQuestion.includes('safety') || lowerQuestion.includes('workplace')) {
+                const reg = legalDatabase['osha'];
+                response.text = `OSHA workplace safety regulations require employers to maintain safe working conditions:\n\n**Key Requirements:**\n• Maintain Safety Data Sheets (SDS) for hazardous chemicals\n• Annual safety training for all employees\n• Job-specific hazard training\n• Quarterly workplace inspections\n• Report injuries within 24 hours\n\n**Compliance:** Failure to comply can result in fines up to $70,000 per violation.`;
+                response.citations = ['29 CFR § 1910.1200', '29 CFR § 1910.132', 'OSHA 1904'];
+                response.confidence = reg.confidence;
+                response.legalText = reg.content;
+            } else if (lowerQuestion.includes('environment') || lowerQuestion.includes('impact') || lowerQuestion.includes('epa')) {
+                const reg = legalDatabase['environmental'];
+                response.text = `Environmental impact assessments are required for projects with significant environmental effects:\n\n**Key Requirements:**\n• File Environmental Impact Statement (EIS) for major projects\n• Include air quality, water resources, wildlife habitat analysis\n• 30-day minimum public comment period\n• NEPA compliance for federal projects\n• Mitigation strategies required\n\n**Timeline:** EIS review typically takes 3-6 months.`;
+                response.citations = ['40 CFR § 1502', 'NEPA', 'Clean Water Act §404'];
+                response.confidence = reg.confidence;
+                response.legalText = reg.content;
+            } else {
+                // Generic response
+                response.text = `I can help you understand various federal and state regulations. I have information about:\n\n• Building permits and construction regulations\n• ADA accessibility requirements\n• OSHA workplace safety standards\n• Environmental impact assessments\n• EPA compliance guidelines\n• HIPAA privacy regulations\n\nPlease ask a specific question about any of these topics, or try one of the quick queries above.`;
+                response.citations = ['Multiple Federal Regulations'];
+                response.confidence = 85;
+                response.legalText = 'For specific legal guidance, please ask a more targeted question.';
+            }
+
+            return response;
+        }
+
+        // Send message function
+        function sendMessage() {
+            const input = document.getElementById('policyQuestion');
+            const question = input.value.trim();
+
+            if (!question) return;
+
+            // Add user message to chat
+            addUserMessage(question);
+            input.value = '';
+
+            // Show typing indicator
+            showTypingIndicator();
+
+            // Simulate AI processing delay (300-800ms for realism)
+            setTimeout(() => {
+                hideTypingIndicator();
+                const response = generateAIResponse(question);
+                addAIMessage(response);
+                updateCitationPanel(response.citations);
+            }, 500 + Math.random() * 300);
+        }
+
+        // Ask predefined question
+        function askQuestion(question) {
+            document.getElementById('policyQuestion').value = question;
+            sendMessage();
+        }
+
+        // Add user message to chat
+        function addUserMessage(text) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex items-start mb-4 justify-end';
+            messageDiv.innerHTML = `
+                <div class="chat-bubble-user p-4 max-w-[80%]">
+                    <p class="text-white">${text}</p>
+                </div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+
+            conversationHistory.push({
+                role: 'user',
+                content: text,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        // Add AI message to chat
+        function addAIMessage(response) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex items-start mb-4';
+
+            const confidenceClass = response.confidence >= 90 ? 'confidence-high' :
+                                   response.confidence >= 70 ? 'confidence-medium' : 'confidence-low';
+
+            messageDiv.innerHTML = `
+                <div class="chat-bubble-ai p-4 max-w-[80%]">
+                    <div class="flex items-center mb-2">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center mr-2">
+                            <span class="text-white font-bold text-sm">AI</span>
+                        </div>
+                        <span class="text-white/70 text-sm">Policy Assistant</span>
+                    </div>
+                    <div class="text-white mb-3 whitespace-pre-line">${response.text}</div>
+
+                    ${response.legalText ? `
+                        <div class="legal-text text-sm mb-3">${response.legalText}</div>
+                    ` : ''}
+
+                    <div class="mb-2">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-white/50 text-xs">Confidence Score</span>
+                            <span class="text-white/70 text-xs font-semibold">${response.confidence}%</span>
+                        </div>
+                        <div class="confidence-meter">
+                            <div class="confidence-fill ${confidenceClass}" style="width: ${response.confidence}%"></div>
+                        </div>
+                    </div>
+
+                    ${response.citations.length > 0 ? `
+                        <div class="mt-3">
+                            ${response.citations.map(citation => `<span class="citation-badge">${citation}</span>`).join(' ')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+
+            conversationHistory.push({
+                role: 'assistant',
+                content: response.text,
+                confidence: response.confidence,
+                citations: response.citations,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        // Typing indicator
+        function showTypingIndicator() {
+            const chatMessages = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'flex items-start mb-4';
+            typingDiv.innerHTML = `
+                <div class="chat-bubble-ai p-4">
+                    <div class="typing-indicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+
+        // Scroll to bottom of chat
+        function scrollToBottom() {
+            const container = document.getElementById('chatContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Update citation panel
+        function updateCitationPanel(citations) {
+            const panel = document.getElementById('citationPanel');
+            if (citations.length === 0) return;
+
+            const existingCitations = new Set(
+                Array.from(panel.querySelectorAll('.citation-item')).map(el => el.textContent)
+            );
+
+            citations.forEach(citation => {
+                if (!existingCitations.has(citation)) {
+                    const citationDiv = document.createElement('div');
+                    citationDiv.className = 'citation-item glass-dark p-3 rounded-lg mb-2 cursor-pointer hover:bg-white/20 transition-all';
+                    citationDiv.innerHTML = `
+                        <div class="flex items-start">
+                            <svg class="w-4 h-4 text-blue-400 mr-2 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div>
+                                <p class="text-white text-sm font-semibold">${citation}</p>
+                                <p class="text-white/50 text-xs mt-1">Click to view full text</p>
+                            </div>
+                        </div>
+                    `;
+                    citationDiv.onclick = () => showCitationDetail(citation);
+                    panel.appendChild(citationDiv);
+                }
+            });
+        }
+
+        // Show citation detail
+        function showCitationDetail(citation) {
+            // Find the regulation in database
+            let regData = null;
+            for (const key in legalDatabase) {
+                if (legalDatabase[key].citation.includes(citation) || citation.includes(legalDatabase[key].citation)) {
+                    regData = legalDatabase[key];
+                    break;
+                }
+            }
+
+            if (regData) {
+                addAIMessage({
+                    text: `**${regData.title}**\n\nCitation: ${regData.citation}`,
+                    legalText: regData.content,
+                    citations: regData.relatedRegulations,
+                    confidence: regData.confidence
+                });
+            }
+        }
+
+        // Voice input toggle
+        function toggleVoiceInput() {
+            const btn = document.getElementById('voiceBtn');
+            isVoiceActive = !isVoiceActive;
+
+            if (isVoiceActive) {
+                btn.classList.add('voice-pulse');
+                btn.style.background = 'rgba(239, 68, 68, 0.4)';
+
+                // Simulate voice recognition (mock)
+                setTimeout(() => {
+                    const mockQueries = [
+                        'What are the requirements for a building permit?',
+                        'Does this policy comply with ADA requirements?',
+                        'What are OSHA workplace safety regulations?'
+                    ];
+                    const query = mockQueries[Math.floor(Math.random() * mockQueries.length)];
+                    document.getElementById('policyQuestion').value = query;
+                    toggleVoiceInput(); // Stop recording
+                }, 2000);
+            } else {
+                btn.classList.remove('voice-pulse');
+                btn.style.background = 'rgba(239, 68, 68, 0.2)';
+            }
+        }
+
+        // Show compliance checker modal
+        function showComplianceChecker() {
+            const modal = document.getElementById('complianceModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // Run compliance check
+        function runComplianceCheck() {
+            const policyText = document.getElementById('policyText').value;
+            if (!policyText.trim()) {
+                alert('Please enter policy text to check.');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('complianceResults');
+            resultsDiv.classList.remove('hidden');
+
+            // Mock compliance check results
+            const checks = [
+                { name: 'ADA Accessibility', status: 'pass', details: 'Policy includes accessibility requirements' },
+                { name: 'OSHA Safety Standards', status: 'warning', details: 'Missing specific PPE requirements' },
+                { name: 'Environmental Impact', status: 'pass', details: 'EIS procedures properly outlined' },
+                { name: 'HIPAA Privacy', status: 'fail', details: 'No data privacy safeguards mentioned' },
+                { name: 'Equal Opportunity', status: 'pass', details: 'Non-discrimination clause present' }
+            ];
+
+            resultsDiv.innerHTML = `
+                <h3 class="text-white font-bold mb-4">Compliance Check Results</h3>
+                <div class="space-y-3">
+                    ${checks.map(check => `
+                        <div class="glass-dark p-4 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-white font-semibold">${check.name}</span>
+                                <span class="px-3 py-1 rounded-full text-sm ${
+                                    check.status === 'pass' ? 'bg-green-500/20 text-green-300 border border-green-500/40' :
+                                    check.status === 'warning' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40' :
+                                    'bg-red-500/20 text-red-300 border border-red-500/40'
+                                }">
+                                    ${check.status.toUpperCase()}
+                                </span>
+                            </div>
+                            <p class="text-white/70 text-sm">${check.details}</p>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="mt-6 glass-dark p-4 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <span class="text-white font-semibold">Overall Compliance Score</span>
+                        <span class="text-2xl font-bold text-yellow-400">72%</span>
+                    </div>
+                    <div class="confidence-meter mt-2">
+                        <div class="confidence-fill confidence-medium" style="width: 72%"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Show conflict detector modal
+        function showConflictDetector() {
+            const modal = document.getElementById('conflictModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            const resultsDiv = document.getElementById('conflictResults');
+
+            // Mock conflict detection with side-by-side comparison
+            resultsDiv.innerHTML = `
+                <div class="mb-6">
+                    <h3 class="text-white font-bold mb-2">Detected Policy Conflicts</h3>
+                    <p class="text-white/70 text-sm">2 potential conflicts found between federal and state regulations</p>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Conflict 1 -->
+                    <div class="glass-dark p-6 rounded-lg">
+                        <div class="flex items-center mb-4">
+                            <div class="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                            <h4 class="text-white font-semibold">Conflict: Minimum Wage Requirements</h4>
+                        </div>
+
+                        <div class="comparison-container mb-4">
+                            <div class="glass p-4 rounded-lg">
+                                <div class="text-blue-400 text-sm font-semibold mb-2">Federal Law</div>
+                                <div class="text-white/80 text-sm mb-2">Fair Labor Standards Act (FLSA)</div>
+                                <div class="legal-text text-xs">
+                                    Federal minimum wage: <span class="legal-keyword">$7.25/hour</span>
+                                </div>
+                            </div>
+                            <div class="comparison-divider"></div>
+                            <div class="glass p-4 rounded-lg">
+                                <div class="text-purple-400 text-sm font-semibold mb-2">State Law</div>
+                                <div class="text-white/80 text-sm mb-2">California Labor Code §1182.12</div>
+                                <div class="legal-text text-xs">
+                                    State minimum wage: <span class="legal-keyword">$15.50/hour</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass p-4 rounded-lg bg-green-500/10 border border-green-500/30">
+                            <div class="text-green-400 text-sm font-semibold mb-1">Resolution</div>
+                            <div class="text-white/80 text-sm">Higher state minimum wage takes precedence. Employers must pay $15.50/hour in California.</div>
+                        </div>
+                    </div>
+
+                    <!-- Conflict 2 -->
+                    <div class="glass-dark p-6 rounded-lg">
+                        <div class="flex items-center mb-4">
+                            <div class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
+                            <h4 class="text-white font-semibold">Potential Conflict: Overtime Calculation</h4>
+                        </div>
+
+                        <div class="comparison-container mb-4">
+                            <div class="glass p-4 rounded-lg">
+                                <div class="text-blue-400 text-sm font-semibold mb-2">Federal Law</div>
+                                <div class="text-white/80 text-sm mb-2">FLSA §207</div>
+                                <div class="legal-text text-xs">
+                                    Overtime after <span class="legal-keyword">40 hours/week</span> at 1.5x rate
+                                </div>
+                            </div>
+                            <div class="comparison-divider"></div>
+                            <div class="glass p-4 rounded-lg">
+                                <div class="text-purple-400 text-sm font-semibold mb-2">State Law</div>
+                                <div class="text-white/80 text-sm mb-2">CA Labor Code §510</div>
+                                <div class="legal-text text-xs">
+                                    Overtime after <span class="legal-keyword">8 hours/day</span> at 1.5x rate,<br>
+                                    after <span class="legal-keyword">12 hours/day</span> at 2x rate
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass p-4 rounded-lg bg-green-500/10 border border-green-500/30">
+                            <div class="text-green-400 text-sm font-semibold mb-1">Resolution</div>
+                            <div class="text-white/80 text-sm">Both regulations apply. Use most favorable to employee (daily overtime in CA).</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Close modal
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // Export to PDF
+        function exportToPDF() {
+            // TODO: Implement actual PDF export functionality
+            // For now, show success message
+
+            const chatMessages = conversationHistory.map(msg => {
+                return `[${msg.role.toUpperCase()}] ${msg.content}`;
+            }).join('\n\n');
+
+            const blob = new Blob([chatMessages], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `policy-interpretation-${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            // Show success notification
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-6 right-6 glass p-4 rounded-lg shadow-lg z-50';
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span class="text-white">Conversation exported successfully!</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // Show citation in chat
+        function showCitation(key) {
+            if (legalDatabase[key]) {
+                const reg = legalDatabase[key];
+                addAIMessage({
+                    text: `**${reg.title}**\n\nCitation: ${reg.citation}`,
+                    legalText: reg.content,
+                    citations: reg.relatedRegulations,
+                    confidence: reg.confidence
+                });
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Escape to close modals
+            if (e.key === 'Escape') {
+                closeModal('complianceModal');
+                closeModal('conflictModal');
+            }
+        });
+
+        // Initialize
+        console.log('Natural Language Policy Interpreter initialized');
+        console.log('Mock legal database loaded with', Object.keys(legalDatabase).length, 'regulations');
+    </script>
+</body>
+</html>

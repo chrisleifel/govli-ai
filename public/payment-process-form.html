@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process Payment - Govli AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --deep-ocean: #0a1628;
+            --ocean-dark: #0c4a6e;
+            --ocean-primary: #0369a1;
+            --azure-blue: #0284c7;
+            --sky-blue: #0ea5e9;
+            --cyan-bright: #06b6d4;
+            --teal-accent: #14b8a6;
+        }
+
+        body {
+            background: linear-gradient(135deg,
+                #0a1628 0%,
+                #0c2340 25%,
+                #0e3a5f 50%,
+                #1e3a5f 75%,
+                #164e7f 100%);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--cyan-bright), var(--teal-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--azure-blue), var(--ocean-primary));
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(6, 182, 212, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .input-field, .select-field, .textarea-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            color: white;
+            width: 100%;
+        }
+
+        .input-field:focus, .select-field:focus, .textarea-field:focus {
+            outline: none;
+            border-color: var(--cyan-bright);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-label {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-section {
+            background: rgba(6, 182, 212, 0.05);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            color: var(--cyan-bright);
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .calculator-display {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(20, 184, 166, 0.2));
+            border: 2px solid var(--cyan-bright);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .success-message {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            color: rgb(16, 185, 129);
+            margin-bottom: 1rem;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            color: rgb(239, 68, 68);
+            margin-bottom: 1rem;
+        }
+
+        .fee-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .fee-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Navigation Bar -->
+    <nav class="glass-card mx-4 mt-4 mb-6">
+        <div class="flex items-center justify-between p-4">
+            <div class="flex items-center gap-4">
+                <button onclick="window.location.href='payments-admin-dashboard.html'" class="text-cyan-400 hover:text-cyan-300">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <h1 class="text-2xl font-bold gradient-text">Process Manual Payment</h1>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto px-4 pb-8">
+        <!-- Success Message -->
+        <div id="successMessage" class="success-message" style="display: none;">
+            <i class="fas fa-check-circle mr-2"></i>
+            <span id="successText"></span>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="error-message" style="display: none;">
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            <span id="errorText"></span>
+        </div>
+
+        <form id="paymentForm" class="space-y-6">
+            <!-- User Information Section -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <i class="fas fa-user"></i>
+                    User Information
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="form-label">User ID *</label>
+                        <input
+                            type="number"
+                            id="userId"
+                            class="input-field"
+                            placeholder="Enter user ID"
+                            required
+                        >
+                        <p class="text-gray-400 text-xs mt-1">The citizen or business making the payment</p>
+                    </div>
+                    <div>
+                        <label class="form-label">Related Permit ID (Optional)</label>
+                        <input
+                            type="number"
+                            id="permitId"
+                            class="input-field"
+                            placeholder="Enter permit ID if applicable"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Details Section -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <i class="fas fa-money-bill-wave"></i>
+                    Payment Details
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="form-label">Payment Type *</label>
+                        <select id="paymentType" class="select-field" required onchange="calculateTotal()">
+                            <option value="">Select payment type...</option>
+                            <option value="permit_fee">Permit Fee</option>
+                            <option value="inspection_fee">Inspection Fee</option>
+                            <option value="license_fee">License Fee</option>
+                            <option value="fine">Fine</option>
+                            <option value="penalty">Penalty</option>
+                            <option value="service_fee">Service Fee</option>
+                            <option value="application_fee">Application Fee</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Amount ($) *</label>
+                        <input
+                            type="number"
+                            id="amount"
+                            class="input-field"
+                            placeholder="0.00"
+                            step="0.01"
+                            min="0"
+                            required
+                            onchange="calculateTotal()"
+                        >
+                    </div>
+                    <div>
+                        <label class="form-label">Currency</label>
+                        <select id="currency" class="select-field">
+                            <option value="USD" selected>USD - US Dollar</option>
+                            <option value="CAD">CAD - Canadian Dollar</option>
+                            <option value="EUR">EUR - Euro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Payment Method *</label>
+                        <select id="paymentMethod" class="select-field" required>
+                            <option value="">Select payment method...</option>
+                            <option value="cash">Cash</option>
+                            <option value="check">Check</option>
+                            <option value="credit_card">Credit Card</option>
+                            <option value="debit_card">Debit Card</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="money_order">Money Order</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Fee Calculator Display -->
+                <div class="calculator-display mt-4">
+                    <p class="text-gray-300 text-sm mb-2">Total Amount</p>
+                    <p class="text-5xl font-bold text-cyan-400" id="calculatedTotal">$0.00</p>
+                    <div class="mt-4 text-left max-w-md mx-auto">
+                        <div class="fee-item">
+                            <span class="text-gray-300">Base Amount:</span>
+                            <span class="text-white font-semibold" id="baseAmount">$0.00</span>
+                        </div>
+                        <div class="fee-item" id="processingFeeRow" style="display: none;">
+                            <span class="text-gray-300">Processing Fee (2.9%):</span>
+                            <span class="text-white font-semibold" id="processingFee">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction Information Section -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <i class="fas fa-receipt"></i>
+                    Transaction Information
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="form-label">Transaction ID</label>
+                        <input
+                            type="text"
+                            id="transactionId"
+                            class="input-field"
+                            placeholder="Auto-generated if left blank"
+                        >
+                        <p class="text-gray-400 text-xs mt-1">Leave blank for auto-generation</p>
+                    </div>
+                    <div>
+                        <label class="form-label">Payment Processor</label>
+                        <input
+                            type="text"
+                            id="paymentProcessor"
+                            class="input-field"
+                            placeholder="e.g., Manual, Stripe, PayPal"
+                        >
+                    </div>
+                    <div>
+                        <label class="form-label">Check Number (if applicable)</label>
+                        <input
+                            type="text"
+                            id="checkNumber"
+                            class="input-field"
+                            placeholder="Enter check number"
+                        >
+                    </div>
+                    <div>
+                        <label class="form-label">Payment Date</label>
+                        <input
+                            type="date"
+                            id="paymentDate"
+                            class="input-field"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Information Section -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <i class="fas fa-sticky-note"></i>
+                    Additional Information
+                </h2>
+                <div>
+                    <label class="form-label">Notes (Optional)</label>
+                    <textarea
+                        id="notes"
+                        class="textarea-field"
+                        rows="4"
+                        placeholder="Add any additional notes about this payment..."
+                    ></textarea>
+                </div>
+
+                <!-- Process Immediately Option -->
+                <div class="mt-4 flex items-center gap-3">
+                    <input
+                        type="checkbox"
+                        id="processImmediately"
+                        class="w-5 h-5"
+                        checked
+                    >
+                    <label for="processImmediately" class="text-white cursor-pointer">
+                        Process payment immediately (mark as completed)
+                    </label>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="glass-card p-6">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <button
+                        type="button"
+                        onclick="window.location.href='payments-admin-dashboard.html'"
+                        class="btn-secondary flex-1"
+                    >
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </button>
+                    <button
+                        type="button"
+                        onclick="resetForm()"
+                        class="btn-secondary flex-1"
+                    >
+                        <i class="fas fa-redo mr-2"></i>Reset
+                    </button>
+                    <button
+                        type="submit"
+                        class="btn-primary flex-1"
+                    >
+                        <i class="fas fa-check mr-2"></i>Submit Payment
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="payments.js"></script>
+    <script>
+        // Set default payment date to today
+        document.getElementById('paymentDate').valueAsDate = new Date();
+
+        // Calculate total with fees
+        function calculateTotal() {
+            const amount = parseFloat(document.getElementById('amount').value) || 0;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+
+            let processingFee = 0;
+
+            // Add processing fee for credit/debit cards (2.9%)
+            if (paymentMethod === 'credit_card' || paymentMethod === 'debit_card') {
+                processingFee = amount * 0.029;
+                document.getElementById('processingFeeRow').style.display = 'flex';
+                document.getElementById('processingFee').textContent = PaymentAPI.formatCurrency(processingFee);
+            } else {
+                document.getElementById('processingFeeRow').style.display = 'none';
+            }
+
+            const total = amount + processingFee;
+
+            document.getElementById('baseAmount').textContent = PaymentAPI.formatCurrency(amount);
+            document.getElementById('calculatedTotal').textContent = PaymentAPI.formatCurrency(total);
+        }
+
+        // Form submission
+        document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = {
+                userId: parseInt(document.getElementById('userId').value),
+                permitId: document.getElementById('permitId').value ? parseInt(document.getElementById('permitId').value) : null,
+                amount: parseFloat(document.getElementById('amount').value),
+                currency: document.getElementById('currency').value,
+                paymentType: document.getElementById('paymentType').value,
+                paymentMethod: document.getElementById('paymentMethod').value,
+                transactionId: document.getElementById('transactionId').value || `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+                paymentProcessor: document.getElementById('paymentProcessor').value || 'Manual Entry',
+                metadata: {
+                    notes: document.getElementById('notes').value,
+                    checkNumber: document.getElementById('checkNumber').value,
+                    paymentDate: document.getElementById('paymentDate').value,
+                    processedBy: 'Staff Member', // In production, get from auth context
+                    entryMethod: 'manual'
+                }
+            };
+
+            // Validate form data
+            const validation = PaymentAPI.validatePayment(formData);
+            if (!validation.valid) {
+                showError(validation.errors.join(', '));
+                return;
+            }
+
+            try {
+                // Create the payment
+                const payment = await PaymentAPI.createPayment(formData);
+
+                // If process immediately is checked, process it
+                if (document.getElementById('processImmediately').checked) {
+                    await PaymentAPI.processPayment(payment.payment.id, {
+                        transactionId: formData.transactionId,
+                        metadata: {
+                            processedAt: new Date().toISOString(),
+                            processedBy: 'Staff Member'
+                        }
+                    });
+                }
+
+                showSuccess(`Payment processed successfully! Receipt: ${payment.payment.receiptNumber}`);
+
+                // Reset form after 2 seconds
+                setTimeout(() => {
+                    resetForm();
+                    hideMessages();
+                }, 2000);
+
+            } catch (error) {
+                console.error('Error processing payment:', error);
+                showError('Error processing payment. Please check the form and try again.');
+            }
+        });
+
+        // Show success message
+        function showSuccess(message) {
+            document.getElementById('successText').textContent = message;
+            document.getElementById('successMessage').style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+
+            // Scroll to top to see message
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Show error message
+        function showError(message) {
+            document.getElementById('errorText').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+
+            // Scroll to top to see message
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Hide messages
+        function hideMessages() {
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('paymentForm').reset();
+            document.getElementById('paymentDate').valueAsDate = new Date();
+            calculateTotal();
+            hideMessages();
+        }
+
+        // Update total when payment method changes
+        document.getElementById('paymentMethod').addEventListener('change', calculateTotal);
+    </script>
+</body>
+</html>

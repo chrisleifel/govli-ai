@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - Govli AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --deep-ocean: #0a1628;
+            --ocean-dark: #0c4a6e;
+            --ocean-primary: #0369a1;
+            --azure-blue: #0284c7;
+            --sky-blue: #0ea5e9;
+            --cyan-bright: #06b6d4;
+            --teal-accent: #14b8a6;
+        }
+
+        body {
+            background: linear-gradient(135deg,
+                #0a1628 0%,
+                #0c2340 25%,
+                #0e3a5f 50%,
+                #1e3a5f 75%,
+                #164e7f 100%);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--cyan-bright), var(--teal-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--azure-blue), var(--ocean-primary));
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(6, 182, 212, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .filter-chip {
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+        }
+
+        .filter-chip:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--cyan-bright);
+        }
+
+        .filter-chip.active {
+            background: linear-gradient(135deg, var(--azure-blue), var(--ocean-primary));
+            border-color: var(--cyan-bright);
+        }
+
+        .notification-item {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .notification-item:hover {
+            transform: translateX(4px);
+        }
+
+        .notification-item.unread {
+            background: rgba(139, 92, 246, 0.1);
+            border-left: 3px solid var(--cyan-bright);
+        }
+
+        .notification-item.read {
+            opacity: 0.7;
+        }
+
+        .priority-indicator {
+            width: 4px;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            border-radius: 16px 0 0 16px;
+        }
+
+        .priority-urgent { background: #f43f5e; }
+        .priority-high { background: #f59e0b; }
+        .priority-medium { background: #3b82f6; }
+        .priority-low { background: #6b7280; }
+
+        .input-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            color: white;
+            width: 100%;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--cyan-bright);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination button.active {
+            background: linear-gradient(135deg, var(--azure-blue), var(--ocean-primary));
+            border-color: var(--cyan-bright);
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(6, 182, 212, 0); }
+        }
+
+        .notification-pulse {
+            animation: pulse-glow 2s infinite;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Navigation Bar -->
+    <nav class="glass-card mx-4 mt-4 mb-6">
+        <div class="flex items-center justify-between p-4">
+            <div class="flex items-center gap-4">
+                <button onclick="window.location.href='index.html'" class="text-cyan-400 hover:text-cyan-300">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <h1 class="text-2xl font-bold gradient-text">Notifications</h1>
+                <span class="badge bg-cyan-500/20 text-cyan-300 border-cyan-500/30" id="unreadBadge">0 unread</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="window.location.href='notification-settings.html'" class="btn-secondary text-sm">
+                    <i class="fas fa-cog mr-2"></i>Settings
+                </button>
+                <button onclick="markAllAsRead()" class="btn-secondary text-sm">
+                    <i class="fas fa-check-double mr-2"></i>Mark All Read
+                </button>
+                <button onclick="clearAllRead()" class="btn-secondary text-sm">
+                    <i class="fas fa-trash mr-2"></i>Clear Read
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 pb-8">
+        <!-- Filters and Search -->
+        <div class="glass-card p-6 mb-6">
+            <div class="flex flex-col lg:flex-row gap-4 mb-4">
+                <div class="flex-1">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        class="input-field"
+                        placeholder="Search notifications..."
+                        onkeyup="handleSearch()"
+                    >
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2 mb-4">
+                <span class="text-gray-300 text-sm self-center mr-2">Status:</span>
+                <button class="filter-chip active" data-filter="all" onclick="filterByStatus('all')">All</button>
+                <button class="filter-chip" data-filter="unread" onclick="filterByStatus('unread')">Unread</button>
+                <button class="filter-chip" data-filter="read" onclick="filterByStatus('read')">Read</button>
+            </div>
+
+            <div class="flex flex-wrap gap-2 mb-4">
+                <span class="text-gray-300 text-sm self-center mr-2">Priority:</span>
+                <button class="filter-chip active" data-priority-filter="all" onclick="filterByPriority('all')">All</button>
+                <button class="filter-chip" data-priority-filter="urgent" onclick="filterByPriority('urgent')">Urgent</button>
+                <button class="filter-chip" data-priority-filter="high" onclick="filterByPriority('high')">High</button>
+                <button class="filter-chip" data-priority-filter="medium" onclick="filterByPriority('medium')">Medium</button>
+                <button class="filter-chip" data-priority-filter="low" onclick="filterByPriority('low')">Low</button>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+                <span class="text-gray-300 text-sm self-center mr-2">Type:</span>
+                <button class="filter-chip active" data-type-filter="all" onclick="filterByType('all')">All</button>
+                <button class="filter-chip" data-type-filter="permit_update" onclick="filterByType('permit_update')">Permits</button>
+                <button class="filter-chip" data-type-filter="inspection_scheduled" onclick="filterByType('inspection_scheduled')">Inspections</button>
+                <button class="filter-chip" data-type-filter="payment_received" onclick="filterByType('payment_received')">Payments</button>
+                <button class="filter-chip" data-type-filter="grant_opportunity" onclick="filterByType('grant_opportunity')">Grants</button>
+            </div>
+        </div>
+
+        <!-- Notifications List -->
+        <div class="glass-card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white">Your Notifications</h2>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm text-gray-400" id="filterInfo">Showing all notifications</span>
+                </div>
+            </div>
+
+            <div id="notificationsList" class="space-y-3">
+                <!-- Loading state -->
+                <div class="text-center py-8 text-gray-400">
+                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                    <p>Loading notifications...</p>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex items-center justify-between mt-6" id="paginationSection" style="display: none;">
+                <div class="text-gray-300 text-sm">
+                    Showing <span id="showingStart">0</span> to <span id="showingEnd">0</span> of <span id="totalRecords">0</span> notifications
+                </div>
+                <div class="pagination" id="paginationContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="notifications.js"></script>
+    <script>
+        let allNotifications = [];
+        let filteredNotifications = [];
+        let currentPage = 1;
+        let currentLimit = 20;
+        let currentFilters = {
+            status: 'all',
+            priority: 'all',
+            type: 'all',
+            search: ''
+        };
+
+        let poller = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadNotifications();
+            startPolling();
+        });
+
+        // Start polling for new notifications
+        function startPolling() {
+            poller = new NotificationPoller({
+                interval: 30000, // 30 seconds
+                onUpdate: (data) => {
+                    document.getElementById('unreadBadge').textContent = `${data.unreadCount || 0} unread`;
+                    // Reload notifications if there are new ones
+                    if (data.unreadCount > getUnreadCount()) {
+                        loadNotifications();
+                    }
+                },
+                onError: (error) => {
+                    console.error('Polling error:', error);
+                }
+            });
+            poller.start();
+        }
+
+        // Get current unread count from loaded notifications
+        function getUnreadCount() {
+            return allNotifications.filter(n => !n.read).length;
+        }
+
+        // Load notifications
+        async function loadNotifications() {
+            try {
+                const response = await NotificationAPI.getNotifications({
+                    page: currentPage,
+                    limit: 100 // Load more for client-side filtering
+                });
+
+                allNotifications = response.notifications || [];
+                document.getElementById('unreadBadge').textContent = `${response.unreadCount || 0} unread`;
+
+                applyFilters();
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                document.getElementById('notificationsList').innerHTML = `
+                    <div class="text-center py-8 text-red-400">
+                        <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                        <p>Error loading notifications. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Apply all filters
+        function applyFilters() {
+            let filtered = [...allNotifications];
+
+            // Status filter
+            if (currentFilters.status === 'unread') {
+                filtered = filtered.filter(n => !n.read);
+            } else if (currentFilters.status === 'read') {
+                filtered = filtered.filter(n => n.read);
+            }
+
+            // Priority filter
+            if (currentFilters.priority !== 'all') {
+                filtered = filtered.filter(n => n.priority === currentFilters.priority);
+            }
+
+            // Type filter
+            if (currentFilters.type !== 'all') {
+                filtered = filtered.filter(n => n.type.includes(currentFilters.type));
+            }
+
+            // Search filter
+            if (currentFilters.search) {
+                const searchLower = currentFilters.search.toLowerCase();
+                filtered = filtered.filter(n =>
+                    n.title.toLowerCase().includes(searchLower) ||
+                    n.message.toLowerCase().includes(searchLower)
+                );
+            }
+
+            filteredNotifications = NotificationAPI.sortByPriority(filtered);
+            renderNotifications();
+            updateFilterInfo();
+        }
+
+        // Render notifications
+        function renderNotifications() {
+            const container = document.getElementById('notificationsList');
+
+            if (filteredNotifications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-bell-slash text-6xl text-gray-600 mb-4"></i>
+                        <p class="text-gray-400 text-lg">No notifications found</p>
+                        <p class="text-gray-500 text-sm mt-2">You're all caught up!</p>
+                    </div>
+                `;
+                document.getElementById('paginationSection').style.display = 'none';
+                return;
+            }
+
+            const grouped = NotificationAPI.groupByDate(filteredNotifications);
+
+            let html = '';
+
+            // Today
+            if (grouped.today.length > 0) {
+                html += '<h3 class="text-sm font-semibold text-gray-400 mb-3 mt-4">Today</h3>';
+                html += renderNotificationGroup(grouped.today);
+            }
+
+            // Yesterday
+            if (grouped.yesterday.length > 0) {
+                html += '<h3 class="text-sm font-semibold text-gray-400 mb-3 mt-4">Yesterday</h3>';
+                html += renderNotificationGroup(grouped.yesterday);
+            }
+
+            // This Week
+            if (grouped.thisWeek.length > 0) {
+                html += '<h3 class="text-sm font-semibold text-gray-400 mb-3 mt-4">This Week</h3>';
+                html += renderNotificationGroup(grouped.thisWeek);
+            }
+
+            // Older
+            if (grouped.older.length > 0) {
+                html += '<h3 class="text-sm font-semibold text-gray-400 mb-3 mt-4">Older</h3>';
+                html += renderNotificationGroup(grouped.older);
+            }
+
+            container.innerHTML = html;
+            document.getElementById('paginationSection').style.display = 'none'; // Client-side pagination not needed
+        }
+
+        // Render notification group
+        function renderNotificationGroup(notifications) {
+            return notifications.map(notification => `
+                <div class="glass-card notification-item ${notification.read ? 'read' : 'unread'} p-4 mb-3 relative" onclick="viewNotification('${notification.id}')">
+                    <div class="priority-indicator priority-${notification.priority}"></div>
+                    <div class="flex items-start gap-4 ml-2">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 rounded-full bg-${notification.priority === 'urgent' ? 'red' : notification.priority === 'high' ? 'orange' : notification.priority === 'medium' ? 'blue' : 'gray'}-500/20 flex items-center justify-center">
+                                <i class="fas ${NotificationAPI.getTypeIcon(notification.type)} ${NotificationAPI.getPriorityColor(notification.priority)} text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between mb-2">
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-white mb-1">${notification.title}</h3>
+                                    <p class="text-sm text-gray-300 line-clamp-2">${notification.message}</p>
+                                </div>
+                                ${!notification.read ? '<div class="w-2 h-2 rounded-full bg-cyan-400 notification-pulse ml-2 flex-shrink-0"></div>' : ''}
+                            </div>
+                            <div class="flex items-center gap-4 text-xs text-gray-400">
+                                <span><i class="far fa-clock mr-1"></i>${NotificationAPI.formatTimestamp(notification.createdAt)}</span>
+                                <span class="badge ${NotificationAPI.getPriorityBadgeClass(notification.priority)}">${notification.priority}</span>
+                                <span class="text-gray-500">${NotificationAPI.getTypeLabel(notification.type)}</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            ${!notification.read ? `
+                                <button onclick="event.stopPropagation(); markAsRead('${notification.id}')" class="text-cyan-400 hover:text-cyan-300 p-2" title="Mark as read">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            ` : ''}
+                            <button onclick="event.stopPropagation(); deleteNotification('${notification.id}')" class="text-red-400 hover:text-red-300 p-2" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // View notification (mark as read and navigate)
+        async function viewNotification(notificationId) {
+            const notification = allNotifications.find(n => n.id === notificationId);
+            if (!notification) return;
+
+            // Mark as read if unread
+            if (!notification.read) {
+                await markAsRead(notificationId);
+            }
+
+            // Navigate to action URL if available
+            if (notification.actionUrl) {
+                window.location.href = notification.actionUrl;
+            }
+        }
+
+        // Mark notification as read
+        async function markAsRead(notificationId) {
+            try {
+                await NotificationAPI.markAsRead(notificationId);
+                // Update local state
+                const notification = allNotifications.find(n => n.id === notificationId);
+                if (notification) {
+                    notification.read = true;
+                    notification.readAt = new Date().toISOString();
+                }
+                applyFilters();
+                updateUnreadBadge();
+            } catch (error) {
+                console.error('Error marking as read:', error);
+            }
+        }
+
+        // Mark all as read
+        async function markAllAsRead() {
+            if (!confirm('Mark all notifications as read?')) return;
+
+            try {
+                await NotificationAPI.markAllAsRead();
+                allNotifications.forEach(n => {
+                    n.read = true;
+                    n.readAt = new Date().toISOString();
+                });
+                applyFilters();
+                updateUnreadBadge();
+            } catch (error) {
+                console.error('Error marking all as read:', error);
+                alert('Error marking all as read');
+            }
+        }
+
+        // Clear all read notifications
+        async function clearAllRead() {
+            if (!confirm('Delete all read notifications? This cannot be undone.')) return;
+
+            try {
+                await NotificationAPI.clearAllRead();
+                allNotifications = allNotifications.filter(n => !n.read);
+                applyFilters();
+            } catch (error) {
+                console.error('Error clearing read:', error);
+                alert('Error clearing read notifications');
+            }
+        }
+
+        // Delete single notification
+        async function deleteNotification(notificationId) {
+            if (!confirm('Delete this notification?')) return;
+
+            try {
+                await NotificationAPI.deleteNotification(notificationId);
+                allNotifications = allNotifications.filter(n => n.id !== notificationId);
+                applyFilters();
+                updateUnreadBadge();
+            } catch (error) {
+                console.error('Error deleting notification:', error);
+                alert('Error deleting notification');
+            }
+        }
+
+        // Update unread badge
+        function updateUnreadBadge() {
+            const unreadCount = getUnreadCount();
+            document.getElementById('unreadBadge').textContent = `${unreadCount} unread`;
+        }
+
+        // Filter functions
+        function filterByStatus(status) {
+            currentFilters.status = status;
+            updateFilterChips('data-filter', status);
+            applyFilters();
+        }
+
+        function filterByPriority(priority) {
+            currentFilters.priority = priority;
+            updateFilterChips('data-priority-filter', priority);
+            applyFilters();
+        }
+
+        function filterByType(type) {
+            currentFilters.type = type;
+            updateFilterChips('data-type-filter', type);
+            applyFilters();
+        }
+
+        function updateFilterChips(attribute, value) {
+            document.querySelectorAll(`[${attribute}]`).forEach(chip => {
+                chip.classList.remove('active');
+                if (chip.getAttribute(attribute) === value) {
+                    chip.classList.add('active');
+                }
+            });
+        }
+
+        function handleSearch() {
+            clearTimeout(window.searchTimeout);
+            window.searchTimeout = setTimeout(() => {
+                currentFilters.search = document.getElementById('searchInput').value;
+                applyFilters();
+            }, 300);
+        }
+
+        function updateFilterInfo() {
+            const total = allNotifications.length;
+            const filtered = filteredNotifications.length;
+            const info = document.getElementById('filterInfo');
+
+            if (filtered === total) {
+                info.textContent = `Showing all ${total} notification${total !== 1 ? 's' : ''}`;
+            } else {
+                info.textContent = `Showing ${filtered} of ${total} notification${total !== 1 ? 's' : ''}`;
+            }
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (poller) {
+                poller.stop();
+            }
+        });
+    </script>
+</body>
+</html>

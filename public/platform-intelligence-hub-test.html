@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform Intelligence Hub - Govli AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #8b5cf6 100%);
+            min-height: 100vh;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .insight-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .insight-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .pulse-dot {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .knowledge-node {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.7rem;
+            text-align: center;
+            padding: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .knowledge-node:hover {
+            transform: scale(1.2);
+            z-index: 10;
+        }
+
+        .knowledge-line {
+            position: absolute;
+            height: 2px;
+            background: rgba(59, 130, 246, 0.3);
+            transform-origin: left center;
+            pointer-events: none;
+        }
+
+        .confidence-meter {
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .integration-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-partial {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .status-limited {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .search-result-group {
+            margin-bottom: 24px;
+        }
+
+        .search-result-item {
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .search-result-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+
+        .priority-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .priority-high {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .priority-medium {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .priority-low {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+
+        .automation-card {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .automation-card:hover {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15));
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                <i class="fas fa-brain text-purple-400"></i>
+                Platform Intelligence Hub
+                <span class="text-sm bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full">AI Command Center</span>
+            </h1>
+            <p class="text-white/70">Unified AI insights and actions across all platform sections</p>
+        </div>
+
+        <!-- Platform-Wide AI Search -->
+        <div class="glass rounded-xl p-6 mb-6">
+            <div class="flex items-center gap-3 mb-4">
+                <i class="fas fa-search text-blue-400 text-xl"></i>
+                <h3 class="text-lg font-bold text-white">Intelligent Platform Search</h3>
+            </div>
+            <div class="flex gap-3">
+                <input type="text" id="platformSearch" placeholder="Search across workflows, contacts, documents, policies, grants..."
+                       class="flex-1 bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                       onkeypress="if(event.key==='Enter') performPlatformSearch()">
+                <button onclick="performPlatformSearch()" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all">
+                    <i class="fas fa-magic mr-2"></i>AI Search
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="glass rounded-lg p-4">
+                <div class="text-sm text-white/70 mb-1">Active AI Insights</div>
+                <div class="text-2xl font-bold text-purple-400">47</div>
+                <div class="text-xs text-white/50 mt-1">Across 7 sections</div>
+            </div>
+            <div class="glass rounded-lg p-4">
+                <div class="text-sm text-white/70 mb-1">Automation Opportunities</div>
+                <div class="text-2xl font-bold text-blue-400">12</div>
+                <div class="text-xs text-white/50 mt-1">Avg 2.3 hrs saved each</div>
+            </div>
+            <div class="glass rounded-lg p-4">
+                <div class="text-sm text-white/70 mb-1">Cross-Section Actions</div>
+                <div class="text-2xl font-bold text-green-400">23</div>
+                <div class="text-xs text-white/50 mt-1">Pending review</div>
+            </div>
+            <div class="glass rounded-lg p-4">
+                <div class="text-sm text-white/70 mb-1">AI Confidence</div>
+                <div class="text-2xl font-bold text-yellow-400">91.2%</div>
+                <div class="text-xs text-white/50 mt-1">+3.1% this week</div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column: Insights Feed -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Unified AI Insights Feed -->
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fas fa-lightbulb text-yellow-400"></i>
+                            Real-Time Intelligence Feed
+                        </h3>
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 bg-green-400 rounded-full pulse-dot"></div>
+                            <span class="text-xs text-white/70">Live</span>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="flex gap-2 mb-4 flex-wrap">
+                        <button onclick="filterInsights('all')" class="bg-purple-500/20 text-purple-400 px-3 py-1 rounded-lg text-sm font-medium border border-purple-500/30">All (47)</button>
+                        <button onclick="filterInsights('high')" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-sm border border-white/20 transition-all">High Priority (8)</button>
+                        <button onclick="filterInsights('actionable')" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-sm border border-white/20 transition-all">Actionable (23)</button>
+                        <button onclick="filterInsights('automated')" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-sm border border-white/20 transition-all">Auto-Run (16)</button>
+                    </div>
+
+                    <!-- Insight Cards -->
+                    <div id="insightsFeed" class="space-y-3 max-h-[600px] overflow-y-auto">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Cross-Section Action Center -->
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-bolt text-yellow-400"></i>
+                        Cross-Section Actions
+                    </h3>
+                    <div id="actionCenter" class="space-y-3">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Intelligent Automation Suggestions -->
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-robot text-purple-400"></i>
+                        Automation Opportunities
+                    </h3>
+                    <div id="automationSuggestions" class="space-y-4">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Knowledge Graph & AI Status -->
+            <div class="space-y-6">
+                <!-- Knowledge Graph Preview -->
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fas fa-project-diagram text-blue-400"></i>
+                            Knowledge Graph
+                        </h3>
+                        <button onclick="openFullGraph()" class="text-blue-400 hover:text-blue-300 text-sm transition-colors">
+                            <i class="fas fa-expand mr-1"></i>Expand
+                        </button>
+                    </div>
+                    <div id="knowledgeGraphPreview" class="bg-black/20 rounded-lg" style="height: 300px; position: relative;">
+                        <!-- Graph will be rendered here -->
+                    </div>
+                    <div class="mt-3 text-xs text-white/60">
+                        <div class="flex items-center gap-2 mb-1">
+                            <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                            <span>Citizens</span>
+                        </div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            <span>Workflows</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-purple-500"></div>
+                            <span>Vendors</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Confidence Dashboard -->
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-line text-green-400"></i>
+                        AI Model Performance
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-white/70">Document OCR</span>
+                                <span class="text-green-400 font-semibold">94.7%</span>
+                            </div>
+                            <div class="confidence-meter">
+                                <div class="confidence-fill bg-green-400" style="width: 94.7%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-white/70">Predictive Models</span>
+                                <span class="text-blue-400 font-semibold">87.3%</span>
+                            </div>
+                            <div class="confidence-meter">
+                                <div class="confidence-fill bg-blue-400" style="width: 87.3%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-white/70">Policy Interpretation</span>
+                                <span class="text-purple-400 font-semibold">91.5%</span>
+                            </div>
+                            <div class="confidence-meter">
+                                <div class="confidence-fill bg-purple-400" style="width: 91.5%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-white/70">Sentiment Analysis</span>
+                                <span class="text-yellow-400 font-semibold">89.2%</span>
+                            </div>
+                            <div class="confidence-meter">
+                                <div class="confidence-fill bg-yellow-400" style="width: 89.2%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="viewExplainability()" class="mt-4 w-full bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium border border-white/20 transition-all">
+                        <i class="fas fa-info-circle mr-2"></i>View Explainability
+                    </button>
+                </div>
+
+                <!-- Integration Health -->
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-link text-blue-400"></i>
+                        Integration Health
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-white/70">Citizen Portal ↔ Predictive</span>
+                            <span class="integration-status status-active">✓ Active</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-white/70">Documents ↔ Workflows</span>
+                            <span class="integration-status status-active">✓ Active</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-white/70">CRM ↔ Documents</span>
+                            <span class="integration-status status-active">✓ Active</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-white/70">Policy ↔ Workflows</span>
+                            <span class="integration-status status-partial">⚠ Partial</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-white/70">Grants ↔ CRM</span>
+                            <span class="integration-status status-limited">⚠ Limited</span>
+                        </div>
+                    </div>
+                    <button onclick="viewIntegrationDetails()" class="mt-4 w-full bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium border border-white/20 transition-all">
+                        <i class="fas fa-cog mr-2"></i>Configure Integrations
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Knowledge Graph Modal -->
+    <div id="graphModal" class="modal" role="dialog" aria-labelledby="graphModalTitle">
+        <div class="glass rounded-xl p-6 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h2 id="graphModalTitle" class="text-2xl font-bold text-white flex items-center gap-3">
+                    <i class="fas fa-project-diagram text-blue-400"></i>
+                    Platform Knowledge Graph
+                </h2>
+                <button onclick="closeGraphModal()" class="text-white/70 hover:text-white transition-colors">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div id="knowledgeGraphFull" class="bg-black/20 rounded-xl" style="height: 600px; position: relative;">
+                <!-- Full graph visualization -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Results Modal -->
+    <div id="searchModal" class="modal" role="dialog" aria-labelledby="searchModalTitle">
+        <div class="glass rounded-xl p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h2 id="searchModalTitle" class="text-2xl font-bold text-white flex items-center gap-3">
+                    <i class="fas fa-search text-purple-400"></i>
+                    Search Results
+                </h2>
+                <button onclick="closeSearchModal()" class="text-white/70 hover:text-white transition-colors">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div id="searchResults">
+                <!-- Results populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // TODO: Connect to all platform sections via unified API
+        // TODO: Implement real-time WebSocket for live insights
+        // TODO: Add machine learning model for automation suggestions
+        // TODO: Integrate with knowledge graph database (Neo4j)
+        // TODO: Implement cross-section workflow orchestration
+        // TODO: Add AI explainability interface
+        // TODO: Connect to integration monitoring system
+        // SECURITY TODO: Add RBAC for sensitive cross-section data
+        // SECURITY TODO: Implement audit logging for all actions
+        // TODO: Add export functionality for insights and reports
+
+        // MOCK DATA - Replace in production
+        const MOCK_INSIGHTS = [
+            {
+                id: 'INS001',
+                source: 'Predictive Needs Engine',
+                icon: 'fas fa-bullseye',
+                color: 'blue',
+                priority: 'high',
+                title: '15 citizens likely to need building permits next week',
+                description: 'Based on recent property purchases and historical patterns',
+                action: 'Pre-send permit guide emails',
+                confidence: 89,
+                timestamp: '2 minutes ago'
+            },
+            {
+                id: 'INS002',
+                source: 'Document Processor',
+                icon: 'fas fa-file-alt',
+                color: 'purple',
+                priority: 'medium',
+                title: '47 business license renewals processed overnight',
+                description: '3 documents need manual review due to low confidence',
+                action: 'Open review queue',
+                confidence: 96,
+                timestamp: '1 hour ago'
+            },
+            {
+                id: 'INS003',
+                source: 'Policy Interpreter',
+                icon: 'fas fa-gavel',
+                color: 'yellow',
+                priority: 'high',
+                title: 'New ADA regulation affects 12 active permits',
+                description: 'Federal accessibility standards updated yesterday',
+                action: 'Notify affected applicants',
+                confidence: 94,
+                timestamp: '3 hours ago'
+            },
+            {
+                id: 'INS004',
+                source: 'Grant Discovery',
+                icon: 'fas fa-hand-holding-usd',
+                color: 'green',
+                priority: 'high',
+                title: '$2.5M cybersecurity grant matches your profile',
+                description: '96% compatibility score - deadline in 14 days',
+                action: 'Start application workflow',
+                confidence: 96,
+                timestamp: '5 hours ago'
+            },
+            {
+                id: 'INS005',
+                source: 'Sentiment Analysis',
+                icon: 'fas fa-chart-line',
+                color: 'red',
+                priority: 'medium',
+                title: 'Citizen satisfaction dropped 8% in permit department',
+                description: 'Trend detected over past 2 weeks',
+                action: 'View detailed sentiment report',
+                confidence: 87,
+                timestamp: '1 day ago'
+            }
+        ];
+
+        const MOCK_ACTIONS = [
+            {
+                id: 'ACT001',
+                title: 'Proactive Citizen Service',
+                insight: 'Sarah Johnson moved (Address Change) + has active permit (Workflows)',
+                aiAction: 'Auto-update permit address + send voter registration reminder',
+                sections: ['CRM', 'Workflows', 'Citizen Portal'],
+                status: 'pending',
+                confidence: 92
+            },
+            {
+                id: 'ACT002',
+                title: 'Vendor Intelligence',
+                insight: 'TechCorp contract expiring (CRM) + similar vendor grant available (Grants)',
+                aiAction: 'Notify procurement + suggest grant application for replacement',
+                sections: ['CRM', 'Grants', 'Procurement'],
+                status: 'pending',
+                confidence: 88
+            },
+            {
+                id: 'ACT003',
+                title: 'Compliance Monitoring',
+                insight: 'OSHA policy changed (Policy Engine) + affects 8 active projects (Workflows)',
+                aiAction: 'Flag affected projects + notify contractors + update checklists',
+                sections: ['Policy', 'Workflows', 'CRM'],
+                status: 'pending',
+                confidence: 95
+            }
+        ];
+
+        const MOCK_AUTOMATIONS = [
+            {
+                id: 'AUTO001',
+                pattern: 'Staff manually routing 47 similar documents per day',
+                suggestion: 'Create workflow: Building permits >$50K → Auto-route to senior inspector',
+                roi: 'Save 2.3 hours/day',
+                accuracy: '99%',
+                confidence: 94
+            },
+            {
+                id: 'AUTO002',
+                pattern: 'Document processor finding vendor info + manually entering to CRM',
+                suggestion: 'Auto-create CRM contacts from processed vendor documents',
+                roi: 'Eliminate 15 min/day duplicate entry',
+                accuracy: '96%',
+                confidence: 91
+            },
+            {
+                id: 'AUTO003',
+                pattern: 'Analyzed 6 months of permit data - can now predict approval time',
+                suggestion: 'Show citizens estimated approval time when applying',
+                roi: 'Reduce inquiry calls by 40%',
+                accuracy: '89% within 1 day',
+                confidence: 89
+            }
+        ];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadInsightsFeed();
+            loadActionCenter();
+            loadAutomationSuggestions();
+            renderKnowledgeGraph();
+        });
+
+        function loadInsightsFeed() {
+            const feed = document.getElementById('insightsFeed');
+            feed.innerHTML = MOCK_INSIGHTS.map(insight => `
+                <div class="insight-card glass rounded-lg p-4" onclick="viewInsightDetails('${insight.id}')">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 bg-${insight.color}-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <i class="${insight.icon} text-${insight.color}-400"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs text-white/60">${insight.source}</span>
+                                <span class="priority-badge priority-${insight.priority}">${insight.priority.toUpperCase()}</span>
+                                <span class="text-xs text-white/50 ml-auto">${insight.timestamp}</span>
+                            </div>
+                            <div class="font-semibold text-white mb-1">${insight.title}</div>
+                            <div class="text-sm text-white/70 mb-2">${insight.description}</div>
+                            <div class="flex items-center justify-between">
+                                <button class="bg-${insight.color}-600 hover:bg-${insight.color}-700 text-white px-3 py-1 rounded-lg text-sm font-medium transition-all">
+                                    ${insight.action}
+                                </button>
+                                <div class="flex items-center gap-2 text-xs text-white/60">
+                                    <span>Confidence:</span>
+                                    <span class="text-${insight.color}-400 font-semibold">${insight.confidence}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadActionCenter() {
+            const center = document.getElementById('actionCenter');
+            center.innerHTML = MOCK_ACTIONS.map(action => `
+                <div class="glass rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="font-semibold text-white">${action.title}</h4>
+                        <div class="flex gap-1">
+                            ${action.sections.map(s => `<span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30">${s}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="text-sm text-white/70 mb-2">
+                        <i class="fas fa-lightbulb text-yellow-400 mr-1"></i>${action.insight}
+                    </div>
+                    <div class="text-sm text-white/80 mb-3">
+                        <i class="fas fa-robot text-purple-400 mr-1"></i>${action.aiAction}
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="executeAction('${action.id}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all">
+                            <i class="fas fa-check mr-1"></i>Approve & Execute
+                        </button>
+                        <button onclick="reviewAction('${action.id}')" class="flex-1 bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg text-sm font-medium border border-white/20 transition-all">
+                            <i class="fas fa-eye mr-1"></i>Review Details
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadAutomationSuggestions() {
+            const suggestions = document.getElementById('automationSuggestions');
+            suggestions.innerHTML = MOCK_AUTOMATIONS.map(auto => `
+                <div class="automation-card">
+                    <div class="flex items-start gap-3 mb-3">
+                        <i class="fas fa-robot text-purple-400 text-xl"></i>
+                        <div class="flex-1">
+                            <div class="font-semibold text-white mb-1">AUTOMATION OPPORTUNITY DETECTED</div>
+                            <div class="text-sm text-white/70 mb-2">
+                                <strong>Pattern:</strong> ${auto.pattern}
+                            </div>
+                            <div class="text-sm text-white/80 mb-2">
+                                <strong>Suggestion:</strong> ${auto.suggestion}
+                            </div>
+                            <div class="flex gap-4 text-xs text-white/60 mb-3">
+                                <div><strong>ROI:</strong> ${auto.roi}</div>
+                                <div><strong>Accuracy:</strong> ${auto.accuracy}</div>
+                                <div><strong>Confidence:</strong> ${auto.confidence}%</div>
+                            </div>
+                            <button onclick="buildAutomation('${auto.id}')" class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fas fa-magic mr-2"></i>Build This Automation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderKnowledgeGraph() {
+            const preview = document.getElementById('knowledgeGraphPreview');
+            const full = document.getElementById('knowledgeGraphFull');
+
+            // Simple network visualization
+            const nodes = [
+                { id: 'citizen', label: 'John Smith', color: 'blue', x: 150, y: 150 },
+                { id: 'permit', label: 'Building Permit', color: 'green', x: 250, y: 100 },
+                { id: 'contractor', label: 'Chen Construction', color: 'purple', x: 250, y: 200 },
+                { id: 'property', label: '123 Oak St', color: 'blue', x: 50, y: 150 }
+            ];
+
+            [preview, full].forEach(container => {
+                if (!container) return;
+                container.innerHTML = '';
+
+                // Draw lines
+                const lines = [
+                    { from: nodes[0], to: nodes[1] },
+                    { from: nodes[0], to: nodes[2] },
+                    { from: nodes[0], to: nodes[3] },
+                    { from: nodes[1], to: nodes[2] }
+                ];
+
+                lines.forEach(line => {
+                    const lineEl = document.createElement('div');
+                    lineEl.className = 'knowledge-line';
+                    const length = Math.sqrt(Math.pow(line.to.x - line.from.x, 2) + Math.pow(line.to.y - line.from.y, 2));
+                    const angle = Math.atan2(line.to.y - line.from.y, line.to.x - line.from.x);
+                    lineEl.style.width = length + 'px';
+                    lineEl.style.left = line.from.x + 'px';
+                    lineEl.style.top = line.from.y + 'px';
+                    lineEl.style.transform = `rotate(${angle}rad)`;
+                    container.appendChild(lineEl);
+                });
+
+                // Draw nodes
+                nodes.forEach(node => {
+                    const nodeEl = document.createElement('div');
+                    nodeEl.className = 'knowledge-node';
+                    nodeEl.style.left = (node.x - 40) + 'px';
+                    nodeEl.style.top = (node.y - 40) + 'px';
+                    nodeEl.style.background = `linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3))`;
+                    nodeEl.textContent = node.label;
+                    nodeEl.onclick = () => viewNodeDetails(node.id);
+                    container.appendChild(nodeEl);
+                });
+            });
+        }
+
+        function performPlatformSearch() {
+            const query = document.getElementById('platformSearch').value;
+            if (!query) return;
+
+            console.log('Searching platform for:', query);
+            document.getElementById('searchModal').classList.add('active');
+
+            const results = document.getElementById('searchResults');
+            results.innerHTML = `
+                <div class="search-result-group">
+                    <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                        <i class="fas fa-sitemap text-blue-400"></i>
+                        Workflows (3 results)
+                    </h3>
+                    <div class="search-result-item">
+                        <div class="font-semibold text-white">Active permit: ${query}</div>
+                        <div class="text-sm text-white/60">Status: Under Review • Updated 2 hours ago</div>
+                    </div>
+                </div>
+                <div class="search-result-group">
+                    <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                        <i class="fas fa-users text-green-400"></i>
+                        CRM Contacts (2 results)
+                    </h3>
+                    <div class="search-result-item">
+                        <div class="font-semibold text-white">John Smith - Applicant</div>
+                        <div class="text-sm text-white/60">Email: john@example.com • Phone: (555) 123-4567</div>
+                    </div>
+                </div>
+                <div class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 mt-4">
+                    <h3 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                        <i class="fas fa-lightbulb text-yellow-400"></i>
+                        AI Insights
+                    </h3>
+                    <div class="text-sm text-white/70">
+                        • Pattern detected: 3x more permit activity than average - possible development trend<br>
+                        • Related: Chen Construction works on 67% of similar projects
+                    </div>
+                </div>
+            `;
+        }
+
+        function filterInsights(filter) {
+            console.log('Filtering insights by:', filter);
+            // TODO: Implement filtering logic
+        }
+
+        function viewInsightDetails(id) {
+            console.log('Viewing insight:', id);
+            alert('📊 Insight Details\n\nThis would show detailed information about the insight including:\n\n• Full context and data sources\n• Historical patterns\n• Confidence breakdown\n• Recommended actions\n• Similar past insights\n\nTODO: Implement insight details modal');
+        }
+
+        function executeAction(id) {
+            console.log('Executing action:', id);
+            alert('✅ Action Executed\n\nCross-section action has been executed successfully.\n\n• Notifications sent\n• Records updated\n• Workflows triggered\n\nTODO: Implement actual action execution');
+        }
+
+        function reviewAction(id) {
+            console.log('Reviewing action:', id);
+            alert('👁️ Action Review\n\nReview mode would show:\n\n• Detailed impact analysis\n• Affected records preview\n• Rollback plan\n• Approval workflow\n\nTODO: Implement action review interface');
+        }
+
+        function buildAutomation(id) {
+            console.log('Building automation:', id);
+            alert('🤖 Build Automation\n\nThis would open the workflow builder with:\n\n• Pre-configured automation template\n• Suggested triggers and actions\n• Test data for validation\n• Deployment options\n\nTODO: Integrate with workflow builder');
+        }
+
+        function openFullGraph() {
+            document.getElementById('graphModal').classList.add('active');
+        }
+
+        function closeGraphModal() {
+            document.getElementById('graphModal').classList.remove('active');
+        }
+
+        function closeSearchModal() {
+            document.getElementById('searchModal').classList.remove('active');
+        }
+
+        function viewNodeDetails(id) {
+            console.log('Viewing node:', id);
+            alert(`📍 Node Details: ${id}\n\nWould show:\n• All connections\n• Associated records\n• Timeline of interactions\n• Related insights\n\nTODO: Implement node details view`);
+        }
+
+        function viewExplainability() {
+            alert('🔍 AI Explainability\n\nFor any AI decision, we show:\n\n• Why did AI make this decision?\n• What data was used?\n• Confidence factors\n• Similar past decisions\n• Override options\n\nExample: "Why route to senior inspector?"\n✓ Project value >$100K\n✓ Structural changes detected\n✓ Historical pattern match\n\nTODO: Implement explainability interface');
+        }
+
+        function viewIntegrationDetails() {
+            alert('🔗 Integration Configuration\n\nWould show:\n\n• Current integration status\n• Data flow diagrams\n• Configuration options\n• Performance metrics\n• Troubleshooting tools\n\nTODO: Implement integration management interface');
+        }
+
+        // Close modals on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

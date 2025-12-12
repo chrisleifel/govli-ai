@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Management - Govli AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --deep-ocean: #0a1628;
+            --ocean-dark: #0c4a6e;
+            --ocean-primary: #0369a1;
+            --azure-blue: #0284c7;
+            --sky-blue: #0ea5e9;
+            --cyan-bright: #06b6d4;
+            --teal-accent: #14b8a6;
+        }
+
+        body {
+            background: linear-gradient(135deg,
+                #0a1628 0%,
+                #0c2340 25%,
+                #0e3a5f 50%,
+                #1e3a5f 75%,
+                #164e7f 100%);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--cyan-bright), var(--teal-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--azure-blue), var(--ocean-primary));
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(6, 182, 212, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(20, 184, 166, 0.1));
+            border: 1px solid rgba(6, 182, 212, 0.2);
+        }
+
+        .filter-chip {
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-chip:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--cyan-bright);
+        }
+
+        .filter-chip.active {
+            background: linear-gradient(135deg, var(--azure-blue), var(--ocean-primary));
+            border-color: var(--cyan-bright);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #0a1628, #0e3a5f);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--cyan-bright);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid rgba(6, 182, 212, 0.3);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .input-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            color: white;
+            width: 100%;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--cyan-bright);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .pagination {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination button.active {
+            background: linear-gradient(135deg, var(--azure-blue), var(--ocean-primary));
+            border-color: var(--cyan-bright);
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Navigation Bar -->
+    <nav class="glass-card mx-4 mt-4 mb-6">
+        <div class="flex items-center justify-between p-4">
+            <div class="flex items-center gap-4">
+                <button onclick="window.location.href='index.html'" class="text-cyan-400 hover:text-cyan-300">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <h1 class="text-2xl font-bold gradient-text">Payment Management</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="exportPayments()" class="btn-secondary">
+                    <i class="fas fa-download mr-2"></i>Export
+                </button>
+                <button onclick="showProcessPaymentModal()" class="btn-primary">
+                    <i class="fas fa-plus mr-2"></i>Process Payment
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 pb-8">
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="glass-card stat-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm mb-1">Total Revenue</p>
+                        <h3 class="text-3xl font-bold text-white" id="totalRevenue">$0.00</h3>
+                        <p class="text-cyan-400 text-xs mt-1">All time</p>
+                    </div>
+                    <div class="text-cyan-400 text-4xl">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card stat-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm mb-1">This Month</p>
+                        <h3 class="text-3xl font-bold text-white" id="monthlyRevenue">$0.00</h3>
+                        <p class="text-green-400 text-xs mt-1" id="monthlyChange">+0%</p>
+                    </div>
+                    <div class="text-green-400 text-4xl">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card stat-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm mb-1">Pending</p>
+                        <h3 class="text-3xl font-bold text-white" id="pendingCount">0</h3>
+                        <p class="text-yellow-400 text-xs mt-1" id="pendingAmount">$0.00</p>
+                    </div>
+                    <div class="text-yellow-400 text-4xl">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card stat-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm mb-1">Completed</p>
+                        <h3 class="text-3xl font-bold text-white" id="completedCount">0</h3>
+                        <p class="text-cyan-400 text-xs mt-1" id="avgPayment">Avg: $0.00</p>
+                    </div>
+                    <div class="text-cyan-400 text-4xl">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="glass-card p-6 mb-6">
+            <div class="flex flex-col lg:flex-row gap-4 mb-4">
+                <div class="flex-1">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        class="input-field"
+                        placeholder="Search by receipt number, transaction ID, or user..."
+                        onkeyup="handleSearch()"
+                    >
+                </div>
+                <div class="flex gap-2">
+                    <input type="date" id="startDate" class="input-field" onchange="applyFilters()">
+                    <input type="date" id="endDate" class="input-field" onchange="applyFilters()">
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2 mb-4">
+                <span class="text-gray-300 text-sm self-center mr-2">Status:</span>
+                <button class="filter-chip active" data-filter="all" onclick="filterByStatus('all')">All</button>
+                <button class="filter-chip" data-filter="pending" onclick="filterByStatus('pending')">Pending</button>
+                <button class="filter-chip" data-filter="completed" onclick="filterByStatus('completed')">Completed</button>
+                <button class="filter-chip" data-filter="processing" onclick="filterByStatus('processing')">Processing</button>
+                <button class="filter-chip" data-filter="failed" onclick="filterByStatus('failed')">Failed</button>
+                <button class="filter-chip" data-filter="refunded" onclick="filterByStatus('refunded')">Refunded</button>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+                <span class="text-gray-300 text-sm self-center mr-2">Type:</span>
+                <button class="filter-chip active" data-type-filter="all" onclick="filterByType('all')">All</button>
+                <button class="filter-chip" data-type-filter="permit_fee" onclick="filterByType('permit_fee')">Permit Fees</button>
+                <button class="filter-chip" data-type-filter="inspection_fee" onclick="filterByType('inspection_fee')">Inspection Fees</button>
+                <button class="filter-chip" data-type-filter="fine" onclick="filterByType('fine')">Fines</button>
+                <button class="filter-chip" data-type-filter="other" onclick="filterByType('other')">Other</button>
+            </div>
+        </div>
+
+        <!-- Payment List -->
+        <div class="glass-card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white">Payment Records</h2>
+                <div class="flex items-center gap-4">
+                    <select id="limitSelect" class="input-field w-auto" onchange="changeLimit()">
+                        <option value="10">10 per page</option>
+                        <option value="25" selected>25 per page</option>
+                        <option value="50">50 per page</option>
+                        <option value="100">100 per page</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Receipt #</th>
+                            <th>Date</th>
+                            <th>User</th>
+                            <th>Amount</th>
+                            <th>Type</th>
+                            <th>Method</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentsTableBody">
+                        <tr>
+                            <td colspan="8" class="text-center py-8 text-gray-400">
+                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                <p>Loading payments...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex items-center justify-between mt-6">
+                <div class="text-gray-300 text-sm">
+                    Showing <span id="showingStart">0</span> to <span id="showingEnd">0</span> of <span id="totalRecords">0</span> payments
+                </div>
+                <div class="pagination" id="paginationContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Details Modal -->
+    <div id="paymentDetailsModal" class="modal">
+        <div class="modal-content p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold gradient-text">Payment Details</h2>
+                <button onclick="closeModal('paymentDetailsModal')" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div id="paymentDetailsContent"></div>
+        </div>
+    </div>
+
+    <!-- Process Payment Modal -->
+    <div id="processPaymentModal" class="modal">
+        <div class="modal-content p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold gradient-text">Process Payment</h2>
+                <button onclick="closeModal('processPaymentModal')" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <form id="processPaymentForm" onsubmit="processPayment(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-300 text-sm mb-2">Payment ID</label>
+                        <input type="text" id="processPaymentId" class="input-field" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 text-sm mb-2">Transaction ID</label>
+                        <input type="text" id="transactionId" class="input-field" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 text-sm mb-2">Notes (optional)</label>
+                        <textarea id="processNotes" class="input-field" rows="3"></textarea>
+                    </div>
+                    <div class="flex gap-4 mt-6">
+                        <button type="button" onclick="closeModal('processPaymentModal')" class="btn-secondary flex-1">Cancel</button>
+                        <button type="submit" class="btn-primary flex-1">Process Payment</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Refund Modal -->
+    <div id="refundModal" class="modal">
+        <div class="modal-content p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold gradient-text">Issue Refund</h2>
+                <button onclick="closeModal('refundModal')" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <form id="refundForm" onsubmit="issueRefund(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-300 text-sm mb-2">Refund Amount</label>
+                        <input type="number" id="refundAmount" class="input-field" step="0.01" required>
+                        <p class="text-gray-400 text-xs mt-1">Original amount: $<span id="originalAmount">0.00</span></p>
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 text-sm mb-2">Refund Reason</label>
+                        <select id="refundReason" class="input-field" required>
+                            <option value="">Select reason...</option>
+                            <option value="customer_request">Customer Request</option>
+                            <option value="duplicate_payment">Duplicate Payment</option>
+                            <option value="service_not_provided">Service Not Provided</option>
+                            <option value="error">Payment Error</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 text-sm mb-2">Additional Notes</label>
+                        <textarea id="refundNotes" class="input-field" rows="3"></textarea>
+                    </div>
+                    <div class="flex gap-4 mt-6">
+                        <button type="button" onclick="closeModal('refundModal')" class="btn-secondary flex-1">Cancel</button>
+                        <button type="submit" class="btn-primary flex-1 bg-red-600 hover:bg-red-700">Issue Refund</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="payments.js"></script>
+    <script>
+        let currentPage = 1;
+        let currentLimit = 25;
+        let currentFilters = {
+            status: 'all',
+            paymentType: 'all',
+            search: '',
+            startDate: '',
+            endDate: ''
+        };
+        let allPayments = [];
+        let currentRefundPaymentId = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadPaymentStats();
+            await loadPayments();
+        });
+
+        // Load payment statistics
+        async function loadPaymentStats() {
+            try {
+                const stats = await PaymentAPI.getPaymentStats();
+
+                document.getElementById('totalRevenue').textContent = PaymentAPI.formatCurrency(stats.totalRevenue || 0);
+                document.getElementById('monthlyRevenue').textContent = PaymentAPI.formatCurrency(stats.monthlyRevenue || 0);
+                document.getElementById('pendingCount').textContent = stats.pendingCount || 0;
+                document.getElementById('pendingAmount').textContent = PaymentAPI.formatCurrency(stats.pendingAmount || 0);
+                document.getElementById('completedCount').textContent = stats.completedCount || 0;
+                document.getElementById('avgPayment').textContent = 'Avg: ' + PaymentAPI.formatCurrency(stats.averagePayment || 0);
+
+                // Calculate monthly change (mock for now)
+                document.getElementById('monthlyChange').textContent = '+12%';
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load payments list
+        async function loadPayments() {
+            try {
+                const filters = {
+                    page: currentPage,
+                    limit: currentLimit
+                };
+
+                if (currentFilters.status !== 'all') {
+                    filters.status = currentFilters.status;
+                }
+                if (currentFilters.paymentType !== 'all') {
+                    filters.paymentType = currentFilters.paymentType;
+                }
+                if (currentFilters.search) {
+                    filters.search = currentFilters.search;
+                }
+                if (currentFilters.startDate) {
+                    filters.startDate = currentFilters.startDate;
+                }
+                if (currentFilters.endDate) {
+                    filters.endDate = currentFilters.endDate;
+                }
+
+                const response = await PaymentAPI.getPayments(filters);
+                allPayments = response.payments || [];
+
+                renderPaymentsTable(allPayments);
+                renderPagination(response.pagination || {});
+            } catch (error) {
+                console.error('Error loading payments:', error);
+                document.getElementById('paymentsTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-8 text-red-400">
+                            <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                            <p>Error loading payments. Please try again.</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Render payments table
+        function renderPaymentsTable(payments) {
+            const tbody = document.getElementById('paymentsTableBody');
+
+            if (payments.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-8 text-gray-400">
+                            <i class="fas fa-inbox text-4xl mb-2"></i>
+                            <p>No payments found</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = payments.map(payment => `
+                <tr>
+                    <td class="font-mono text-cyan-400">${payment.receiptNumber || 'N/A'}</td>
+                    <td>${new Date(payment.createdAt).toLocaleDateString()}</td>
+                    <td>${payment.User ? payment.User.name : 'Unknown'}</td>
+                    <td class="font-semibold">${PaymentAPI.formatCurrency(payment.amount)}</td>
+                    <td>${PaymentAPI.getPaymentTypeLabel(payment.paymentType)}</td>
+                    <td>
+                        <i class="fas ${PaymentAPI.getPaymentMethodIcon(payment.paymentMethod)} mr-2"></i>
+                        ${payment.paymentMethod.replace('_', ' ')}
+                    </td>
+                    <td>
+                        <span class="status-badge ${PaymentAPI.getStatusBadgeClass(payment.status)}">
+                            ${payment.status}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="flex gap-2">
+                            <button onclick="viewPaymentDetails('${payment.id}')" class="text-cyan-400 hover:text-cyan-300" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${payment.status === 'pending' ? `
+                                <button onclick="showProcessModal('${payment.id}')" class="text-green-400 hover:text-green-300" title="Process">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            ` : ''}
+                            ${payment.status === 'completed' && !payment.refundedAt ? `
+                                <button onclick="showRefundModal('${payment.id}', ${payment.amount})" class="text-red-400 hover:text-red-300" title="Refund">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Render pagination
+        function renderPagination(pagination) {
+            const container = document.getElementById('paginationContainer');
+            const totalPages = pagination.totalPages || 1;
+            const currentPage = pagination.currentPage || 1;
+            const total = pagination.total || 0;
+            const limit = pagination.limit || currentLimit;
+
+            // Update showing text
+            const start = total === 0 ? 0 : (currentPage - 1) * limit + 1;
+            const end = Math.min(currentPage * limit, total);
+            document.getElementById('showingStart').textContent = start;
+            document.getElementById('showingEnd').textContent = end;
+            document.getElementById('totalRecords').textContent = total;
+
+            // Render pagination buttons
+            let buttons = '';
+
+            buttons += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">Previous</button>`;
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    buttons += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    buttons += `<span class="text-gray-400">...</span>`;
+                }
+            }
+
+            buttons += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">Next</button>`;
+
+            container.innerHTML = buttons;
+        }
+
+        // Filter and search functions
+        function filterByStatus(status) {
+            currentFilters.status = status;
+            currentPage = 1;
+            updateFilterChips('data-filter', status);
+            loadPayments();
+        }
+
+        function filterByType(type) {
+            currentFilters.paymentType = type;
+            currentPage = 1;
+            updateFilterChips('data-type-filter', type);
+            loadPayments();
+        }
+
+        function updateFilterChips(attribute, value) {
+            document.querySelectorAll(`[${attribute}]`).forEach(chip => {
+                chip.classList.remove('active');
+                if (chip.getAttribute(attribute) === value) {
+                    chip.classList.add('active');
+                }
+            });
+        }
+
+        function handleSearch() {
+            clearTimeout(window.searchTimeout);
+            window.searchTimeout = setTimeout(() => {
+                currentFilters.search = document.getElementById('searchInput').value;
+                currentPage = 1;
+                loadPayments();
+            }, 500);
+        }
+
+        function applyFilters() {
+            currentFilters.startDate = document.getElementById('startDate').value;
+            currentFilters.endDate = document.getElementById('endDate').value;
+            currentPage = 1;
+            loadPayments();
+        }
+
+        function changeLimit() {
+            currentLimit = parseInt(document.getElementById('limitSelect').value);
+            currentPage = 1;
+            loadPayments();
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            loadPayments();
+        }
+
+        // View payment details
+        async function viewPaymentDetails(paymentId) {
+            try {
+                const payment = await PaymentAPI.getPayment(paymentId);
+
+                const content = document.getElementById('paymentDetailsContent');
+                content.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-gray-400 text-sm">Receipt Number</p>
+                                <p class="text-white font-semibold">${payment.receiptNumber || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-sm">Status</p>
+                                <span class="status-badge ${PaymentAPI.getStatusBadgeClass(payment.status)}">${payment.status}</span>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-sm">Amount</p>
+                                <p class="text-white font-semibold text-xl">${PaymentAPI.formatCurrency(payment.amount)}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-sm">Payment Type</p>
+                                <p class="text-white">${PaymentAPI.getPaymentTypeLabel(payment.paymentType)}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-sm">Payment Method</p>
+                                <p class="text-white">${payment.paymentMethod}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-sm">Transaction ID</p>
+                                <p class="text-white font-mono text-sm">${payment.transactionId || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-sm">Created</p>
+                                <p class="text-white">${new Date(payment.createdAt).toLocaleString()}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-sm">User</p>
+                                <p class="text-white">${payment.User ? payment.User.name : 'Unknown'}</p>
+                            </div>
+                        </div>
+                        ${payment.refundedAt ? `
+                            <div class="border-t border-gray-600 pt-4">
+                                <h3 class="text-lg font-semibold text-red-400 mb-2">Refund Information</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-gray-400 text-sm">Refund Amount</p>
+                                        <p class="text-white font-semibold">${PaymentAPI.formatCurrency(payment.refundAmount)}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-400 text-sm">Refunded At</p>
+                                        <p class="text-white">${new Date(payment.refundedAt).toLocaleString()}</p>
+                                    </div>
+                                    <div class="col-span-2">
+                                        <p class="text-gray-400 text-sm">Refund Reason</p>
+                                        <p class="text-white">${payment.refundReason || 'N/A'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : ''}
+                        <div class="flex gap-4 mt-6">
+                            ${payment.status === 'completed' ? `
+                                <button onclick="window.open('${PaymentAPI.getReceiptUrl(payment.id)}', '_blank')" class="btn-primary flex-1">
+                                    <i class="fas fa-download mr-2"></i>Download Receipt
+                                </button>
+                            ` : ''}
+                            <button onclick="closeModal('paymentDetailsModal')" class="btn-secondary flex-1">Close</button>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('paymentDetailsModal').classList.add('active');
+            } catch (error) {
+                console.error('Error fetching payment details:', error);
+                alert('Error loading payment details');
+            }
+        }
+
+        // Show process payment modal
+        function showProcessPaymentModal() {
+            document.getElementById('processPaymentForm').reset();
+            document.getElementById('processPaymentModal').classList.add('active');
+        }
+
+        function showProcessModal(paymentId) {
+            document.getElementById('processPaymentId').value = paymentId;
+            document.getElementById('processPaymentModal').classList.add('active');
+        }
+
+        // Process payment
+        async function processPayment(event) {
+            event.preventDefault();
+
+            const paymentId = document.getElementById('processPaymentId').value;
+            const transactionId = document.getElementById('transactionId').value;
+            const notes = document.getElementById('processNotes').value;
+
+            try {
+                await PaymentAPI.processPayment(paymentId, {
+                    transactionId,
+                    metadata: { notes }
+                });
+
+                closeModal('processPaymentModal');
+                await loadPayments();
+                await loadPaymentStats();
+                alert('Payment processed successfully!');
+            } catch (error) {
+                console.error('Error processing payment:', error);
+                alert('Error processing payment. Please try again.');
+            }
+        }
+
+        // Show refund modal
+        function showRefundModal(paymentId, amount) {
+            currentRefundPaymentId = paymentId;
+            document.getElementById('refundAmount').value = amount;
+            document.getElementById('refundAmount').max = amount;
+            document.getElementById('originalAmount').textContent = amount.toFixed(2);
+            document.getElementById('refundForm').reset();
+            document.getElementById('refundModal').classList.add('active');
+        }
+
+        // Issue refund
+        async function issueRefund(event) {
+            event.preventDefault();
+
+            const amount = parseFloat(document.getElementById('refundAmount').value);
+            const reason = document.getElementById('refundReason').value;
+            const notes = document.getElementById('refundNotes').value;
+
+            try {
+                await PaymentAPI.refundPayment(currentRefundPaymentId, {
+                    amount,
+                    reason: `${reason}: ${notes}`
+                });
+
+                closeModal('refundModal');
+                await loadPayments();
+                await loadPaymentStats();
+                alert('Refund issued successfully!');
+            } catch (error) {
+                console.error('Error issuing refund:', error);
+                alert('Error issuing refund. Please try again.');
+            }
+        }
+
+        // Export payments to CSV
+        function exportPayments() {
+            const csvContent = PaymentAPI.exportToCSV(allPayments);
+            const filename = `payments_${new Date().toISOString().split('T')[0]}.csv`;
+            PaymentAPI.downloadCSV(csvContent, filename);
+        }
+
+        // Modal controls
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Close modal on background click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

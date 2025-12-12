@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent Document Processing - Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .drop-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .drop-zone.drag-over {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+            transform: scale(1.02);
+        }
+
+        .confidence-high {
+            background: linear-gradient(90deg, #10b981 0%, #10b981 var(--confidence));
+        }
+
+        .confidence-medium {
+            background: linear-gradient(90deg, #f59e0b 0%, #f59e0b var(--confidence));
+        }
+
+        .confidence-low {
+            background: linear-gradient(90deg, #ef4444 0%, #ef4444 var(--confidence));
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .processing {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-in {
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes checkmark {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-checkmark {
+            animation: checkmark 0.5s ease-out;
+        }
+
+        .document-thumbnail {
+            transition: all 0.3s ease;
+        }
+
+        .document-thumbnail:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        .field-card {
+            transition: all 0.2s ease;
+        }
+
+        .field-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .auto-filled {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid #3b82f6;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">Intelligent Document Processing</h1>
+            <p class="text-white/70">Upload documents to auto-fill your application with AI-powered OCR</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Left Column: Upload & Processing -->
+            <div>
+                <!-- Document Upload Zone -->
+                <div class="glass rounded-xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-cloud-upload-alt text-blue-400"></i>
+                        Upload Documents
+                    </h2>
+
+                    <div id="dropZone" class="drop-zone rounded-lg p-12 text-center cursor-pointer" role="button" tabindex="0" aria-label="Upload documents - click or drag and drop files here">
+                        <i class="fas fa-file-upload text-6xl text-white/30 mb-4" aria-hidden="true"></i>
+                        <p class="text-white text-lg font-medium mb-2">Drag & drop documents here</p>
+                        <p class="text-white/60 text-sm mb-4">or click to browse files</p>
+                        <div class="flex items-center justify-center gap-2 mb-4">
+                            <span class="text-xs bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full">PDF</span>
+                            <span class="text-xs bg-green-500/20 text-green-300 px-3 py-1 rounded-full">JPG</span>
+                            <span class="text-xs bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full">PNG</span>
+                        </div>
+                        <button class="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-2 rounded-lg text-white hover:shadow-lg transition-all" aria-label="Take photo with camera">
+                            <i class="fas fa-camera mr-2" aria-hidden="true"></i>Take Photo
+                        </button>
+                        <input type="file" id="fileInput" class="hidden" accept=".pdf,.jpg,.jpeg,.png" multiple aria-label="Select files to upload">
+                    </div>
+
+                    <div class="mt-4 text-xs text-white/50 text-center">
+                        Max 5 files, 10MB each. Supports Driver's License, Utility Bills, Business Cards, Tax Bills, Permits
+                    </div>
+                </div>
+
+                <!-- Processing Status -->
+                <div id="processingStatus" class="glass rounded-xl p-6 mb-6 hidden">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="processing">
+                            <i class="fas fa-spinner fa-spin text-blue-400 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white">Analyzing Document...</h3>
+                            <p class="text-sm text-white/70">Extracting text and data</p>
+                        </div>
+                    </div>
+                    <div class="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                        <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-purple-600 h-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <p id="progressText" class="text-sm text-white/60 mt-2">Initializing...</p>
+                </div>
+
+                <!-- Uploaded Documents List -->
+                <div id="uploadedDocuments" class="space-y-3">
+                    <!-- Documents will appear here -->
+                </div>
+            </div>
+
+            <!-- Right Column: Extracted Data & Application Form -->
+            <div>
+                <!-- Extracted Data Review Panel -->
+                <div id="extractedDataPanel" class="glass rounded-xl p-6 mb-6 hidden slide-in">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fas fa-magic text-purple-400"></i>
+                            Extracted Data
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <span id="overallConfidence" class="text-sm font-bold"></span>
+                            <button onclick="approveAll()" class="text-sm bg-green-500/20 text-green-300 px-3 py-1 rounded-lg hover:bg-green-500/30 transition-all" aria-label="Approve all extracted data">
+                                <i class="fas fa-check mr-1" aria-hidden="true"></i>Approve All
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="extractedFields" class="space-y-3 mb-4">
+                        <!-- Extracted fields will appear here -->
+                    </div>
+
+                    <button onclick="autoFillForm()" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-3 rounded-lg text-white font-bold hover:shadow-lg transition-all" aria-label="Auto-fill application form with extracted data">
+                        <i class="fas fa-bolt mr-2" aria-hidden="true"></i>Auto-fill Application (<span id="fieldCount">0</span> fields)
+                    </button>
+                </div>
+
+                <!-- Application Form -->
+                <div class="glass rounded-xl p-6">
+                    <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-file-alt text-blue-400"></i>
+                        Application Form
+                    </h2>
+
+                    <form id="applicationForm" class="space-y-4">
+                        <!-- Personal Information -->
+                        <div>
+                            <h3 class="text-sm font-bold text-white/80 mb-3">Personal Information</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label for="firstName" class="text-xs text-white/70 block mb-1">First Name</label>
+                                    <input type="text" id="firstName" name="firstName" aria-label="First name" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label for="lastName" class="text-xs text-white/70 block mb-1">Last Name</label>
+                                    <input type="text" id="lastName" name="lastName" aria-label="Last name" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="text-xs text-white/70 block mb-1">Date of Birth</label>
+                                    <input type="text" id="dob" placeholder="MM/DD/YYYY" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="text-xs text-white/70 block mb-1">Email</label>
+                                    <input type="email" id="email" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="text-xs text-white/70 block mb-1">Phone Number</label>
+                                    <input type="tel" id="phone" placeholder="(555) 123-4567" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Address Information -->
+                        <div>
+                            <h3 class="text-sm font-bold text-white/80 mb-3">Address Information</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="text-xs text-white/70 block mb-1">Street Address</label>
+                                    <input type="text" id="address" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                    <div>
+                                        <label class="text-xs text-white/70 block mb-1">City</label>
+                                        <input type="text" id="city" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-white/70 block mb-1">State</label>
+                                        <input type="text" id="state" maxlength="2" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-white/70 block mb-1">ZIP Code</label>
+                                        <input type="text" id="zip" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Fields -->
+                        <div>
+                            <h3 class="text-sm font-bold text-white/80 mb-3">Additional Information</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="text-xs text-white/70 block mb-1">License/ID Number</label>
+                                    <input type="text" id="licenseNumber" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-white/70 block mb-1">Business Name (if applicable)</label>
+                                    <input type="text" id="businessName" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-white/70 block mb-1">Parcel Number (if applicable)</label>
+                                    <input type="text" id="parcelNumber" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-3 pt-4">
+                            <button type="button" onclick="clearForm()" class="flex-1 bg-white/10 px-4 py-2 rounded-lg text-white hover:bg-white/20 transition-all">
+                                <i class="fas fa-undo mr-2"></i>Clear
+                            </button>
+                            <button type="submit" class="flex-1 bg-gradient-to-r from-green-500 to-blue-600 px-4 py-2 rounded-lg text-white font-bold hover:shadow-lg transition-all">
+                                <i class="fas fa-paper-plane mr-2"></i>Submit
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // MOCK DATA - Replace in production
+        // TODO: Connect to OCR service (Tesseract, Google Vision, AWS Textract)
+        // TODO: Implement document classification ML model
+        // TODO: Add secure document storage with encryption
+        // TODO: Integrate with form auto-fill API
+        // TODO: Add audit logging for all extractions
+        // TODO: Implement user correction feedback loop for ML improvement
+        // TODO: Add PII detection and masking for sensitive data
+
+        const DOCUMENT_TEMPLATES = {
+            drivers_license: {
+                name: "Driver's License",
+                icon: "fa-id-card",
+                color: "blue",
+                fields: {
+                    firstName: { label: "First Name", confidence: 0.98 },
+                    lastName: { label: "Last Name", confidence: 0.97 },
+                    address: { label: "Street Address", confidence: 0.89 },
+                    city: { label: "City", confidence: 0.95 },
+                    state: { label: "State", confidence: 0.99 },
+                    zip: { label: "ZIP Code", confidence: 0.96 },
+                    dob: { label: "Date of Birth", confidence: 0.92 },
+                    licenseNumber: { label: "License Number", confidence: 0.94 }
+                },
+                sampleData: {
+                    firstName: "John",
+                    lastName: "Smith",
+                    address: "123 Oak Street",
+                    city: "Springfield",
+                    state: "IL",
+                    zip: "62701",
+                    dob: "03/15/1985",
+                    licenseNumber: "S123-4567-8901"
+                }
+            },
+            utility_bill: {
+                name: "Utility Bill",
+                icon: "fa-file-invoice-dollar",
+                color: "green",
+                fields: {
+                    firstName: { label: "First Name", confidence: 0.91 },
+                    lastName: { label: "Last Name", confidence: 0.93 },
+                    address: { label: "Service Address", confidence: 0.96 },
+                    city: { label: "City", confidence: 0.94 },
+                    state: { label: "State", confidence: 0.97 },
+                    zip: { label: "ZIP Code", confidence: 0.95 }
+                },
+                sampleData: {
+                    firstName: "Sarah",
+                    lastName: "Johnson",
+                    address: "456 Maple Avenue",
+                    city: "Springfield",
+                    state: "IL",
+                    zip: "62702"
+                }
+            },
+            business_card: {
+                name: "Business Card",
+                icon: "fa-address-card",
+                color: "purple",
+                fields: {
+                    firstName: { label: "First Name", confidence: 0.88 },
+                    lastName: { label: "Last Name", confidence: 0.90 },
+                    businessName: { label: "Company Name", confidence: 0.92 },
+                    email: { label: "Email", confidence: 0.95 },
+                    phone: { label: "Phone", confidence: 0.87 },
+                    address: { label: "Business Address", confidence: 0.85 }
+                },
+                sampleData: {
+                    firstName: "Mike",
+                    lastName: "Chen",
+                    businessName: "Chen's Restaurant",
+                    email: "mike@chensrestaurant.com",
+                    phone: "(555) 123-4567",
+                    address: "789 Main Street"
+                }
+            },
+            tax_bill: {
+                name: "Property Tax Bill",
+                icon: "fa-file-invoice",
+                color: "yellow",
+                fields: {
+                    firstName: { label: "First Name", confidence: 0.93 },
+                    lastName: { label: "Last Name", confidence: 0.94 },
+                    address: { label: "Property Address", confidence: 0.96 },
+                    city: { label: "City", confidence: 0.95 },
+                    state: { label: "State", confidence: 0.98 },
+                    zip: { label: "ZIP Code", confidence: 0.97 },
+                    parcelNumber: { label: "Parcel Number", confidence: 0.91 }
+                },
+                sampleData: {
+                    firstName: "Jennifer",
+                    lastName: "Martinez",
+                    address: "321 Elm Street",
+                    city: "Springfield",
+                    state: "IL",
+                    zip: "62703",
+                    parcelNumber: "45-123-456"
+                }
+            },
+            permit: {
+                name: "Previous Permit",
+                icon: "fa-clipboard-check",
+                color: "red",
+                fields: {
+                    firstName: { label: "Applicant First Name", confidence: 0.90 },
+                    lastName: { label: "Applicant Last Name", confidence: 0.91 },
+                    address: { label: "Property Address", confidence: 0.94 },
+                    city: { label: "City", confidence: 0.93 },
+                    state: { label: "State", confidence: 0.96 },
+                    zip: { label: "ZIP Code", confidence: 0.95 }
+                },
+                sampleData: {
+                    firstName: "Robert",
+                    lastName: "Williams",
+                    address: "789 Pine Street",
+                    city: "Springfield",
+                    state: "IL",
+                    zip: "62704"
+                }
+            }
+        };
+
+        let currentExtractedData = null;
+        let processedDocuments = [];
+
+        // Setup drag and drop
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        async function handleFiles(files) {
+            if (files.length === 0) return;
+
+            // Validate file types and size
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+
+            for (let file of files) {
+                // File type validation
+                if (!allowedTypes.includes(file.type)) {
+                    alert(`❌ Invalid file type: ${file.name}\n\nPlease upload PDF, JPG, or PNG files only.`);
+                    continue;
+                }
+
+                // File size validation
+                if (file.size > maxSize) {
+                    alert(`❌ File too large: ${file.name}\n\nMaximum file size is 10MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB.`);
+                    continue;
+                }
+
+                await processDocument(file);
+            }
+        }
+
+        async function processDocument(file) {
+            // Show processing status
+            const statusEl = document.getElementById('processingStatus');
+            statusEl.classList.remove('hidden');
+
+            // Simulate processing with progress
+            await simulateProcessing();
+
+            // Randomly select a document type for demo
+            const types = Object.keys(DOCUMENT_TEMPLATES);
+            const randomType = types[Math.floor(Math.random() * types.length)];
+            const template = DOCUMENT_TEMPLATES[randomType];
+
+            // Create extracted data
+            const extractedData = {
+                documentType: randomType,
+                fileName: file.name,
+                template: template,
+                fields: {}
+            };
+
+            // Populate fields with sample data and confidence scores
+            Object.keys(template.fields).forEach(fieldKey => {
+                extractedData.fields[fieldKey] = {
+                    value: template.sampleData[fieldKey] || '',
+                    confidence: template.fields[fieldKey].confidence,
+                    label: template.fields[fieldKey].label
+                };
+            });
+
+            currentExtractedData = extractedData;
+            processedDocuments.push(extractedData);
+
+            // Hide processing, show results
+            statusEl.classList.add('hidden');
+            displayExtractedData(extractedData);
+            addDocumentToList(extractedData);
+        }
+
+        async function simulateProcessing() {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+
+            const steps = [
+                { progress: 20, text: 'Detecting document type...' },
+                { progress: 40, text: 'Extracting text...' },
+                { progress: 60, text: 'Analyzing fields...' },
+                { progress: 80, text: 'Validating data...' },
+                { progress: 100, text: 'Complete!' }
+            ];
+
+            for (let step of steps) {
+                await delay(300);
+                progressBar.style.width = step.progress + '%';
+                progressText.textContent = step.text;
+            }
+
+            await delay(300);
+        }
+
+        function displayExtractedData(data) {
+            const panel = document.getElementById('extractedDataPanel');
+            const fieldsContainer = document.getElementById('extractedFields');
+            const fieldCountEl = document.getElementById('fieldCount');
+
+            panel.classList.remove('hidden');
+
+            // Calculate overall confidence
+            const confidences = Object.values(data.fields).map(f => f.confidence);
+            const avgConfidence = (confidences.reduce((a, b) => a + b, 0) / confidences.length) * 100;
+
+            const overallEl = document.getElementById('overallConfidence');
+            const confidenceClass = avgConfidence >= 90 ? 'text-green-400' : avgConfidence >= 70 ? 'text-yellow-400' : 'text-red-400';
+            overallEl.className = `text-sm font-bold ${confidenceClass}`;
+            overallEl.innerHTML = `<i class="fas fa-chart-line mr-1"></i>${avgConfidence.toFixed(0)}% Confidence`;
+
+            // Display fields
+            fieldsContainer.innerHTML = '';
+            Object.keys(data.fields).forEach(fieldKey => {
+                const field = data.fields[fieldKey];
+                const confidencePercent = (field.confidence * 100).toFixed(0);
+                const confidenceClass = field.confidence >= 0.9 ? 'confidence-high' : field.confidence >= 0.7 ? 'confidence-medium' : 'confidence-low';
+                const badgeClass = field.confidence >= 0.9 ? 'bg-green-500/20 text-green-300' : field.confidence >= 0.7 ? 'bg-yellow-500/20 text-yellow-300' : 'bg-red-500/20 text-red-300';
+
+                const fieldCard = document.createElement('div');
+                fieldCard.className = 'field-card glass rounded-lg p-3';
+                fieldCard.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs text-white/70">${field.label}</span>
+                        <span class="text-xs ${badgeClass} px-2 py-1 rounded-full">${confidencePercent}%</span>
+                    </div>
+                    <input type="text" value="${field.value}" data-field="${fieldKey}"
+                           class="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                           onchange="updateExtractedField('${fieldKey}', this.value)">
+                    <div class="w-full h-1 bg-white/10 rounded-full mt-2 overflow-hidden">
+                        <div class="${confidenceClass}" style="--confidence: ${confidencePercent}%; width: ${confidencePercent}%;"></div>
+                    </div>
+                `;
+                fieldsContainer.appendChild(fieldCard);
+            });
+
+            fieldCountEl.textContent = Object.keys(data.fields).length;
+        }
+
+        function addDocumentToList(data) {
+            const container = document.getElementById('uploadedDocuments');
+            const colorClass = `${data.template.color}-500`;
+
+            const docCard = document.createElement('div');
+            docCard.className = 'glass rounded-lg p-4 document-thumbnail slide-in';
+            docCard.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-${data.template.color}-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fas ${data.template.icon} text-${data.template.color}-400 text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-white text-sm">${data.template.name}</h4>
+                        <p class="text-xs text-white/60">${data.fileName}</p>
+                    </div>
+                    <div class="success-checkmark">
+                        <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                    </div>
+                </div>
+            `;
+            container.appendChild(docCard);
+        }
+
+        function updateExtractedField(fieldKey, value) {
+            if (currentExtractedData && currentExtractedData.fields[fieldKey]) {
+                currentExtractedData.fields[fieldKey].value = value;
+            }
+        }
+
+        function approveAll() {
+            // In production, this would mark all fields as verified
+            alert('✓ All extracted data approved!\n\nClick "Auto-fill Application" to populate the form.');
+        }
+
+        function autoFillForm() {
+            if (!currentExtractedData) return;
+
+            // Fill form fields
+            Object.keys(currentExtractedData.fields).forEach(fieldKey => {
+                const field = currentExtractedData.fields[fieldKey];
+                const input = document.getElementById(fieldKey);
+                if (input) {
+                    input.value = field.value;
+                    input.classList.add('auto-filled');
+
+                    // Add visual feedback
+                    setTimeout(() => {
+                        input.classList.remove('auto-filled');
+                    }, 2000);
+                }
+            });
+
+            // Show success message
+            alert(`✨ Application auto-filled!\n\n${Object.keys(currentExtractedData.fields).length} fields populated from ${currentExtractedData.template.name}\n\nPlease review and submit.`);
+        }
+
+        function clearForm() {
+            document.getElementById('applicationForm').reset();
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => input.classList.remove('auto-filled'));
+        }
+
+        document.getElementById('applicationForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('✓ Application submitted successfully!\n\nIn production, this would submit to the government processing system.');
+        });
+
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Enter key on drop zone
+            if (e.key === 'Enter' && document.activeElement.id === 'dropZone') {
+                fileInput.click();
+            }
+
+            // Escape key to clear form
+            if (e.key === 'Escape') {
+                const confirmation = confirm('Clear the application form?');
+                if (confirmation) {
+                    clearForm();
+                }
+            }
+
+            // Ctrl/Cmd + Enter to submit form
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                const form = document.getElementById('applicationForm');
+                if (form) {
+                    e.preventDefault();
+                    form.dispatchEvent(new Event('submit'));
+                }
+            }
+        });
+
+        // Make drop zone keyboard accessible
+        dropZone.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInput.click();
+            }
+        });
+
+        // Initialize
+        console.log('Intelligent Document Processing initialized');
+        console.log('MOCK OCR ENGINE - Replace with production API');
+        console.log('Keyboard shortcuts:');
+        console.log('  - Enter on drop zone: Open file picker');
+        console.log('  - Escape: Clear form');
+        console.log('  - Ctrl/Cmd + Enter: Submit form');
+    </script>
+</body>
+</html>

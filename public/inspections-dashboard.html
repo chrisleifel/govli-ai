@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspections Dashboard - Govli AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --deep-ocean: #0a1628;
+            --ocean-dark: #0c4a6e;
+            --ocean-primary: #0369a1;
+            --azure-blue: #0284c7;
+            --sky-blue: #0ea5e9;
+            --cyan-bright: #06b6d4;
+            --teal-accent: #14b8a6;
+            --emerald-success: #10b981;
+            --glass-bg: rgba(15, 23, 42, 0.75);
+            --glass-border: rgba(6, 182, 212, 0.25);
+            --glow-cyan: rgba(6, 182, 212, 0.4);
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg,
+                #0a1628 0%,
+                #0c2340 25%,
+                #0e3a5f 50%,
+                #1e3a5f 75%,
+                #164e7f 100%
+            );
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .gradient-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(20, 184, 166, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-hover:hover {
+            background: rgba(15, 23, 42, 0.85);
+            border-color: var(--cyan-bright);
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--azure-blue) 0%, var(--ocean-primary) 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+        }
+
+        .nav-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 16px 24px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(20, 184, 166, 0.1) 100%);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--cyan-bright);
+            transform: translateY(-4px);
+        }
+
+        .inspection-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .inspection-card:hover {
+            border-color: var(--cyan-bright);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .tab-button.active {
+            border-bottom-color: var(--cyan-bright);
+            color: white;
+        }
+
+        .tab-button:hover {
+            background: rgba(6, 182, 212, 0.1);
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-scheduled { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .badge-in_progress { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+        .badge-completed { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .badge-cancelled { background: rgba(107, 114, 128, 0.2); color: #9ca3af; }
+        .badge-failed { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .badge-passed { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .badge-conditional { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+        .badge-pending { background: rgba(107, 114, 128, 0.2); color: #9ca3af; }
+
+        .input-field {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--cyan-bright);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+        }
+
+        .checklist-item {
+            background: rgba(15, 23, 42, 0.3);
+            border: 1px solid var(--glass-border);
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            padding: 8px;
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day:hover {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: var(--cyan-bright);
+        }
+
+        .calendar-day.has-inspection {
+            background: rgba(6, 182, 212, 0.2);
+        }
+
+        .calendar-day.today {
+            border-color: var(--cyan-bright);
+            border-width: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="gradient-bg">
+
+        <!-- Navigation Header -->
+        <div class="nav-header">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-clipboard-check text-3xl" style="color: var(--cyan-bright);"></i>
+                    <span class="text-2xl font-bold text-white">Inspections Dashboard</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="switchView('list')" id="btn-list" class="px-4 py-2 rounded-lg border border-cyan-400 bg-cyan-400/10">
+                        <i class="fas fa-list mr-2"></i>List View
+                    </button>
+                    <button onclick="switchView('calendar')" id="btn-calendar" class="px-4 py-2 rounded-lg border border-gray-600 hover:border-cyan-400 transition">
+                        <i class="fas fa-calendar mr-2"></i>Calendar View
+                    </button>
+                    <button onclick="showScheduleModal()" class="btn-primary">
+                        <i class="fas fa-plus mr-2"></i>Schedule Inspection
+                    </button>
+                    <button onclick="window.location.href='index.html'" class="px-4 py-2 rounded-lg border border-gray-600 hover:border-cyan-400 transition">
+                        <i class="fas fa-home"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="px-8 py-8">
+
+            <!-- Stats Row -->
+            <div class="grid grid-cols-4 gap-6 mb-8">
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-2">
+                        <i class="fas fa-calendar-check text-3xl text-cyan-400"></i>
+                        <span id="totalInspections" class="text-3xl font-bold text-white">0</span>
+                    </div>
+                    <p class="text-gray-300 text-sm">Total Inspections</p>
+                </div>
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-2">
+                        <i class="fas fa-clock text-3xl text-yellow-400"></i>
+                        <span id="todayInspections" class="text-3xl font-bold text-white">0</span>
+                    </div>
+                    <p class="text-gray-300 text-sm">Today's Inspections</p>
+                </div>
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-2">
+                        <i class="fas fa-check-circle text-3xl text-green-400"></i>
+                        <span id="passRate" class="text-3xl font-bold text-white">0%</span>
+                    </div>
+                    <p class="text-gray-300 text-sm">Pass Rate</p>
+                </div>
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-2">
+                        <i class="fas fa-tasks text-3xl text-blue-400"></i>
+                        <span id="avgDuration" class="text-3xl font-bold text-white">0</span>
+                    </div>
+                    <p class="text-gray-300 text-sm">Avg Duration (days)</p>
+                </div>
+            </div>
+
+            <!-- List View -->
+            <div id="listView" class="glass rounded-xl p-6">
+
+                <!-- Filters -->
+                <div class="mb-6">
+                    <div class="flex items-center space-x-4">
+                        <input type="text" id="searchInspections" placeholder="Search by permit number..."
+                               class="input-field flex-1" onkeyup="searchInspections()">
+                        <select id="statusFilter" class="input-field" onchange="filterInspections()">
+                            <option value="">All Statuses</option>
+                            <option value="scheduled">Scheduled</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                        <select id="resultFilter" class="input-field" onchange="filterInspections()">
+                            <option value="">All Results</option>
+                            <option value="passed">Passed</option>
+                            <option value="failed">Failed</option>
+                            <option value="conditional">Conditional</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Inspections List -->
+                <div id="inspectionsList" class="grid grid-cols-2 gap-4 mb-6">
+                    <!-- Inspections will be loaded here -->
+                </div>
+
+                <!-- Pagination -->
+                <div id="inspectionsPagination" class="flex justify-center items-center space-x-2">
+                    <!-- Pagination will be rendered here -->
+                </div>
+
+            </div>
+
+            <!-- Calendar View -->
+            <div id="calendarView" class="glass rounded-xl p-6 hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <button onclick="changeMonth(-1)" class="px-4 py-2 rounded-lg border border-gray-600 hover:border-cyan-400">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h2 id="calendarMonth" class="text-2xl font-bold text-white"></h2>
+                    <button onclick="changeMonth(1)" class="px-4 py-2 rounded-lg border border-gray-600 hover:border-cyan-400">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-7 gap-2 mb-2">
+                    <div class="text-center text-gray-400 font-semibold py-2">Sun</div>
+                    <div class="text-center text-gray-400 font-semibold py-2">Mon</div>
+                    <div class="text-center text-gray-400 font-semibold py-2">Tue</div>
+                    <div class="text-center text-gray-400 font-semibold py-2">Wed</div>
+                    <div class="text-center text-gray-400 font-semibold py-2">Thu</div>
+                    <div class="text-center text-gray-400 font-semibold py-2">Fri</div>
+                    <div class="text-center text-gray-400 font-semibold py-2">Sat</div>
+                </div>
+
+                <div id="calendarGrid" class="grid grid-cols-7 gap-2">
+                    <!-- Calendar days will be rendered here -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Inspection Detail Modal -->
+    <div id="inspectionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="glass rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 id="modalInspectionTitle" class="text-2xl font-bold text-white mb-2"></h2>
+                    <p id="modalInspectionInfo" class="text-gray-400"></p>
+                </div>
+                <button onclick="closeModal('inspectionModal')" class="text-gray-400 hover:text-white text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div id="inspectionDetail" class="space-y-6">
+                <!-- Details will be populated -->
+            </div>
+
+            <div class="flex justify-between items-center mt-8 pt-6 border-t border-gray-700">
+                <div class="space-x-3">
+                    <button onclick="startInspection()" id="startButton" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white">
+                        <i class="fas fa-play mr-2"></i>Start Inspection
+                    </button>
+                    <button onclick="showCompleteModal()" id="completeButton" class="hidden px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white">
+                        <i class="fas fa-check mr-2"></i>Complete Inspection
+                    </button>
+                    <button onclick="cancelInspection()" class="px-4 py-2 rounded-lg border border-red-400 hover:bg-red-400/10">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </button>
+                </div>
+                <button onclick="closeModal('inspectionModal')"
+                        class="px-6 py-2 rounded-lg border border-gray-600 hover:border-cyan-400">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Inspection Modal -->
+    <div id="scheduleModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="glass rounded-2xl p-8 max-w-2xl w-full">
+            <h2 class="text-2xl font-bold text-white mb-6">Schedule Inspection</h2>
+
+            <form id="scheduleForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Permit ID *</label>
+                    <input type="text" id="schedulePermitId" class="input-field w-full" required
+                           placeholder="Enter permit ID">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Inspection Type *</label>
+                        <select id="scheduleType" class="input-field w-full" required>
+                            <option value="">Select type</option>
+                            <option value="initial">Initial Inspection</option>
+                            <option value="follow-up">Follow-up Inspection</option>
+                            <option value="final">Final Inspection</option>
+                            <option value="re-inspection">Re-Inspection</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Inspector</label>
+                        <select id="scheduleInspector" class="input-field w-full">
+                            <option value="">Auto-assign</option>
+                            <!-- Inspectors loaded dynamically -->
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Scheduled Date *</label>
+                    <input type="datetime-local" id="scheduleDate" class="input-field w-full" required>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Notes</label>
+                    <textarea id="scheduleNotes" rows="4" class="input-field w-full"
+                              placeholder="Additional notes or requirements"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeModal('scheduleModal')"
+                            class="px-6 py-2 rounded-lg border border-gray-600 hover:border-cyan-400">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn-primary px-8">
+                        Schedule Inspection
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Complete Inspection Modal -->
+    <div id="completeInspectionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="glass rounded-2xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-bold text-white mb-6">Complete Inspection</h2>
+
+            <form id="completeForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Result *</label>
+                    <select id="completeResult" class="input-field w-full" required>
+                        <option value="">Select result</option>
+                        <option value="passed">Passed</option>
+                        <option value="failed">Failed</option>
+                        <option value="conditional">Conditional Pass</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-4">Checklist Items</label>
+                    <div id="checklistItems" class="space-y-2">
+                        <!-- Checklist items -->
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Inspector Notes *</label>
+                    <textarea id="completeNotes" rows="6" class="input-field w-full" required
+                              placeholder="Detailed findings, observations, and recommendations"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('completeInspectionModal')"
+                            class="px-6 py-2 rounded-lg border border-gray-600 hover:border-cyan-400">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn-primary px-8">
+                        Complete & Submit
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="inspections.js"></script>
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        let currentView = 'list';
+        let currentPage = 1;
+        let inspectionsData = [];
+        let currentInspection = null;
+        let currentMonth = new Date();
+        let calendarInspections = {};
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadStats();
+            await loadInspections();
+            await loadInspectors();
+            renderCalendar();
+
+            // Setup form submissions
+            document.getElementById('scheduleForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await scheduleInspection();
+            });
+
+            document.getElementById('completeForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await completeInspection();
+            });
+
+            // Generate sample checklist items
+            generateChecklist();
+        });
+
+        // Load statistics
+        async function loadStats() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE}/inspections`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    const inspections = data.inspections;
+
+                    document.getElementById('totalInspections').textContent = inspections.length;
+
+                    const today = new Date().toDateString();
+                    const todayCount = inspections.filter(i =>
+                        new Date(i.scheduledDate).toDateString() === today
+                    ).length;
+                    document.getElementById('todayInspections').textContent = todayCount;
+
+                    const completed = inspections.filter(i => i.status === 'completed');
+                    const passed = completed.filter(i => i.result === 'passed').length;
+                    const passRate = completed.length > 0 ? ((passed / completed.length) * 100).toFixed(0) : 0;
+                    document.getElementById('passRate').textContent = `${passRate}%`;
+
+                    // Calculate average duration
+                    const durations = completed.filter(i => i.completedDate && i.scheduledDate)
+                        .map(i => {
+                            const start = new Date(i.scheduledDate);
+                            const end = new Date(i.completedDate);
+                            return Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+                        });
+                    const avgDuration = durations.length > 0
+                        ? (durations.reduce((a, b) => a + b, 0) / durations.length).toFixed(1)
+                        : 0;
+                    document.getElementById('avgDuration').textContent = avgDuration;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load inspections
+        async function loadInspections(page = 1) {
+            try {
+                const token = localStorage.getItem('token');
+                const status = document.getElementById('statusFilter')?.value || '';
+                const result = document.getElementById('resultFilter')?.value || '';
+
+                let url = `${API_BASE}/inspections?page=${page}&limit=20`;
+                if (status) url += `&status=${status}`;
+
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    inspectionsData = data.inspections;
+
+                    // Filter by result client-side
+                    let filtered = inspectionsData;
+                    if (result) {
+                        filtered = filtered.filter(i => i.result === result);
+                    }
+
+                    displayInspections(filtered);
+                    renderPagination(data.pagination);
+
+                    // Build calendar data
+                    calendarInspections = {};
+                    inspectionsData.forEach(inspection => {
+                        const date = new Date(inspection.scheduledDate).toDateString();
+                        if (!calendarInspections[date]) {
+                            calendarInspections[date] = [];
+                        }
+                        calendarInspections[date].push(inspection);
+                    });
+
+                    if (currentView === 'calendar') {
+                        renderCalendar();
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading inspections:', error);
+            }
+        }
+
+        // Display inspections
+        function displayInspections(inspections) {
+            const container = document.getElementById('inspectionsList');
+
+            if (inspections.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-12"><p class="text-gray-400">No inspections found</p></div>';
+                return;
+            }
+
+            container.innerHTML = inspections.map(inspection => {
+                const scheduledDate = new Date(inspection.scheduledDate);
+                const isToday = scheduledDate.toDateString() === new Date().toDateString();
+
+                return `
+                    <div class="inspection-card ${isToday ? 'border-yellow-400' : ''}" onclick="viewInspection('${inspection.id}')">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-white mb-1">${inspection.type} Inspection</h3>
+                                <p class="text-sm text-gray-400">Permit: ${inspection.permit?.permitNumber || 'N/A'}</p>
+                                <p class="text-sm text-gray-400">${inspection.permit?.propertyAddress || 'No address'}</p>
+                            </div>
+                            <span class="badge badge-${inspection.status}">${inspection.status.replace('_', ' ')}</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                                <span class="text-gray-400">Scheduled:</span>
+                                <p class="text-white">${scheduledDate.toLocaleDateString()}</p>
+                            </div>
+                            <div>
+                                <span class="text-gray-400">Inspector:</span>
+                                <p class="text-white">${inspection.inspector?.name || 'Unassigned'}</p>
+                            </div>
+                            ${inspection.result ? `
+                            <div class="col-span-2">
+                                <span class="badge badge-${inspection.result}">${inspection.result}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // View inspection details
+        async function viewInspection(id) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE}/inspections/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    currentInspection = data.inspection;
+                    displayInspectionDetail(currentInspection);
+                    document.getElementById('inspectionModal').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error loading inspection:', error);
+            }
+        }
+
+        // Display inspection detail
+        function displayInspectionDetail(inspection) {
+            document.getElementById('modalInspectionTitle').textContent = `${inspection.type} Inspection`;
+            document.getElementById('modalInspectionInfo').textContent = `Permit ${inspection.permit?.permitNumber} • ${inspection.status}`;
+
+            const detail = document.getElementById('inspectionDetail');
+            detail.innerHTML = `
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400 mb-2">Inspection Details</h3>
+                        <div class="space-y-2 text-white">
+                            <p><span class="text-gray-400">Status:</span> <span class="badge badge-${inspection.status}">${inspection.status}</span></p>
+                            <p><span class="text-gray-400">Scheduled:</span> ${new Date(inspection.scheduledDate).toLocaleString()}</p>
+                            ${inspection.completedDate ? `<p><span class="text-gray-400">Completed:</span> ${new Date(inspection.completedDate).toLocaleString()}</p>` : ''}
+                            ${inspection.result ? `<p><span class="text-gray-400">Result:</span> <span class="badge badge-${inspection.result}">${inspection.result}</span></p>` : ''}
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400 mb-2">Property Information</h3>
+                        <div class="space-y-2 text-white">
+                            <p><span class="text-gray-400">Address:</span> ${inspection.permit?.propertyAddress || 'N/A'}</p>
+                            <p><span class="text-gray-400">Applicant:</span> ${inspection.permit?.applicantName || 'N/A'}</p>
+                            <p><span class="text-gray-400">Permit Type:</span> ${inspection.permit?.type || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div class="col-span-2">
+                        <h3 class="text-sm font-semibold text-gray-400 mb-2">Inspector</h3>
+                        <p class="text-white">${inspection.inspector?.name || 'Unassigned'} ${inspection.inspector?.email ? `(${inspection.inspector.email})` : ''}</p>
+                    </div>
+                    ${inspection.notes ? `
+                    <div class="col-span-2">
+                        <h3 class="text-sm font-semibold text-gray-400 mb-2">Notes</h3>
+                        <p class="text-white">${inspection.notes}</p>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+
+            // Show/hide action buttons based on status
+            document.getElementById('startButton').classList.toggle('hidden', inspection.status !== 'scheduled');
+            document.getElementById('completeButton').classList.toggle('hidden', inspection.status !== 'in_progress');
+        }
+
+        // Schedule inspection
+        async function scheduleInspection() {
+            const inspectionData = {
+                permitId: document.getElementById('schedulePermitId').value,
+                type: document.getElementById('scheduleType').value,
+                inspectorId: document.getElementById('scheduleInspector').value || null,
+                scheduledDate: document.getElementById('scheduleDate').value,
+                notes: document.getElementById('scheduleNotes').value
+            };
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE}/inspections`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(inspectionData)
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('Inspection scheduled successfully!');
+                    closeModal('scheduleModal');
+                    document.getElementById('scheduleForm').reset();
+                    await loadInspections();
+                    await loadStats();
+                } else {
+                    alert('Failed to schedule inspection: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error scheduling inspection:', error);
+                alert('Failed to schedule inspection');
+            }
+        }
+
+        // Start inspection
+        async function startInspection() {
+            if (!currentInspection) return;
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE}/inspections/${currentInspection.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ status: 'in_progress' })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('Inspection started!');
+                    await viewInspection(currentInspection.id);
+                    await loadInspections();
+                }
+            } catch (error) {
+                console.error('Error starting inspection:', error);
+                alert('Failed to start inspection');
+            }
+        }
+
+        // Complete inspection
+        async function completeInspection() {
+            if (!currentInspection) return;
+
+            const result = document.getElementById('completeResult').value;
+            const notes = document.getElementById('completeNotes').value;
+
+            // Collect checklist
+            const checklist = {};
+            document.querySelectorAll('.checklist-checkbox').forEach(checkbox => {
+                checklist[checkbox.dataset.item] = checkbox.checked;
+            });
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE}/inspections/${currentInspection.id}/complete`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ result, notes, checklist })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('Inspection completed successfully!');
+                    closeModal('completeInspectionModal');
+                    closeModal('inspectionModal');
+                    await loadInspections();
+                    await loadStats();
+                }
+            } catch (error) {
+                console.error('Error completing inspection:', error);
+                alert('Failed to complete inspection');
+            }
+        }
+
+        // Cancel inspection
+        async function cancelInspection() {
+            if (!currentInspection || !confirm('Cancel this inspection?')) return;
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE}/inspections/${currentInspection.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ status: 'cancelled' })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('Inspection cancelled');
+                    closeModal('inspectionModal');
+                    await loadInspections();
+                    await loadStats();
+                }
+            } catch (error) {
+                console.error('Error cancelling inspection:', error);
+            }
+        }
+
+        // Load inspectors for dropdown
+        async function loadInspectors() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE}/users?role=inspector`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    const select = document.getElementById('scheduleInspector');
+                    data.users.forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user.id;
+                        option.textContent = user.name;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading inspectors:', error);
+            }
+        }
+
+        // Generate sample checklist
+        function generateChecklist() {
+            const items = [
+                'Foundation inspection',
+                'Framing and structural elements',
+                'Electrical wiring and panels',
+                'Plumbing systems',
+                'HVAC installation',
+                'Fire safety systems',
+                'Building code compliance',
+                'Site drainage and grading'
+            ];
+
+            const container = document.getElementById('checklistItems');
+            container.innerHTML = items.map(item => `
+                <div class="checklist-item flex items-center">
+                    <input type="checkbox" class="checklist-checkbox w-5 h-5 mr-3" data-item="${item}">
+                    <label class="text-white flex-1">${item}</label>
+                </div>
+            `).join('');
+        }
+
+        // Calendar rendering
+        function renderCalendar() {
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+
+            document.getElementById('calendarMonth').textContent =
+                new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            // Empty cells before first day
+            for (let i = 0; i < firstDay; i++) {
+                grid.innerHTML += '<div class="calendar-day opacity-50"></div>';
+            }
+
+            // Days of month
+            const today = new Date().toDateString();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dateString = date.toDateString();
+                const hasInspection = calendarInspections[dateString]?.length > 0;
+                const isToday = dateString === today;
+
+                grid.innerHTML += `
+                    <div class="calendar-day ${hasInspection ? 'has-inspection' : ''} ${isToday ? 'today' : ''}"
+                         onclick="showDayInspections('${dateString}')">
+                        <div class="font-semibold text-white">${day}</div>
+                        ${hasInspection ? `<div class="text-xs text-cyan-400 mt-1">${calendarInspections[dateString].length} inspections</div>` : ''}
+                    </div>
+                `;
+            }
+        }
+
+        function changeMonth(delta) {
+            currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + delta, 1);
+            renderCalendar();
+        }
+
+        function showDayInspections(dateString) {
+            const inspections = calendarInspections[dateString];
+            if (inspections && inspections.length > 0) {
+                displayInspections(inspections);
+                switchView('list');
+            }
+        }
+
+        // View switching
+        function switchView(view) {
+            currentView = view;
+
+            document.getElementById('listView').classList.toggle('hidden', view !== 'list');
+            document.getElementById('calendarView').classList.toggle('hidden', view !== 'calendar');
+
+            document.getElementById('btn-list').classList.toggle('bg-cyan-400/10', view === 'list');
+            document.getElementById('btn-list').classList.toggle('border-cyan-400', view === 'list');
+            document.getElementById('btn-list').classList.toggle('border-gray-600', view !== 'list');
+
+            document.getElementById('btn-calendar').classList.toggle('bg-cyan-400/10', view === 'calendar');
+            document.getElementById('btn-calendar').classList.toggle('border-cyan-400', view === 'calendar');
+            document.getElementById('btn-calendar').classList.toggle('border-gray-600', view !== 'calendar');
+
+            if (view === 'calendar') {
+                renderCalendar();
+            }
+        }
+
+        // Search and filter
+        function searchInspections() {
+            const query = document.getElementById('searchInspections').value.toLowerCase();
+            const filtered = inspectionsData.filter(inspection =>
+                inspection.permit?.permitNumber?.toLowerCase().includes(query) ||
+                inspection.permit?.propertyAddress?.toLowerCase().includes(query)
+            );
+            displayInspections(filtered);
+        }
+
+        function filterInspections() {
+            loadInspections(1);
+        }
+
+        // Pagination
+        function renderPagination(pagination) {
+            const container = document.getElementById('inspectionsPagination');
+            const { page, totalPages } = pagination;
+
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = `
+                <button onclick="loadInspections(${page - 1})"
+                        class="px-3 py-1 rounded border border-gray-600 hover:border-cyan-400 ${page === 1 ? 'opacity-50 cursor-not-allowed' : ''}"
+                        ${page === 1 ? 'disabled' : ''}>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            `;
+
+            for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+                html += `
+                    <button onclick="loadInspections(${i})"
+                            class="px-4 py-1 rounded ${i === page ? 'bg-cyan-600' : 'border border-gray-600 hover:border-cyan-400'}">
+                        ${i}
+                    </button>
+                `;
+            }
+
+            html += `
+                <button onclick="loadInspections(${page + 1})"
+                        class="px-3 py-1 rounded border border-gray-600 hover:border-cyan-400 ${page === totalPages ? 'opacity-50 cursor-not-allowed' : ''}"
+                        ${page === totalPages ? 'disabled' : ''}>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Modal management
+        function showScheduleModal() {
+            document.getElementById('scheduleModal').classList.remove('hidden');
+        }
+
+        function showCompleteModal() {
+            document.getElementById('completeInspectionModal').classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

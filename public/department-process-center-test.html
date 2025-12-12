@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department Process Center - Govli AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #1e40af;
+            --secondary-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --success-green: #10b981;
+            --warning-yellow: #f59e0b;
+            --danger-red: #ef4444;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Department Color Coding */
+        .dept-building {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        .dept-building-light {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid #f59e0b;
+            color: #fbbf24;
+        }
+
+        .dept-tax {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .dept-tax-light {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            color: #34d399;
+        }
+
+        .dept-public-works {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+        .dept-public-works-light {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid #3b82f6;
+            color: #60a5fa;
+        }
+
+        .dept-health {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        .dept-health-light {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #f87171;
+        }
+
+        .dept-planning {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+        .dept-planning-light {
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid #8b5cf6;
+            color: #a78bfa;
+        }
+
+        .dept-legal {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        }
+        .dept-legal-light {
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid #6366f1;
+            color: #818cf8;
+        }
+
+        .dept-hr {
+            background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+        }
+        .dept-hr-light {
+            background: rgba(236, 72, 153, 0.2);
+            border: 1px solid #ec4899;
+            color: #f472b6;
+        }
+
+        .dept-it {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        }
+        .dept-it-light {
+            background: rgba(6, 182, 212, 0.2);
+            border: 1px solid #06b6d4;
+            color: #22d3ee;
+        }
+
+        /* Compliance Status Badges */
+        .compliance-good {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            color: #10b981;
+        }
+
+        .compliance-warning {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid #f59e0b;
+            color: #fbbf24;
+        }
+
+        .compliance-critical {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #f87171;
+        }
+
+        /* Tab Navigation */
+        .dept-tab-button {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dept-tab-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .dept-tab-button.active {
+            background: rgba(59, 130, 246, 0.3);
+            border-bottom: 3px solid #3b82f6;
+        }
+
+        /* Module Content */
+        .dept-module-content {
+            display: none;
+        }
+
+        .dept-module-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Workflow Status */
+        .workflow-status-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .workflow-status-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .workflow-status-paused {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        /* Custom Scrollbar */
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3b82f6, #1e40af);
+            border-radius: 10px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #60a5fa, #3b82f6);
+        }
+
+        /* Progress Animation */
+        .progress-bar {
+            transition: width 0.5s ease;
+        }
+
+        /* Pulse Effect */
+        .pulse-effect {
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.8); }
+        }
+    </style>
+</head>
+<body class="gradient-bg text-white overflow-hidden">
+    <div class="flex h-screen">
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="glass-dark border-b border-white/10 p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-building text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-white">Department Process Center</h2>
+                            <p class="text-sm text-white/70">Streamlined workflows for all departments</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="glass rounded-lg px-3 py-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-shield-check text-green-400"></i>
+                                <span class="text-sm text-white">CJIS Compliant</span>
+                            </div>
+                        </div>
+                        <div class="glass rounded-lg px-3 py-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-certificate text-blue-400"></i>
+                                <span class="text-sm text-white">FedRAMP</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <!-- Department Selection Hub -->
+                <div class="glass rounded-xl p-6 mb-6">
+                    <h3 class="text-xl font-bold text-white mb-4">Select Department</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="departmentHub">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Department Dashboard (Hidden until department selected) -->
+                <div id="departmentDashboard" class="hidden">
+                    <!-- Department Header -->
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div id="deptIcon" class="w-16 h-16 rounded-xl flex items-center justify-center text-white text-2xl">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div>
+                                    <h2 id="deptName" class="text-3xl font-bold text-white">Department Name</h2>
+                                    <p id="deptDescription" class="text-white/70">Department description</p>
+                                </div>
+                            </div>
+                            <button onclick="backToDepartments()" class="px-4 py-2 glass rounded-lg text-white hover:bg-white/20 transition-all">
+                                <i class="fas fa-arrow-left mr-2"></i>Back to Departments
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Module Navigation -->
+                    <div class="glass rounded-xl p-2 mb-6">
+                        <div class="flex items-center space-x-2 overflow-x-auto scrollbar-thin">
+                            <button onclick="switchDeptModule('overview')" class="dept-tab-button active px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap transition-all" data-dept-module="overview">
+                                <i class="fas fa-dashboard mr-2"></i>Overview
+                            </button>
+                            <button onclick="switchDeptModule('workflows')" class="dept-tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap transition-all" data-dept-module="workflows">
+                                <i class="fas fa-diagram-project mr-2"></i>Workflows
+                            </button>
+                            <button onclick="switchDeptModule('compliance')" class="dept-tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap transition-all" data-dept-module="compliance">
+                                <i class="fas fa-clipboard-check mr-2"></i>Compliance
+                            </button>
+                            <button onclick="switchDeptModule('knowledge')" class="dept-tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap transition-all" data-dept-module="knowledge">
+                                <i class="fas fa-book mr-2"></i>Knowledge Base
+                            </button>
+                            <button onclick="switchDeptModule('integration')" class="dept-tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap transition-all" data-dept-module="integration">
+                                <i class="fas fa-link mr-2"></i>Integration
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Module 1: Overview Dashboard -->
+                    <div id="dept-module-overview" class="dept-module-content active">
+                        <!-- KPI Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6" id="deptKPIs">
+                            <!-- Populated by JavaScript -->
+                        </div>
+
+                        <!-- Active Workflows & Quick Actions -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <!-- Active Workflows -->
+                            <div class="glass rounded-xl p-6">
+                                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                    <i class="fas fa-tasks text-blue-400"></i>
+                                    Active Workflows
+                                </h3>
+                                <div class="space-y-3" id="activeWorkflowsList">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+
+                            <!-- Quick Actions -->
+                            <div class="glass rounded-xl p-6">
+                                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                    <i class="fas fa-bolt text-yellow-400"></i>
+                                    Quick Actions
+                                </h3>
+                                <div class="grid grid-cols-2 gap-3" id="quickActionsList">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div class="glass rounded-xl p-6">
+                            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                <i class="fas fa-clock text-purple-400"></i>
+                                Recent Activity
+                            </h3>
+                            <div class="space-y-3" id="recentActivityList">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Module 2: Workflows -->
+                    <div id="dept-module-workflows" class="dept-module-content">
+                        <!-- Workflow Templates -->
+                        <div class="glass rounded-xl p-6 mb-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xl font-bold text-white">Workflow Templates</h3>
+                                <button onclick="createCustomWorkflow()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white font-semibold hover:shadow-lg transition-all">
+                                    <i class="fas fa-plus mr-2"></i>Create Custom Workflow
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="workflowTemplatesList">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Running Workflows -->
+                        <div class="glass rounded-xl p-6">
+                            <h3 class="text-xl font-bold text-white mb-4">Running Workflows</h3>
+                            <div class="space-y-4" id="runningWorkflowsList">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Module 3: Compliance -->
+                    <div id="dept-module-compliance" class="dept-module-content">
+                        <!-- Compliance Overview -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                            <div class="glass rounded-xl p-6">
+                                <div class="text-white/70 text-xs mb-2">Compliance Score</div>
+                                <div class="text-3xl font-bold text-green-400 mb-2">98.5%</div>
+                                <div class="text-xs text-green-400">All regulations met</div>
+                            </div>
+                            <div class="glass rounded-xl p-6">
+                                <div class="text-white/70 text-xs mb-2">Active Audits</div>
+                                <div class="text-3xl font-bold text-blue-400 mb-2">3</div>
+                                <div class="text-xs text-white/50">In progress</div>
+                            </div>
+                            <div class="glass rounded-xl p-6">
+                                <div class="text-white/70 text-xs mb-2">Pending Reviews</div>
+                                <div class="text-3xl font-bold text-yellow-400 mb-2">7</div>
+                                <div class="text-xs text-yellow-400">Requires attention</div>
+                            </div>
+                        </div>
+
+                        <!-- Compliance Monitoring -->
+                        <div class="glass rounded-xl p-6 mb-6">
+                            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                <i class="fas fa-shield-check text-green-400"></i>
+                                Compliance Monitoring
+                            </h3>
+                            <div class="space-y-4" id="complianceMonitoringList">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Audit Trail -->
+                        <div class="glass rounded-xl p-6">
+                            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                <i class="fas fa-file-alt text-blue-400"></i>
+                                Audit Trail
+                            </h3>
+                            <div class="space-y-3" id="auditTrailList">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Module 4: Knowledge Base -->
+                    <div id="dept-module-knowledge" class="dept-module-content">
+                        <!-- Search -->
+                        <div class="glass rounded-xl p-4 mb-6">
+                            <div class="flex gap-3">
+                                <input type="text" id="knowledgeSearch" placeholder="Search best practices, regulations, and procedures..." class="flex-1 bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50">
+                                <button onclick="searchKnowledge()" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white font-semibold hover:shadow-lg transition-all">
+                                    <i class="fas fa-search mr-2"></i>Search
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Knowledge Categories -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                            <!-- Best Practices -->
+                            <div class="glass rounded-xl p-6">
+                                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                    <i class="fas fa-lightbulb text-yellow-400"></i>
+                                    Best Practices
+                                </h3>
+                                <div class="space-y-2" id="bestPracticesList">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+
+                            <!-- Regulations -->
+                            <div class="glass rounded-xl p-6">
+                                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                    <i class="fas fa-gavel text-blue-400"></i>
+                                    Regulations
+                                </h3>
+                                <div class="space-y-2" id="regulationsList">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+
+                            <!-- AI Suggestions -->
+                            <div class="glass rounded-xl p-6">
+                                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                    <i class="fas fa-brain text-purple-400"></i>
+                                    AI Suggestions
+                                </h3>
+                                <div class="space-y-2" id="aiSuggestionsList">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Document Library -->
+                        <div class="glass rounded-xl p-6">
+                            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                <i class="fas fa-folder text-blue-400"></i>
+                                Document Library
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="documentLibraryList">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Module 5: Integration -->
+                    <div id="dept-module-integration" class="dept-module-content">
+                        <!-- Cross-Department Connections -->
+                        <div class="glass rounded-xl p-6 mb-6">
+                            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                <i class="fas fa-link text-blue-400"></i>
+                                Cross-Department Connections
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="crossDeptConnectionsList">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Workflow Handoffs -->
+                        <div class="glass rounded-xl p-6 mb-6">
+                            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                <i class="fas fa-exchange-alt text-purple-400"></i>
+                                Workflow Handoffs
+                            </h3>
+                            <div class="space-y-4" id="workflowHandoffsList">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Shared Documents -->
+                        <div class="glass rounded-xl p-6">
+                            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                <i class="fas fa-share-nodes text-green-400"></i>
+                                Shared Document Repositories
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="sharedDocsList">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== DEPARTMENT PROCESS CENTER JAVASCRIPT =====
+        // Added 2024-11-06: Department-Focused Process Center
+
+        // MOCK DATA - Replace in production
+        // TODO: Connect to API endpoint /api/departments
+        // TODO: Connect to API endpoint /api/workflows
+        // TODO: Connect to AI optimization API /api/ai/optimize
+        // SECURITY TODO: Implement role-based permissions
+
+        const DEPARTMENTS = [
+            {
+                id: 'building',
+                name: 'Building & Permits',
+                icon: 'fa-building',
+                color: 'dept-building',
+                colorLight: 'dept-building-light',
+                description: 'Construction permits, inspections, and code enforcement',
+                activeWorkflows: 23,
+                complianceScore: 97.8
+            },
+            {
+                id: 'tax',
+                name: 'Tax & Finance',
+                icon: 'fa-dollar-sign',
+                color: 'dept-tax',
+                colorLight: 'dept-tax-light',
+                description: 'Tax collection, budgeting, and financial reporting',
+                activeWorkflows: 18,
+                complianceScore: 99.2
+            },
+            {
+                id: 'public-works',
+                name: 'Public Works',
+                icon: 'fa-road',
+                color: 'dept-public-works',
+                colorLight: 'dept-public-works-light',
+                description: 'Infrastructure maintenance, utilities, and transportation',
+                activeWorkflows: 31,
+                complianceScore: 96.5
+            },
+            {
+                id: 'health',
+                name: 'Health Department',
+                icon: 'fa-heart-pulse',
+                color: 'dept-health',
+                colorLight: 'dept-health-light',
+                description: 'Public health services, inspections, and emergency response',
+                activeWorkflows: 27,
+                complianceScore: 98.9
+            },
+            {
+                id: 'planning',
+                name: 'Planning & Zoning',
+                icon: 'fa-map',
+                color: 'dept-planning',
+                colorLight: 'dept-planning-light',
+                description: 'Land use planning, zoning regulations, and development review',
+                activeWorkflows: 15,
+                complianceScore: 97.3
+            },
+            {
+                id: 'legal',
+                name: 'Legal Department',
+                icon: 'fa-gavel',
+                color: 'dept-legal',
+                colorLight: 'dept-legal-light',
+                description: 'Legal counsel, contract review, and litigation management',
+                activeWorkflows: 12,
+                complianceScore: 99.5
+            },
+            {
+                id: 'hr',
+                name: 'Human Resources',
+                icon: 'fa-users',
+                color: 'dept-hr',
+                colorLight: 'dept-hr-light',
+                description: 'Employee management, benefits, and recruitment',
+                activeWorkflows: 19,
+                complianceScore: 98.1
+            },
+            {
+                id: 'it',
+                name: 'IT Department',
+                icon: 'fa-server',
+                color: 'dept-it',
+                colorLight: 'dept-it-light',
+                description: 'Technology infrastructure, cybersecurity, and support',
+                activeWorkflows: 25,
+                complianceScore: 99.8
+            }
+        ];
+
+        // Current selected department
+        let currentDepartment = null;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            populateDepartmentHub();
+        });
+
+        function populateDepartmentHub() {
+            const container = document.getElementById('departmentHub');
+            if (!container) return;
+
+            container.innerHTML = DEPARTMENTS.map(dept => `
+                <div onclick="selectDepartment('${dept.id}')" class="glass rounded-xl p-6 cursor-pointer hover:bg-white/15 transition-all group">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="${dept.color} w-12 h-12 rounded-lg flex items-center justify-center text-white">
+                            <i class="fas ${dept.icon} text-xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-white group-hover:text-blue-300 transition-all">${dept.name}</h4>
+                            <p class="text-xs text-white/60">${dept.activeWorkflows} active workflows</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-white/70 mb-3">${dept.description}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-white/60">Compliance</span>
+                        <span class="text-sm font-bold text-green-400">${dept.complianceScore}%</span>
+                    </div>
+                    <div class="w-full h-2 bg-white/10 rounded-full mt-2 overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-green-500 to-green-400" style="width: ${dept.complianceScore}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectDepartment(deptId) {
+            currentDepartment = DEPARTMENTS.find(d => d.id === deptId);
+            if (!currentDepartment) return;
+
+            // Show department dashboard
+            document.getElementById('departmentDashboard').classList.remove('hidden');
+
+            // Update header
+            const iconDiv = document.getElementById('deptIcon');
+            iconDiv.className = `w-16 h-16 ${currentDepartment.color} rounded-xl flex items-center justify-center text-white text-2xl`;
+            iconDiv.innerHTML = `<i class="fas ${currentDepartment.icon}"></i>`;
+
+            document.getElementById('deptName').textContent = currentDepartment.name;
+            document.getElementById('deptDescription').textContent = currentDepartment.description;
+
+            // Load department-specific data
+            loadDepartmentData(currentDepartment.id);
+        }
+
+        function backToDepartments() {
+            document.getElementById('departmentDashboard').classList.add('hidden');
+            currentDepartment = null;
+        }
+
+        function switchDeptModule(moduleName) {
+            // Update active tab
+            document.querySelectorAll('.dept-tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.dept-tab-button').classList.add('active');
+
+            // Show selected module
+            document.querySelectorAll('.dept-module-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`dept-module-${moduleName}`).classList.add('active');
+        }
+
+        function loadDepartmentData(deptId) {
+            // Load KPIs, workflows, and other data based on department
+            // This would fetch from API in production
+            loadDepartmentKPIs(deptId);
+            loadActiveWorkflows(deptId);
+            loadQuickActions(deptId);
+            loadRecentActivity(deptId);
+            loadWorkflowTemplates(deptId);
+            loadRunningWorkflows(deptId);
+            loadComplianceData(deptId);
+            loadKnowledgeBase(deptId);
+            loadIntegrations(deptId);
+        }
+
+        function loadDepartmentKPIs(deptId) {
+            // MOCK DATA - Replace with API call
+            const kpis = {
+                'building': [
+                    { label: 'Permits Issued', value: '847', change: '+12%', trend: 'up' },
+                    { label: 'Inspections Complete', value: '1,234', change: '+8%', trend: 'up' },
+                    { label: 'Avg Processing Time', value: '3.2 days', change: '-15%', trend: 'down' },
+                    { label: 'Compliance Rate', value: '97.8%', change: '+2%', trend: 'up' }
+                ],
+                'tax': [
+                    { label: 'Revenue Collected', value: '$12.4M', change: '+5%', trend: 'up' },
+                    { label: 'Returns Processed', value: '3,421', change: '+7%', trend: 'up' },
+                    { label: 'Avg Response Time', value: '2.1 days', change: '-10%', trend: 'down' },
+                    { label: 'Accuracy Rate', value: '99.2%', change: '+1%', trend: 'up' }
+                ]
+            };
+
+            const deptKPIs = kpis[deptId] || kpis['building'];
+            const container = document.getElementById('deptKPIs');
+            if (!container) return;
+
+            container.innerHTML = deptKPIs.map(kpi => `
+                <div class="glass rounded-xl p-6">
+                    <div class="text-white/70 text-xs mb-2">${kpi.label}</div>
+                    <div class="text-3xl font-bold text-white mb-2">${kpi.value}</div>
+                    <div class="text-xs ${kpi.trend === 'up' ? 'text-green-400' : 'text-red-400'}">
+                        <i class="fas fa-arrow-${kpi.trend === 'up' ? 'up' : 'down'} mr-1"></i>${kpi.change}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadActiveWorkflows(deptId) {
+            // MOCK DATA
+            const workflows = [
+                { name: 'Permit Application Review', status: 'active', progress: 75, dueIn: '2 hours' },
+                { name: 'Inspection Scheduling', status: 'active', progress: 45, dueIn: '1 day' },
+                { name: 'Code Violation Processing', status: 'pending', progress: 30, dueIn: '3 days' }
+            ];
+
+            const container = document.getElementById('activeWorkflowsList');
+            if (!container) return;
+
+            container.innerHTML = workflows.map(wf => `
+                <div class="glass-dark rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-white font-semibold text-sm">${wf.name}</span>
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold workflow-status-${wf.status}">${wf.status.toUpperCase()}</span>
+                    </div>
+                    <div class="w-full h-2 bg-white/10 rounded-full overflow-hidden mb-2">
+                        <div class="h-full bg-gradient-to-r from-blue-500 to-purple-500 progress-bar" style="width: ${wf.progress}%"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-white/60">${wf.progress}% complete</span>
+                        <span class="text-white/60">Due in ${wf.dueIn}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadQuickActions(deptId) {
+            // MOCK DATA
+            const actions = [
+                { name: 'New Permit', icon: 'fa-file-circle-plus', color: 'blue' },
+                { name: 'Schedule Inspection', icon: 'fa-calendar-check', color: 'green' },
+                { name: 'Generate Report', icon: 'fa-chart-bar', color: 'purple' },
+                { name: 'View Analytics', icon: 'fa-chart-line', color: 'yellow' }
+            ];
+
+            const container = document.getElementById('quickActionsList');
+            if (!container) return;
+
+            container.innerHTML = actions.map(action => `
+                <button onclick="quickAction('${action.name}')" class="glass rounded-lg p-4 hover:bg-white/15 transition-all text-center">
+                    <i class="fas ${action.icon} text-${action.color}-400 text-2xl mb-2"></i>
+                    <div class="text-white text-sm font-medium">${action.name}</div>
+                </button>
+            `).join('');
+        }
+
+        function loadRecentActivity(deptId) {
+            // MOCK DATA
+            const activities = [
+                { action: 'Permit #2847 approved', user: 'Sarah Martinez', time: '15 min ago', icon: 'fa-check-circle', color: 'green' },
+                { action: 'Inspection scheduled for 123 Main St', user: 'John Smith', time: '1 hour ago', icon: 'fa-calendar', color: 'blue' },
+                { action: 'Code violation report submitted', user: 'Mike Johnson', time: '2 hours ago', icon: 'fa-exclamation-triangle', color: 'yellow' }
+            ];
+
+            const container = document.getElementById('recentActivityList');
+            if (!container) return;
+
+            container.innerHTML = activities.map(act => `
+                <div class="flex items-center gap-3 glass-dark rounded-lg p-3">
+                    <div class="w-10 h-10 bg-${act.color}-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fas ${act.icon} text-${act.color}-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-white text-sm">${act.action}</div>
+                        <div class="text-white/60 text-xs">${act.user} • ${act.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadWorkflowTemplates(deptId) {
+            // MOCK DATA - Department-specific templates
+            const templates = {
+                'building': [
+                    { name: 'Building Permit Application', steps: 8, avgTime: '5 days', uses: 847 },
+                    { name: 'Electrical Inspection', steps: 5, avgTime: '2 days', uses: 423 },
+                    { name: 'Plumbing Permit Review', steps: 6, avgTime: '3 days', uses: 312 },
+                    { name: 'Code Violation Processing', steps: 7, avgTime: '4 days', uses: 156 },
+                    { name: 'Certificate of Occupancy', steps: 9, avgTime: '6 days', uses: 234 }
+                ]
+            };
+
+            const deptTemplates = templates[deptId] || templates['building'];
+            const container = document.getElementById('workflowTemplatesList');
+            if (!container) return;
+
+            container.innerHTML = deptTemplates.map(tmpl => `
+                <div class="glass rounded-xl p-4 hover:bg-white/15 transition-all cursor-pointer" onclick="useTemplate('${tmpl.name}')">
+                    <h4 class="font-bold text-white mb-2">${tmpl.name}</h4>
+                    <div class="space-y-1 text-xs text-white/60 mb-3">
+                        <div><i class="fas fa-list-ol mr-2"></i>${tmpl.steps} steps</div>
+                        <div><i class="fas fa-clock mr-2"></i>Avg: ${tmpl.avgTime}</div>
+                        <div><i class="fas fa-chart-line mr-2"></i>${tmpl.uses} uses</div>
+                    </div>
+                    <button class="w-full px-3 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white text-sm font-semibold hover:shadow-lg transition-all">
+                        Use Template
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function loadRunningWorkflows(deptId) {
+            // MOCK DATA
+            const running = [
+                { id: 'WF-2847', name: 'Residential Permit - 456 Oak Ave', status: 'active', progress: 65, currentStep: 'Plan Review', assignee: 'Sarah Martinez' },
+                { id: 'WF-2848', name: 'Commercial Inspection - 789 Main St', status: 'active', progress: 40, currentStep: 'Field Inspection', assignee: 'John Smith' }
+            ];
+
+            const container = document.getElementById('runningWorkflowsList');
+            if (!container) return;
+
+            container.innerHTML = running.map(wf => `
+                <div class="glass-dark rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <div class="text-white font-bold">${wf.id}: ${wf.name}</div>
+                            <div class="text-white/60 text-sm">Current: ${wf.currentStep} • Assigned: ${wf.assignee}</div>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold workflow-status-${wf.status}">${wf.status.toUpperCase()}</span>
+                    </div>
+                    <div class="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-blue-500 to-purple-500 progress-bar" style="width: ${wf.progress}%"></div>
+                    </div>
+                    <div class="flex items-center justify-between mt-2">
+                        <span class="text-xs text-white/60">${wf.progress}% complete</span>
+                        <div class="flex gap-2">
+                            <button onclick="viewWorkflow('${wf.id}')" class="text-blue-400 hover:text-blue-300 text-sm">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="pauseWorkflow('${wf.id}')" class="text-yellow-400 hover:text-yellow-300 text-sm">
+                                <i class="fas fa-pause"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadComplianceData(deptId) {
+            // MOCK DATA
+            const compliance = [
+                { regulation: 'OSHA Safety Standards', status: 'good', lastCheck: '2024-11-05', nextReview: '2024-12-05' },
+                { regulation: 'ADA Accessibility Requirements', status: 'good', lastCheck: '2024-11-04', nextReview: '2024-12-04' },
+                { regulation: 'Building Code 2024', status: 'warning', lastCheck: '2024-11-03', nextReview: '2024-11-10' }
+            ];
+
+            const container = document.getElementById('complianceMonitoringList');
+            if (!container) return;
+
+            container.innerHTML = compliance.map(comp => `
+                <div class="glass-dark rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-white font-semibold">${comp.regulation}</span>
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold compliance-${comp.status}">${comp.status.toUpperCase()}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-xs text-white/60">
+                        <div>
+                            <div>Last Check</div>
+                            <div class="text-white mt-1">${comp.lastCheck}</div>
+                        </div>
+                        <div>
+                            <div>Next Review</div>
+                            <div class="text-white mt-1">${comp.nextReview}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Load audit trail
+            const audits = [
+                { action: 'Compliance check completed', regulation: 'OSHA Standards', user: 'System', timestamp: '2024-11-05T14:30:00Z' },
+                { action: 'Policy update applied', regulation: 'ADA Requirements', user: 'Admin', timestamp: '2024-11-04T10:15:00Z' }
+            ];
+
+            const auditContainer = document.getElementById('auditTrailList');
+            if (!auditContainer) return;
+
+            auditContainer.innerHTML = audits.map(audit => `
+                <div class="flex items-center gap-3 glass-dark rounded-lg p-3">
+                    <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-clipboard-check text-blue-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-white text-sm">${audit.action}</div>
+                        <div class="text-white/60 text-xs">${audit.regulation} • ${audit.user} • ${new Date(audit.timestamp).toLocaleString()}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadKnowledgeBase(deptId) {
+            // MOCK DATA
+            const bestPractices = [
+                { title: 'Permit Review Best Practices', views: 234 },
+                { title: 'Inspection Efficiency Guide', views: 189 },
+                { title: 'Customer Service Standards', views: 156 }
+            ];
+
+            const regulations = [
+                { title: '2024 Building Code Updates', updated: 'Oct 2024' },
+                { title: 'Fire Safety Requirements', updated: 'Sep 2024' },
+                { title: 'Accessibility Standards', updated: 'Aug 2024' }
+            ];
+
+            const aiSuggestions = [
+                { suggestion: 'Automate permit pre-screening', impact: 'High' },
+                { suggestion: 'Implement digital inspections', impact: 'Medium' },
+                { suggestion: 'Streamline approval workflow', impact: 'High' }
+            ];
+
+            document.getElementById('bestPracticesList').innerHTML = bestPractices.map(bp => `
+                <div class="glass-dark rounded-lg p-3 hover:bg-white/10 transition-all cursor-pointer">
+                    <div class="text-white text-sm font-medium mb-1">${bp.title}</div>
+                    <div class="text-white/60 text-xs"><i class="fas fa-eye mr-1"></i>${bp.views} views</div>
+                </div>
+            `).join('');
+
+            document.getElementById('regulationsList').innerHTML = regulations.map(reg => `
+                <div class="glass-dark rounded-lg p-3 hover:bg-white/10 transition-all cursor-pointer">
+                    <div class="text-white text-sm font-medium mb-1">${reg.title}</div>
+                    <div class="text-white/60 text-xs"><i class="fas fa-calendar mr-1"></i>${reg.updated}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('aiSuggestionsList').innerHTML = aiSuggestions.map(ai => `
+                <div class="glass-dark rounded-lg p-3 hover:bg-white/10 transition-all cursor-pointer">
+                    <div class="text-white text-sm font-medium mb-1">${ai.suggestion}</div>
+                    <div class="text-white/60 text-xs">
+                        <span class="px-2 py-0.5 rounded-full ${ai.impact === 'High' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'} text-xs">${ai.impact} Impact</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // Document Library
+            const documents = [
+                { name: 'Permit Application Forms', type: 'PDF', size: '2.4 MB', date: '2024-11-01' },
+                { name: 'Inspection Checklists', type: 'PDF', size: '1.8 MB', date: '2024-10-28' },
+                { name: 'Code Reference Guide', type: 'PDF', size: '5.2 MB', date: '2024-10-15' }
+            ];
+
+            document.getElementById('documentLibraryList').innerHTML = documents.map(doc => `
+                <div class="glass-dark rounded-lg p-4 hover:bg-white/10 transition-all cursor-pointer">
+                    <div class="flex items-center gap-3 mb-2">
+                        <i class="fas fa-file-pdf text-red-400 text-2xl"></i>
+                        <div class="flex-1">
+                            <div class="text-white font-medium text-sm">${doc.name}</div>
+                            <div class="text-white/60 text-xs">${doc.type} • ${doc.size}</div>
+                        </div>
+                    </div>
+                    <div class="text-white/60 text-xs">Modified: ${doc.date}</div>
+                </div>
+            `).join('');
+        }
+
+        function loadIntegrations(deptId) {
+            // MOCK DATA
+            const connections = [
+                { dept: 'Legal Department', workflows: 12, status: 'active' },
+                { dept: 'Public Works', workflows: 8, status: 'active' },
+                { dept: 'Tax & Finance', workflows: 5, status: 'active' }
+            ];
+
+            document.getElementById('crossDeptConnectionsList').innerHTML = connections.map(conn => `
+                <div class="glass-dark rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-white font-semibold">${conn.dept}</span>
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold workflow-status-${conn.status}">${conn.status.toUpperCase()}</span>
+                    </div>
+                    <div class="text-white/60 text-sm">${conn.workflows} shared workflows</div>
+                </div>
+            `).join('');
+
+            // Workflow Handoffs
+            const handoffs = [
+                { from: 'Building & Permits', to: 'Legal Department', workflow: 'Permit Appeal Review', status: 'pending' },
+                { from: 'Building & Permits', to: 'Public Works', workflow: 'Road Closure Approval', status: 'active' }
+            ];
+
+            document.getElementById('workflowHandoffsList').innerHTML = handoffs.map(ho => `
+                <div class="glass-dark rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-white font-semibold">${ho.workflow}</span>
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold workflow-status-${ho.status}">${ho.status.toUpperCase()}</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-white/60">
+                        <span>${ho.from}</span>
+                        <i class="fas fa-arrow-right text-blue-400"></i>
+                        <span>${ho.to}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // Shared Documents
+            const sharedDocs = [
+                { name: 'Inter-Department Forms', departments: 3, files: 24 },
+                { name: 'Shared Policy Documents', departments: 5, files: 18 }
+            ];
+
+            document.getElementById('sharedDocsList').innerHTML = sharedDocs.map(doc => `
+                <div class="glass-dark rounded-lg p-4">
+                    <div class="text-white font-semibold mb-2">${doc.name}</div>
+                    <div class="flex items-center justify-between text-sm text-white/60">
+                        <span><i class="fas fa-building mr-1"></i>${doc.departments} departments</span>
+                        <span><i class="fas fa-file mr-1"></i>${doc.files} files</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Action Functions
+        function quickAction(actionName) {
+            alert(`Quick action: ${actionName}. TODO: Implement action handler.`);
+        }
+
+        function createCustomWorkflow() {
+            alert('Custom workflow builder would open here. TODO: Implement workflow builder modal.');
+        }
+
+        function useTemplate(templateName) {
+            alert(`Using template: ${templateName}. TODO: Implement template instantiation.`);
+        }
+
+        function viewWorkflow(workflowId) {
+            alert(`Viewing workflow ${workflowId}. TODO: Implement workflow viewer.`);
+        }
+
+        function pauseWorkflow(workflowId) {
+            alert(`Pausing workflow ${workflowId}. TODO: Implement workflow control.`);
+        }
+
+        function searchKnowledge() {
+            const query = document.getElementById('knowledgeSearch').value;
+            alert(`Searching for: ${query}. TODO: Implement knowledge base search.`);
+        }
+
+        console.log('Department Process Center test file loaded successfully');
+    </script>
+</body>
+</html>

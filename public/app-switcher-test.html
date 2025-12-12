@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Govli App Switcher - Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        // Tailwind Configuration Override for Professional Blue Ocean Theme
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        blue: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        cyan: {
+                            50: '#ecfeff',
+                            100: '#cffafe',
+                            200: '#a5f3fc',
+                            300: '#67e8f9',
+                            400: '#22d3ee',
+                            500: '#06b6d4',
+                            600: '#0891b2',
+                            700: '#0e7490',
+                            800: '#155e75',
+                            900: '#164e63',
+                        },
+                        purple: {
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Added 2025-01-08: Govli App Switcher Styles */
+        :root {
+            /* Professional Blue Ocean Palette */
+            --deep-ocean: #0a1628;
+            --ocean-dark: #0c4a6e;
+            --ocean-primary: #0369a1;
+            --azure-blue: #0284c7;
+            --sky-blue: #0ea5e9;
+            --cyan-bright: #06b6d4;
+            --teal-accent: #14b8a6;
+            --emerald-success: #10b981;
+            --amber-warning: #f59e0b;
+            --rose-danger: #f43f5e;
+            --violet-special: #8b5cf6;
+            --glass-bg: rgba(15, 23, 42, 0.75);
+            --glass-border: rgba(6, 182, 212, 0.25);
+            --glow-cyan: rgba(6, 182, 212, 0.4);
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg,
+                #0a1628 0%,
+                #0c2340 25%,
+                #0e3a5f 50%,
+                #1e3a5f 75%,
+                #164e7f 100%
+            );
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .gradient-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(2, 132, 199, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        /* App Switcher Dropdown */
+        .app-switcher-dropdown {
+            display: none;
+            position: fixed;
+            top: 70px;
+            left: 20px;
+            width: 420px;
+            max-width: calc(100vw - 40px);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px var(--glow-cyan);
+            z-index: 9999;
+            animation: slideDown 0.3s ease-out;
+            transform-origin: top left;
+        }
+
+        .app-switcher-dropdown.active {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .app-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            min-height: 100px;
+        }
+
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(6, 182, 212, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .app-card:hover::before {
+            opacity: 1;
+        }
+
+        .app-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--cyan-bright);
+            box-shadow: 0 8px 24px rgba(6, 182, 212, 0.3);
+        }
+
+        .app-card.active {
+            background: rgba(6, 182, 212, 0.2);
+            border-color: var(--cyan-bright);
+            box-shadow: 0 0 20px var(--glow-cyan);
+        }
+
+        .app-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .app-card.disabled:hover {
+            transform: none;
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+        }
+
+        .app-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .app-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--cyan-bright);
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(6, 182, 212, 0.4);
+        }
+
+        .coming-soon-badge {
+            background: rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.6);
+            box-shadow: none;
+        }
+
+        /* Quick Switcher Command Palette */
+        .quick-switcher {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 22, 40, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 15vh;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .quick-switcher.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .quick-switcher-content {
+            width: 600px;
+            max-width: 90vw;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.6), 0 0 60px var(--glow-cyan);
+            animation: slideDownQuick 0.3s ease-out;
+        }
+
+        @keyframes slideDownQuick {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .quick-switcher-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px 24px;
+            font-size: 18px;
+            color: white;
+            outline: none;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .quick-switcher-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .quick-switcher-results {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .quick-switcher-item {
+            padding: 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .quick-switcher-item:hover,
+        .quick-switcher-item.selected {
+            background: rgba(6, 182, 212, 0.2);
+            border: 1px solid var(--cyan-bright);
+        }
+
+        /* App Theme Transitions */
+        .app-content {
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .app-content.switching {
+            opacity: 0;
+            transform: scale(0.98);
+        }
+
+        /* Loading Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg,
+                rgba(255, 255, 255, 0.05) 25%,
+                rgba(255, 255, 255, 0.1) 50%,
+                rgba(255, 255, 255, 0.05) 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* App-Specific Themes */
+        .theme-core {
+            --app-primary: #0284c7;
+            --app-secondary: #8b5cf6;
+            --app-gradient: linear-gradient(135deg, #0284c7, #8b5cf6);
+        }
+
+        .theme-permits {
+            --app-primary: #10b981;
+            --app-secondary: #14b8a6;
+            --app-gradient: linear-gradient(135deg, #10b981, #14b8a6);
+        }
+
+        .theme-grants {
+            --app-primary: #8b5cf6;
+            --app-secondary: #ec4899;
+            --app-gradient: linear-gradient(135deg, #8b5cf6, #ec4899);
+        }
+
+        .theme-crm {
+            --app-primary: #f59e0b;
+            --app-secondary: #ef4444;
+            --app-gradient: linear-gradient(135deg, #f59e0b, #ef4444);
+        }
+
+        .app-header-gradient {
+            background: var(--app-gradient);
+            padding: 2px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-switcher-dropdown {
+                width: calc(100vw - 40px);
+                left: 20px;
+            }
+
+            .quick-switcher-content {
+                width: 90vw;
+            }
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <!-- App Switcher Button -->
+    <div class="fixed top-4 left-4 z-50">
+        <button id="appSwitcherBtn" class="flex items-center gap-3 bg-glass-bg backdrop-blur-xl border border-glass-border rounded-xl px-4 py-3 text-white hover:bg-cyan-500/20 transition-all shadow-lg" style="background: var(--glass-bg); border-color: var(--glass-border);" aria-label="Open app switcher">
+            <i class="fas fa-th text-cyan-400"></i>
+            <div class="flex flex-col items-start">
+                <span class="text-xs text-white/60">Govli</span>
+                <span class="text-sm font-semibold" id="currentAppName">Core Platform</span>
+            </div>
+            <i class="fas fa-chevron-down text-xs text-white/40"></i>
+        </button>
+    </div>
+
+    <!-- App Switcher Dropdown -->
+    <div id="appSwitcherDropdown" class="app-switcher-dropdown">
+        <!-- Header -->
+        <div class="p-6 border-b border-white/10">
+            <h3 class="text-white font-bold text-lg mb-1">Govli Platform</h3>
+            <p class="text-white/60 text-sm">Switch between applications</p>
+        </div>
+
+        <!-- App Grid -->
+        <div class="p-6 grid grid-cols-2 gap-4">
+            <!-- Core Platform App -->
+            <div class="app-card active" data-app="core">
+                <div class="app-badge">Active</div>
+                <div class="app-icon theme-core" style="background: var(--app-gradient);">
+                    <i class="fas fa-building text-white"></i>
+                </div>
+                <h4 class="text-white font-semibold text-sm mb-1">Core Platform</h4>
+                <p class="text-white/60 text-xs">Workflows & CRM</p>
+            </div>
+
+            <!-- Permits & Inspections App -->
+            <div class="app-card" data-app="permits">
+                <div class="app-icon theme-permits" style="background: linear-gradient(135deg, #10b981, #14b8a6);">
+                    <i class="fas fa-clipboard-check text-white"></i>
+                </div>
+                <h4 class="text-white font-semibold text-sm mb-1">Permits</h4>
+                <p class="text-white/60 text-xs">& Inspections</p>
+            </div>
+
+            <!-- Grants Management App -->
+            <div class="app-card disabled" data-app="grants">
+                <div class="app-badge coming-soon-badge">
+                    <i class="fas fa-lock mr-1"></i>Coming Soon
+                </div>
+                <div class="app-icon theme-grants" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);">
+                    <i class="fas fa-hand-holding-usd text-white"></i>
+                </div>
+                <h4 class="text-white font-semibold text-sm mb-1">Grants Mgmt</h4>
+                <p class="text-white/60 text-xs">Grant Tracking</p>
+            </div>
+
+            <!-- Advanced CRM App -->
+            <div class="app-card disabled" data-app="crm">
+                <div class="app-badge coming-soon-badge">
+                    <i class="fas fa-lock mr-1"></i>Coming Soon
+                </div>
+                <div class="app-icon theme-crm" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">
+                    <i class="fas fa-users text-white"></i>
+                </div>
+                <h4 class="text-white font-semibold text-sm mb-1">Advanced CRM</h4>
+                <p class="text-white/60 text-xs">Constituent Mgmt</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 border-t border-white/10">
+            <button class="w-full flex items-center justify-between text-white/70 hover:text-white text-sm py-2 px-4 rounded-lg hover:bg-white/5 transition-all">
+                <span><i class="fas fa-cog mr-2"></i>Platform Settings</span>
+                <i class="fas fa-chevron-right text-xs"></i>
+            </button>
+            <div class="mt-3 text-center text-xs text-white/40">
+                <kbd class="bg-white/10 px-2 py-1 rounded">Ctrl</kbd> +
+                <kbd class="bg-white/10 px-2 py-1 rounded">K</kbd>
+                to quick switch
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Switcher (Command Palette) -->
+    <div id="quickSwitcher" class="quick-switcher">
+        <div class="quick-switcher-content">
+            <input
+                type="text"
+                id="quickSwitcherInput"
+                class="quick-switcher-input"
+                placeholder="Type to search apps..."
+                aria-label="Search applications"
+            />
+            <div class="quick-switcher-results" id="quickSwitcherResults">
+                <!-- MOCK DATA - Dynamically populated -->
+                <div class="quick-switcher-item" data-app="core">
+                    <div class="app-icon theme-core" style="background: var(--app-gradient); width: 40px; height: 40px; font-size: 18px;">
+                        <i class="fas fa-building text-white"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-white font-semibold text-sm">Core Platform</div>
+                        <div class="text-white/60 text-xs">Workflows & CRM</div>
+                    </div>
+                    <span class="text-cyan-400 text-xs font-semibold">Active</span>
+                </div>
+
+                <div class="quick-switcher-item" data-app="permits">
+                    <div class="app-icon theme-permits" style="background: linear-gradient(135deg, #10b981, #14b8a6); width: 40px; height: 40px; font-size: 18px;">
+                        <i class="fas fa-clipboard-check text-white"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-white font-semibold text-sm">Permits & Inspections</div>
+                        <div class="text-white/60 text-xs">Building permits, inspections tracking</div>
+                    </div>
+                </div>
+
+                <div class="quick-switcher-item disabled" data-app="grants" style="opacity: 0.5; cursor: not-allowed;">
+                    <div class="app-icon theme-grants" style="background: linear-gradient(135deg, #8b5cf6, #ec4899); width: 40px; height: 40px; font-size: 18px;">
+                        <i class="fas fa-hand-holding-usd text-white"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-white font-semibold text-sm">Grants Management</div>
+                        <div class="text-white/60 text-xs">Coming Soon</div>
+                    </div>
+                    <i class="fas fa-lock text-white/40"></i>
+                </div>
+
+                <div class="quick-switcher-item disabled" data-app="crm" style="opacity: 0.5; cursor: not-allowed;">
+                    <div class="app-icon theme-crm" style="background: linear-gradient(135deg, #f59e0b, #ef4444); width: 40px; height: 40px; font-size: 18px;">
+                        <i class="fas fa-users text-white"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-white font-semibold text-sm">Advanced CRM</div>
+                        <div class="text-white/60 text-xs">Coming Soon</div>
+                    </div>
+                    <i class="fas fa-lock text-white/40"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="pt-24 px-8">
+        <div id="appContent" class="app-content max-w-7xl mx-auto">
+            <!-- Core Platform Content -->
+            <div id="coreContent" class="app-view">
+                <div class="glass rounded-2xl p-8 mb-6" style="background: var(--glass-bg); border: 1px solid var(--glass-border);">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-16 h-16 rounded-2xl flex items-center justify-center theme-core" style="background: var(--app-gradient);">
+                            <i class="fas fa-building text-white text-2xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-3xl font-bold text-white mb-1">Govli Core Platform</h1>
+                            <p class="text-white/70">Complete government workflow and security management</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white/5 rounded-xl p-6 border border-white/10">
+                            <div class="text-cyan-400 text-3xl mb-2"><i class="fas fa-project-diagram"></i></div>
+                            <h3 class="text-white font-semibold mb-2">Workflows</h3>
+                            <p class="text-white/60 text-sm">AI-powered process automation</p>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-6 border border-white/10">
+                            <div class="text-purple-400 text-3xl mb-2"><i class="fas fa-shield-alt"></i></div>
+                            <h3 class="text-white font-semibold mb-2">Security</h3>
+                            <p class="text-white/60 text-sm">CJIS & FedRAMP compliant</p>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-6 border border-white/10">
+                            <div class="text-emerald-400 text-3xl mb-2"><i class="fas fa-users"></i></div>
+                            <h3 class="text-white font-semibold mb-2">CRM</h3>
+                            <p class="text-white/60 text-sm">Constituent management</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Permits Content (Hidden by default) -->
+            <div id="permitsContent" class="app-view" style="display: none;">
+                <div class="glass rounded-2xl p-8 mb-6" style="background: var(--glass-bg); border: 1px solid var(--glass-border);">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-16 h-16 rounded-2xl flex items-center justify-center theme-permits" style="background: linear-gradient(135deg, #10b981, #14b8a6);">
+                            <i class="fas fa-clipboard-check text-white text-2xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-3xl font-bold text-white mb-1">Govli Permits & Inspections</h1>
+                            <p class="text-white/70">Streamlined building permits and inspection management</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white/5 rounded-xl p-6 border border-emerald-500/20">
+                            <div class="text-emerald-400 text-3xl mb-2"><i class="fas fa-file-alt"></i></div>
+                            <h3 class="text-white font-semibold mb-2">Permit Applications</h3>
+                            <p class="text-white/60 text-sm">Digital permit processing</p>
+                            <div class="mt-4 text-2xl font-bold text-emerald-400">243</div>
+                            <div class="text-xs text-white/50">Active permits</div>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-6 border border-teal-500/20">
+                            <div class="text-teal-400 text-3xl mb-2"><i class="fas fa-clipboard-list"></i></div>
+                            <h3 class="text-white font-semibold mb-2">Inspections</h3>
+                            <p class="text-white/60 text-sm">Scheduled & completed</p>
+                            <div class="mt-4 text-2xl font-bold text-teal-400">87</div>
+                            <div class="text-xs text-white/50">This week</div>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-6 border border-cyan-500/20">
+                            <div class="text-cyan-400 text-3xl mb-2"><i class="fas fa-check-circle"></i></div>
+                            <h3 class="text-white font-semibold mb-2">Approvals</h3>
+                            <p class="text-white/60 text-sm">Average processing time</p>
+                            <div class="mt-4 text-2xl font-bold text-cyan-400">3.2 days</div>
+                            <div class="text-xs text-emerald-400">↓ 18% faster</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Skeleton (Hidden by default) -->
+            <div id="loadingSkeleton" class="app-view" style="display: none;">
+                <div class="glass rounded-2xl p-8 mb-6" style="background: var(--glass-bg); border: 1px solid var(--glass-border);">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="skeleton w-16 h-16 rounded-2xl"></div>
+                        <div class="flex-1">
+                            <div class="skeleton h-8 w-64 mb-2"></div>
+                            <div class="skeleton h-4 w-96"></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="skeleton h-40 rounded-xl"></div>
+                        <div class="skeleton h-40 rounded-xl"></div>
+                        <div class="skeleton h-40 rounded-xl"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Added 2025-01-08: Govli App Switcher JavaScript
+
+        // MOCK DATA - Replace in production
+        const apps = {
+            core: {
+                name: 'Core Platform',
+                description: 'Workflows & CRM',
+                icon: 'fa-building',
+                theme: 'theme-core',
+                enabled: true,
+                contentId: 'coreContent'
+            },
+            permits: {
+                name: 'Permits & Inspections',
+                description: 'Building permits, inspections tracking',
+                icon: 'fa-clipboard-check',
+                theme: 'theme-permits',
+                enabled: true,
+                contentId: 'permitsContent'
+            },
+            grants: {
+                name: 'Grants Management',
+                description: 'Grant tracking and compliance',
+                icon: 'fa-hand-holding-usd',
+                theme: 'theme-grants',
+                enabled: false,
+                contentId: null
+            },
+            crm: {
+                name: 'Advanced CRM',
+                description: 'Constituent management',
+                icon: 'fa-users',
+                theme: 'theme-crm',
+                enabled: false,
+                contentId: null
+            }
+        };
+
+        let currentApp = 'core';
+        let hasUnsavedChanges = false; // TODO: Track actual unsaved changes
+
+        // DOM Elements
+        const appSwitcherBtn = document.getElementById('appSwitcherBtn');
+        const appSwitcherDropdown = document.getElementById('appSwitcherDropdown');
+        const quickSwitcher = document.getElementById('quickSwitcher');
+        const quickSwitcherInput = document.getElementById('quickSwitcherInput');
+        const currentAppName = document.getElementById('currentAppName');
+        const appContent = document.getElementById('appContent');
+
+        // Toggle App Switcher Dropdown
+        function toggleAppSwitcher() {
+            appSwitcherDropdown.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!appSwitcherBtn.contains(e.target) && !appSwitcherDropdown.contains(e.target)) {
+                appSwitcherDropdown.classList.remove('active');
+            }
+        });
+
+        // Switch App Function
+        function switchApp(appId) {
+            const app = apps[appId];
+
+            // Check if app is enabled
+            if (!app.enabled) {
+                alert('This application is coming soon!');
+                return;
+            }
+
+            // Check for unsaved changes
+            if (hasUnsavedChanges && appId !== currentApp) {
+                if (!confirm('You have unsaved changes. Are you sure you want to switch apps?')) {
+                    return;
+                }
+            }
+
+            // Close dropdowns
+            appSwitcherDropdown.classList.remove('active');
+            quickSwitcher.classList.remove('active');
+
+            // Show loading state
+            appContent.classList.add('switching');
+            document.getElementById('loadingSkeleton').style.display = 'block';
+
+            // Hide current content
+            if (apps[currentApp].contentId) {
+                document.getElementById(apps[currentApp].contentId).style.display = 'none';
+            }
+
+            // Simulate loading (TODO: Replace with actual app loading)
+            setTimeout(() => {
+                // Update current app
+                currentApp = appId;
+                currentAppName.textContent = app.name;
+
+                // Update active states in dropdown
+                document.querySelectorAll('.app-card').forEach(card => {
+                    card.classList.remove('active');
+                    const badge = card.querySelector('.app-badge:not(.coming-soon-badge)');
+                    if (badge) badge.remove();
+                });
+
+                const activeCard = document.querySelector(`.app-card[data-app="${appId}"]`);
+                if (activeCard && !activeCard.classList.contains('disabled')) {
+                    activeCard.classList.add('active');
+                    const newBadge = document.createElement('div');
+                    newBadge.className = 'app-badge';
+                    newBadge.textContent = 'Active';
+                    activeCard.insertBefore(newBadge, activeCard.firstChild);
+                }
+
+                // Show new content
+                document.getElementById('loadingSkeleton').style.display = 'none';
+                if (app.contentId) {
+                    document.getElementById(app.contentId).style.display = 'block';
+                }
+
+                // Apply theme
+                document.body.className = `gradient-bg ${app.theme}`;
+
+                // Remove switching state
+                appContent.classList.remove('switching');
+
+                // TODO: Save last visited app to localStorage (non-sensitive)
+                // TODO: Track app usage analytics
+
+                console.log(`Switched to ${app.name}`);
+            }, 800);
+        }
+
+        // Quick Switcher Keyboard Shortcut
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+K or Cmd+K
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                quickSwitcher.classList.add('active');
+                quickSwitcherInput.focus();
+            }
+
+            // Escape to close
+            if (e.key === 'Escape') {
+                quickSwitcher.classList.remove('active');
+                appSwitcherDropdown.classList.remove('active');
+            }
+        });
+
+        // Quick Switcher Search
+        quickSwitcherInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const items = document.querySelectorAll('.quick-switcher-item');
+
+            items.forEach(item => {
+                const appId = item.dataset.app;
+                const app = apps[appId];
+                const matches = app.name.toLowerCase().includes(query) ||
+                               app.description.toLowerCase().includes(query);
+
+                item.style.display = matches ? 'flex' : 'none';
+            });
+        });
+
+        // Quick Switcher Arrow Key Navigation
+        let selectedIndex = 0;
+        quickSwitcherInput.addEventListener('keydown', (e) => {
+            const visibleItems = Array.from(document.querySelectorAll('.quick-switcher-item'))
+                .filter(item => item.style.display !== 'none' && !item.classList.contains('disabled'));
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedIndex = Math.min(selectedIndex + 1, visibleItems.length - 1);
+                updateQuickSwitcherSelection(visibleItems);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedIndex = Math.max(selectedIndex - 1, 0);
+                updateQuickSwitcherSelection(visibleItems);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (visibleItems[selectedIndex]) {
+                    const appId = visibleItems[selectedIndex].dataset.app;
+                    switchApp(appId);
+                }
+            }
+        });
+
+        function updateQuickSwitcherSelection(items) {
+            items.forEach((item, index) => {
+                if (index === selectedIndex) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+        }
+
+        // Close Quick Switcher on background click
+        quickSwitcher.addEventListener('click', (e) => {
+            if (e.target === quickSwitcher) {
+                quickSwitcher.classList.remove('active');
+            }
+        });
+
+        // Event Listeners for App Cards
+        document.addEventListener('DOMContentLoaded', () => {
+            // App switcher dropdown cards
+            document.querySelectorAll('.app-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const appId = card.dataset.app;
+                    switchApp(appId);
+                });
+            });
+
+            // Quick switcher items
+            document.querySelectorAll('.quick-switcher-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    if (!item.classList.contains('disabled')) {
+                        const appId = item.dataset.app;
+                        switchApp(appId);
+                    }
+                });
+            });
+
+            // App switcher button
+            appSwitcherBtn.addEventListener('click', toggleAppSwitcher);
+
+            // TODO: Load last visited app from localStorage
+            // TODO: Connect to API endpoint /api/user/apps for allowed apps
+            // SECURITY TODO: Validate user permissions before showing apps
+        });
+
+        // TODO: Implement deep linking support
+        // Example: permits.govli.ai vs core.govli.ai
+        // function handleDeepLink() {
+        //     const subdomain = window.location.hostname.split('.')[0];
+        //     if (apps[subdomain] && apps[subdomain].enabled) {
+        //         switchApp(subdomain);
+        //     }
+        // }
+
+        console.log('Govli App Switcher initialized');
+        console.log('Press Ctrl+K to open quick switcher');
+    </script>
+</body>
+</html>

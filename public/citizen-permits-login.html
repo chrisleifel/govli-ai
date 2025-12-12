@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citizen Login - Govli Permits</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Added 2025-01-09: Citizen Login Page */
+        :root {
+            --deep-ocean: #0a1628;
+            --ocean-dark: #0c4a6e;
+            --ocean-primary: #0369a1;
+            --azure-blue: #0284c7;
+            --sky-blue: #0ea5e9;
+            --cyan-bright: #06b6d4;
+            --teal-accent: #14b8a6;
+            --emerald-success: #10b981;
+            --glass-bg: rgba(15, 23, 42, 0.75);
+            --glass-border: rgba(6, 182, 212, 0.25);
+            --permit-primary: #10b981;
+            --permit-secondary: #14b8a6;
+            --permit-gradient: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg,
+                #0a1628 0%,
+                #0c2340 25%,
+                #0e3a5f 50%,
+                #1e3a5f 75%,
+                #164e7f 100%
+            );
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .gradient-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(20, 184, 166, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .login-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 48px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            z-index: 100;
+            min-height: 44px;
+        }
+
+        .back-btn:hover {
+            background: rgba(6, 182, 212, 0.2);
+            border-color: var(--cyan-bright);
+            transform: translateX(-4px);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 16px;
+            background: var(--permit-gradient);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            box-shadow: 0 12px 32px rgba(16, 185, 129, 0.3);
+        }
+
+        .logo-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .logo-subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            min-height: 48px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--permit-primary);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            min-width: 20px;
+            min-height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 48px;
+        }
+
+        .btn-primary {
+            background: var(--permit-gradient);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 24px 0;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 13px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .link {
+            color: var(--permit-primary);
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #60a5fa;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--permit-primary);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 640px) {
+            .login-container {
+                padding: 32px 24px;
+            }
+
+            .back-btn {
+                top: 16px;
+                left: 16px;
+                padding: 10px 16px;
+            }
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <a href="permits-landing-test.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        <span>Back</span>
+    </a>
+
+    <div class="login-container">
+        <div class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-clipboard-check"></i>
+            </div>
+            <h1 class="logo-title">Citizen Portal</h1>
+            <p class="logo-subtitle">Sign in to manage your permits</p>
+        </div>
+
+        <!-- Success Message (hidden by default) -->
+        <div id="successMessage" class="alert alert-success hidden">
+            <i class="fas fa-check-circle"></i>
+            <span>Account created successfully! You can now sign in.</span>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm">
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" id="email" class="form-input" placeholder="your.email@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <div class="checkbox-group" style="margin-bottom: 0;">
+                    <input type="checkbox" id="rememberMe">
+                    <label for="rememberMe">Remember me</label>
+                </div>
+                <a href="#" class="link" id="forgotPasswordLink">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-sign-in-alt"></i>
+                Sign In
+            </button>
+        </form>
+
+        <div class="divider">or</div>
+
+        <button class="btn btn-secondary" id="createAccountBtn">
+            <i class="fas fa-user-plus"></i>
+            Create New Account
+        </button>
+
+        <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+            <div class="text-center" style="font-size: 13px; color: rgba(255, 255, 255, 0.6);">
+                Need help? <a href="#" class="link">Contact Support</a>
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="alert alert-info" style="margin-top: 24px;">
+            <i class="fas fa-info-circle"></i>
+            <div>
+                <strong>Demo Mode:</strong> Use any email and password to sign in. Your session will be remembered for 30 days.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Added 2025-01-09: Citizen Login System
+
+        const loginForm = document.getElementById('loginForm');
+        const createAccountBtn = document.getElementById('createAccountBtn');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        const successMessage = document.getElementById('successMessage');
+
+        // Check if already logged in
+        window.addEventListener('DOMContentLoaded', function() {
+            const userSession = sessionStorage.getItem('citizenUser');
+            const rememberedUser = localStorage.getItem('citizenUser');
+
+            if (userSession || rememberedUser) {
+                // User is already logged in, redirect to portal
+                console.log('User already logged in, redirecting...');
+                window.location.href = 'citizen-permits-portal.html';
+            }
+
+            // Check for success message from registration
+            const registered = sessionStorage.getItem('justRegistered');
+            if (registered === 'true') {
+                successMessage.classList.remove('hidden');
+                sessionStorage.removeItem('justRegistered');
+                setTimeout(() => {
+                    successMessage.classList.add('hidden');
+                }, 5000);
+            }
+        });
+
+        // Handle Login
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+
+            console.log('Login attempt:', email);
+
+            // TODO: Connect to API endpoint /api/auth/login
+            // SECURITY TODO: Never store passwords in localStorage or sessionStorage
+            // MOCK DATA - Simulate login (accepts any email/password for demo)
+
+            // Show loading state
+            const submitBtn = loginForm.querySelector('button[type="submit"]');
+            const originalContent = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+            submitBtn.disabled = true;
+
+            setTimeout(() => {
+                // Simulate successful login
+                const user = {
+                    email: email,
+                    name: email.split('@')[0],
+                    loginTime: new Date().toISOString()
+                };
+
+                // Store user session
+                if (rememberMe) {
+                    // Remember for 30 days
+                    localStorage.setItem('citizenUser', JSON.stringify(user));
+                    localStorage.setItem('citizenUserExpiry', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString());
+                } else {
+                    // Session only (until browser closes)
+                    sessionStorage.setItem('citizenUser', JSON.stringify(user));
+                }
+
+                console.log('Login successful, redirecting to portal...');
+
+                // Redirect to citizen portal
+                window.location.href = 'citizen-permits-portal.html';
+            }, 1000);
+        });
+
+        // Create Account
+        createAccountBtn.addEventListener('click', function() {
+            // TODO: Navigate to registration page
+            // For demo, simulate account creation
+            const email = document.getElementById('email').value;
+
+            if (!email || !email.includes('@')) {
+                alert('Please enter a valid email address to create an account.');
+                document.getElementById('email').focus();
+                return;
+            }
+
+            console.log('Creating account for:', email);
+
+            // Show loading
+            const originalContent = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+            this.disabled = true;
+
+            setTimeout(() => {
+                // Simulate account creation
+                sessionStorage.setItem('justRegistered', 'true');
+
+                // Pre-fill email
+                document.getElementById('email').value = email;
+                document.getElementById('password').focus();
+
+                // Reset button
+                this.innerHTML = originalContent;
+                this.disabled = false;
+
+                // Show success message
+                successMessage.classList.remove('hidden');
+                setTimeout(() => {
+                    successMessage.classList.add('hidden');
+                }, 5000);
+            }, 1500);
+        });
+
+        // Forgot Password
+        forgotPasswordLink.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // TODO: Implement password reset flow
+            alert('Password Reset\n\nAn email will be sent to your registered email address with instructions to reset your password.\n\nFor demo purposes, you can use any password to sign in.');
+        });
+
+        // TODO: Connect to API endpoints:
+        // - /api/auth/login - Authenticate user
+        // - /api/auth/register - Create new account
+        // - /api/auth/reset-password - Reset password flow
+        // - /api/auth/verify-session - Verify existing session
+
+        // SECURITY TODO: Implement proper authentication:
+        // - Use secure HTTP-only cookies for session tokens
+        // - Implement CSRF protection
+        // - Add rate limiting for login attempts
+        // - Use bcrypt or similar for password hashing
+        // - Implement 2FA option
+        // - Add account lockout after failed attempts
+
+        console.log('Citizen Login Page initialized');
+    </script>
+</body>
+</html>

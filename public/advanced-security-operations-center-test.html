@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Govli AI - Advanced Security Operations Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .security-module-tab {
+            transition: all 0.3s ease;
+        }
+
+        .security-module-tab.active {
+            background: rgba(59, 130, 246, 0.3);
+            border-bottom: 3px solid #3b82f6;
+        }
+
+        .security-module-content {
+            display: none;
+        }
+
+        .security-module-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .threat-indicator {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <div class="container mx-auto p-6">
+        <!-- Header -->
+        <div class="glass rounded-xl p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-14 h-14 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-shield-halved text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-white">Advanced Security Operations Center</h1>
+                        <p class="text-white/70">CJIS-Compliant Threat Detection • Automated Response • Compliance Reporting</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-2 bg-green-500/20 px-4 py-2 rounded-lg border border-green-400/30">
+                        <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                        <span class="text-green-300 text-sm font-semibold">SECURE</span>
+                    </div>
+                    <div class="text-white/60 text-sm">
+                        <i class="fas fa-clock mr-2"></i>Last scan: 2 min ago
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Module Navigation -->
+        <div class="glass rounded-xl p-2 mb-6">
+            <div class="flex items-center space-x-2 overflow-x-auto">
+                <button onclick="switchSecurityModule('dashboard')" class="security-module-tab active px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap" data-module="dashboard">
+                    <i class="fas fa-chart-line mr-2"></i>Threat Dashboard
+                </button>
+                <button onclick="switchSecurityModule('behavioral')" class="security-module-tab px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap" data-module="behavioral">
+                    <i class="fas fa-brain mr-2"></i>Behavioral Analytics
+                </button>
+                <button onclick="switchSecurityModule('incidents')" class="security-module-tab px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap" data-module="incidents">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>Incident Response
+                </button>
+                <button onclick="switchSecurityModule('compliance')" class="security-module-tab px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap" data-module="compliance">
+                    <i class="fas fa-clipboard-check mr-2"></i>Compliance Reports
+                </button>
+            </div>
+        </div>
+
+        <!-- Module 1: Comprehensive Security Monitoring Dashboard -->
+        <!-- Added 2024-10-30: Advanced Security Operations Center Enhancement -->
+        <div id="security-module-dashboard" class="security-module-content active">
+            <!-- Threat Level Status -->
+            <div class="glass rounded-xl p-6 mb-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fas fa-shield-halved text-green-400"></i>
+                        Current Threat Level
+                    </h3>
+                    <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm transition">
+                        <i class="fas fa-sync-alt mr-2"></i>Refresh
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <!-- Overall Threat Level -->
+                    <div class="glass rounded-xl p-6 text-center">
+                        <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
+                            <i class="fas fa-shield-check text-green-400 text-3xl"></i>
+                        </div>
+                        <div class="text-3xl font-bold text-green-400 mb-2">LOW</div>
+                        <div class="text-white/70 text-sm">Overall System Status</div>
+                        <div class="text-white/50 text-xs mt-2">No critical threats detected</div>
+                    </div>
+
+                    <!-- Active Threats -->
+                    <div class="glass rounded-xl p-6">
+                        <div class="text-white/70 text-sm mb-2">Active Threats</div>
+                        <div class="text-3xl font-bold text-white">3</div>
+                        <div class="mt-3 space-y-1">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-red-400">Critical</span>
+                                <span class="text-white/80">0</span>
+                            </div>
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-yellow-400">Medium</span>
+                                <span class="text-white/80">3</span>
+                            </div>
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-blue-400">Low</span>
+                                <span class="text-white/80">12</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Blocked Attempts -->
+                    <div class="glass rounded-xl p-6">
+                        <div class="text-white/70 text-sm mb-2">Blocked Today</div>
+                        <div class="text-3xl font-bold text-blue-400">847</div>
+                        <div class="mt-3 text-xs">
+                            <div class="flex items-center gap-2 text-green-400 mb-1">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>+124 vs yesterday</span>
+                            </div>
+                            <div class="text-white/50">Auto-blocked by AI</div>
+                        </div>
+                    </div>
+
+                    <!-- Response Time -->
+                    <div class="glass rounded-xl p-6">
+                        <div class="text-white/70 text-sm mb-2">Avg Response Time</div>
+                        <div class="text-3xl font-bold text-purple-400">1.2s</div>
+                        <div class="mt-3 text-xs">
+                            <div class="flex items-center gap-2 text-green-400 mb-1">
+                                <i class="fas fa-arrow-down"></i>
+                                <span>-0.3s faster</span>
+                            </div>
+                            <div class="text-white/50">Automated workflows</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-Time Security Monitoring -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Live Threat Map -->
+                <div class="glass rounded-xl p-6">
+                    <h4 class="text-white font-semibold mb-4 flex items-center gap-2">
+                        <i class="fas fa-globe text-blue-400"></i>
+                        Live Threat Map
+                        <span class="ml-auto text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">LIVE</span>
+                    </h4>
+                    <div class="bg-black/30 rounded-lg p-4 mb-4" style="height: 200px; position: relative;">
+                        <div class="text-white/50 text-center pt-16">
+                            <i class="fas fa-map-marked-alt text-4xl mb-2"></i>
+                            <div class="text-sm">Geographic threat visualization</div>
+                            <div class="text-xs">Showing attack origins and patterns</div>
+                        </div>
+                        <!-- MOCK DATA - Replace with actual threat map -->
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="text-center">
+                            <div class="text-red-400 text-xl font-bold">23</div>
+                            <div class="text-white/60 text-xs">High Risk IPs</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-yellow-400 text-xl font-bold">156</div>
+                            <div class="text-white/60 text-xs">Suspicious Activity</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-blue-400 text-xl font-bold">847</div>
+                            <div class="text-white/60 text-xs">Blocked Requests</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Security Events -->
+                <div class="glass rounded-xl p-6">
+                    <h4 class="text-white font-semibold mb-4 flex items-center gap-2">
+                        <i class="fas fa-stream text-purple-400"></i>
+                        Recent Security Events
+                    </h4>
+                    <div class="space-y-3 max-h-80 overflow-y-auto">
+                        <!-- Event 1 -->
+                        <div class="glass rounded-lg p-3 hover:bg-white/10 transition">
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-ban text-red-400 text-sm"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-white text-sm font-medium">Brute Force Attempt Blocked</div>
+                                    <div class="text-white/60 text-xs">IP: 192.168.45.123 • 47 failed login attempts</div>
+                                    <div class="text-white/50 text-xs mt-1">2 min ago • Auto-blocked for 24h</div>
+                                </div>
+                                <span class="text-red-400 text-xs font-semibold">CRITICAL</span>
+                            </div>
+                        </div>
+
+                        <!-- Event 2 -->
+                        <div class="glass rounded-lg p-3 hover:bg-white/10 transition">
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-exclamation-triangle text-yellow-400 text-sm"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-white text-sm font-medium">Unusual Access Pattern</div>
+                                    <div class="text-white/60 text-xs">User: admin@agency.gov • Off-hours access</div>
+                                    <div class="text-white/50 text-xs mt-1">8 min ago • MFA verification sent</div>
+                                </div>
+                                <span class="text-yellow-400 text-xs font-semibold">MEDIUM</span>
+                            </div>
+                        </div>
+
+                        <!-- Event 3 -->
+                        <div class="glass rounded-lg p-3 hover:bg-white/10 transition">
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-shield-check text-blue-400 text-sm"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-white text-sm font-medium">Security Patch Applied</div>
+                                    <div class="text-white/60 text-xs">System update v2.4.1 • 3 vulnerabilities fixed</div>
+                                    <div class="text-white/50 text-xs mt-1">15 min ago • No restart required</div>
+                                </div>
+                                <span class="text-green-400 text-xs font-semibold">INFO</span>
+                            </div>
+                        </div>
+
+                        <!-- Event 4 -->
+                        <div class="glass rounded-lg p-3 hover:bg-white/10 transition">
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-user-shield text-purple-400 text-sm"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-white text-sm font-medium">Privilege Escalation Detected</div>
+                                    <div class="text-white/60 text-xs">User: j.smith • Attempted admin access</div>
+                                    <div class="text-white/50 text-xs mt-1">22 min ago • Access denied, supervisor notified</div>
+                                </div>
+                                <span class="text-yellow-400 text-xs font-semibold">MEDIUM</span>
+                            </div>
+                        </div>
+
+                        <!-- Event 5 -->
+                        <div class="glass rounded-lg p-3 hover:bg-white/10 transition">
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-check text-green-400 text-sm"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-white text-sm font-medium">Compliance Scan Completed</div>
+                                    <div class="text-white/60 text-xs">CJIS v5.9 • All checks passed</div>
+                                    <div class="text-white/50 text-xs mt-1">1 hour ago • Report generated</div>
+                                </div>
+                                <span class="text-green-400 text-xs font-semibold">SUCCESS</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Metrics -->
+            <div class="glass rounded-xl p-6">
+                <h4 class="text-white font-semibold mb-4">Security Performance Metrics</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Detection Accuracy -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-white/70 text-sm">Threat Detection Accuracy</span>
+                            <span class="text-green-400 text-sm font-bold">99.2%</span>
+                        </div>
+                        <div class="w-full bg-white/10 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full" style="width: 99.2%"></div>
+                        </div>
+                        <div class="text-white/50 text-xs mt-1">AI-powered analysis active</div>
+                    </div>
+
+                    <!-- Response Automation -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-white/70 text-sm">Automated Response Rate</span>
+                            <span class="text-blue-400 text-sm font-bold">87%</span>
+                        </div>
+                        <div class="w-full bg-white/10 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full" style="width: 87%"></div>
+                        </div>
+                        <div class="text-white/50 text-xs mt-1">824 threats auto-mitigated today</div>
+                    </div>
+
+                    <!-- CJIS Compliance -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-white/70 text-sm">CJIS Compliance Score</span>
+                            <span class="text-green-400 text-sm font-bold">100%</span>
+                        </div>
+                        <div class="w-full bg-white/10 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full" style="width: 100%"></div>
+                        </div>
+                        <div class="text-white/50 text-xs mt-1">All security controls verified</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MOCK DATA - Replace in production -->
+            <!-- TODO: Connect to SIEM system for real-time threat data -->
+        </div>
+
+        <!-- Module 2: Behavioral Analytics & Anomaly Detection -->
+        <!-- Added 2024-10-30: Advanced Security Operations Center Enhancement -->
+        <div id="security-module-behavioral" class="security-module-content">
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-brain text-purple-400"></i>
+                    AI-Powered Behavioral Analytics
+                    <span class="text-xs bg-purple-500/20 text-purple-400 px-3 py-1 rounded-full">Machine Learning</span>
+                </h3>
+                <p class="text-white/70 text-sm mb-6">
+                    Advanced machine learning algorithms analyze user behavior patterns to detect anomalies, insider threats, and account compromises in real-time.
+                </p>
+
+                <!-- Anomaly Detection Dashboard -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="glass rounded-xl p-4">
+                        <div class="text-white/70 text-xs mb-1">Behavioral Models</div>
+                        <div class="text-2xl font-bold text-white">247</div>
+                        <div class="text-green-400 text-xs mt-1">Active user profiles</div>
+                    </div>
+                    <div class="glass rounded-xl p-4">
+                        <div class="text-white/70 text-xs mb-1">Anomalies Detected</div>
+                        <div class="text-2xl font-bold text-yellow-400">18</div>
+                        <div class="text-white/60 text-xs mt-1">Last 24 hours</div>
+                    </div>
+                    <div class="glass rounded-xl p-4">
+                        <div class="text-white/70 text-xs mb-1">False Positive Rate</div>
+                        <div class="text-2xl font-bold text-green-400">0.8%</div>
+                        <div class="text-green-400 text-xs mt-1">
+                            <i class="fas fa-arrow-down mr-1"></i>-0.2% this month
+                        </div>
+                    </div>
+                    <div class="glass rounded-xl p-4">
+                        <div class="text-white/70 text-xs mb-1">Risk Score Avg</div>
+                        <div class="text-2xl font-bold text-blue-400">23/100</div>
+                        <div class="text-green-400 text-xs mt-1">Low risk environment</div>
+                    </div>
+                </div>
+
+                <!-- Active Anomalies -->
+                <div class="glass rounded-xl p-6 mb-6">
+                    <h4 class="text-white font-semibold mb-4 flex items-center gap-2">
+                        <i class="fas fa-exclamation-circle text-yellow-400"></i>
+                        Active Behavioral Anomalies
+                    </h4>
+                    <div class="space-y-3">
+                        <!-- Anomaly 1 -->
+                        <div class="glass rounded-lg p-4">
+                            <div class="flex items-start justify-between mb-3">
+                                <div>
+                                    <div class="text-white font-medium">Unusual Data Access Pattern</div>
+                                    <div class="text-white/60 text-sm">User: sarah.johnson@agency.gov</div>
+                                </div>
+                                <span class="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-xs font-semibold">Risk: 67/100</span>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                <div>
+                                    <div class="text-white/50 text-xs">Baseline Access</div>
+                                    <div class="text-white text-sm">120 records/day</div>
+                                </div>
+                                <div>
+                                    <div class="text-white/50 text-xs">Current Access</div>
+                                    <div class="text-yellow-400 text-sm">847 records/day</div>
+                                </div>
+                                <div>
+                                    <div class="text-white/50 text-xs">Time</div>
+                                    <div class="text-white text-sm">02:47 AM</div>
+                                </div>
+                                <div>
+                                    <div class="text-white/50 text-xs">Location</div>
+                                    <div class="text-white text-sm">Remote VPN</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white text-sm transition">
+                                    <i class="fas fa-lock mr-2"></i>Suspend Access
+                                </button>
+                                <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm transition">
+                                    <i class="fas fa-user-check mr-2"></i>Request MFA
+                                </button>
+                                <button class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-white text-sm transition">
+                                    <i class="fas fa-flag mr-2"></i>Mark as False Positive
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Anomaly 2 -->
+                        <div class="glass rounded-lg p-4">
+                            <div class="flex items-start justify-between mb-3">
+                                <div>
+                                    <div class="text-white font-medium">Geographic Access Anomaly</div>
+                                    <div class="text-white/60 text-sm">User: michael.chen@agency.gov</div>
+                                </div>
+                                <span class="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-xs font-semibold">Risk: 89/100</span>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                <div>
+                                    <div class="text-white/50 text-xs">Previous Location</div>
+                                    <div class="text-white text-sm">Washington DC</div>
+                                </div>
+                                <div>
+                                    <div class="text-white/50 text-xs">Current Location</div>
+                                    <div class="text-red-400 text-sm">Moscow, Russia</div>
+                                </div>
+                                <div>
+                                    <div class="text-white/50 text-xs">Time Gap</div>
+                                    <div class="text-white text-sm">12 minutes</div>
+                                </div>
+                                <div>
+                                    <div class="text-white/50 text-xs">Device</div>
+                                    <div class="text-white text-sm">Unknown</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white text-sm transition">
+                                    <i class="fas fa-ban mr-2"></i>Block Immediately
+                                </button>
+                                <button class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-white text-sm transition">
+                                    <i class="fas fa-phone mr-2"></i>Contact User
+                                </button>
+                                <button class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white text-sm transition">
+                                    <i class="fas fa-clipboard-list mr-2"></i>Create Incident
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Anomaly 3 -->
+                        <div class="glass rounded-lg p-4">
+                            <div class="flex items-start justify-between mb-3">
+                                <div>
+                                    <div class="text-white font-medium">Off-Hours System Access</div>
+                                    <div class="text-white/60 text-sm">User: admin@agency.gov</div>
+                                </div>
+                                <span class="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-xs font-semibold">Risk: 45/100</span>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                <div>
+                                    <div class="text-white/50 text-xs">Typical Hours</div>
+                                    <div class="text-white text-sm">9 AM - 5 PM</div>
+                                </div>
+                                <div>
+                                    <div class="text-white/50 text-xs">Current Time</div>
+                                    <div class="text-yellow-400 text-sm">11:23 PM</div>
+                                </div>
+                                <div>
+                                    <div class="text-white/50 text-xs">Actions</div>
+                                    <div class="text-white text-sm">Configuration changes</div>
+                                </div>
+                                <div>
+                                    <div class="text-white/50 text-xs">MFA Status</div>
+                                    <div class="text-green-400 text-sm">Verified</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm transition">
+                                    <i class="fas fa-eye mr-2"></i>Monitor Activity
+                                </button>
+                                <button class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white text-sm transition">
+                                    <i class="fas fa-check mr-2"></i>Approve
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Risk Profiles -->
+                <div class="glass rounded-xl p-6">
+                    <h4 class="text-white font-semibold mb-4">High-Risk User Profiles</h4>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center">
+                                    <span class="text-white font-bold text-sm">MK</span>
+                                </div>
+                                <div>
+                                    <div class="text-white font-medium">Marcus King</div>
+                                    <div class="text-white/60 text-xs">IT Administrator • 6 anomalies</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="text-right">
+                                    <div class="text-red-400 text-lg font-bold">78</div>
+                                    <div class="text-white/50 text-xs">Risk Score</div>
+                                </div>
+                                <button class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-white text-xs transition">
+                                    Review
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center">
+                                    <span class="text-white font-bold text-sm">SJ</span>
+                                </div>
+                                <div>
+                                    <div class="text-white font-medium">Sarah Johnson</div>
+                                    <div class="text-white/60 text-xs">Records Specialist • 4 anomalies</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="text-right">
+                                    <div class="text-yellow-400 text-lg font-bold">67</div>
+                                    <div class="text-white/50 text-xs">Risk Score</div>
+                                </div>
+                                <button class="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-white text-xs transition">
+                                    Review
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-500 to-green-500 flex items-center justify-center">
+                                    <span class="text-white font-bold text-sm">DL</span>
+                                </div>
+                                <div>
+                                    <div class="text-white font-medium">David Lopez</div>
+                                    <div class="text-white/60 text-xs">System Analyst • 2 anomalies</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="text-right">
+                                    <div class="text-yellow-400 text-lg font-bold">52</div>
+                                    <div class="text-white/50 text-xs">Risk Score</div>
+                                </div>
+                                <button class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-xs transition">
+                                    Review
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MOCK DATA - Replace in production -->
+            <!-- TODO: Connect to behavioral analytics engine API -->
+            <!-- TODO: Integrate with machine learning model for anomaly detection -->
+        </div>
+
+        <!-- Module 3: Automated Incident Response -->
+        <!-- Added 2024-10-30: Advanced Security Operations Center Enhancement -->
+        <div id="security-module-incidents" class="security-module-content">
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-robot text-blue-400"></i>
+                    Automated Incident Response Workflows
+                    <span class="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">AI-Powered</span>
+                </h3>
+                <p class="text-white/70 text-sm mb-6">
+                    Pre-configured response playbooks automatically execute when threats are detected, reducing response time from hours to seconds.
+                </p>
+
+                <!-- Incident Response Statistics -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="glass rounded-xl p-4">
+                        <div class="text-white/70 text-xs mb-1">Active Playbooks</div>
+                        <div class="text-2xl font-bold text-white">34</div>
+                        <div class="text-green-400 text-xs mt-1">All automated</div>
+                    </div>
+                    <div class="glass rounded-xl p-4">
+                        <div class="text-white/70 text-xs mb-1">Incidents Today</div>
+                        <div class="text-2xl font-bold text-blue-400">12</div>
+                        <div class="text-green-400 text-xs mt-1">11 auto-resolved</div>
+                    </div>
+                    <div class="glass rounded-xl p-4">
+                        <div class="text-white/70 text-xs mb-1">Avg Resolution Time</div>
+                        <div class="text-2xl font-bold text-purple-400">3.2 min</div>
+                        <div class="text-green-400 text-xs mt-1">
+                            <i class="fas fa-arrow-down mr-1"></i>-87% vs manual
+                        </div>
+                    </div>
+                    <div class="glass rounded-xl p-4">
+                        <div class="text-white/70 text-xs mb-1">Success Rate</div>
+                        <div class="text-2xl font-bold text-green-400">98.4%</div>
+                        <div class="text-white/60 text-xs mt-1">Last 30 days</div>
+                    </div>
+                </div>
+
+                <!-- Active Response Playbooks -->
+                <div class="glass rounded-xl p-6 mb-6">
+                    <h4 class="text-white font-semibold mb-4">Active Response Playbooks</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Playbook 1 -->
+                        <div class="glass rounded-lg p-4 hover:bg-white/10 transition cursor-pointer">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
+                                        <i class="fas fa-user-lock text-red-400"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-white font-medium">Brute Force Response</div>
+                                        <div class="text-white/60 text-xs">Auto-block malicious IPs</div>
+                                    </div>
+                                </div>
+                                <span class="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs">Active</span>
+                            </div>
+                            <div class="space-y-2 mb-3">
+                                <div class="flex items-center gap-2 text-xs text-white/70">
+                                    <i class="fas fa-check text-green-400"></i>
+                                    <span>1. Detect failed login attempts (threshold: 5)</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-white/70">
+                                    <i class="fas fa-check text-green-400"></i>
+                                    <span>2. Block source IP for 24 hours</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-white/70">
+                                    <i class="fas fa-check text-green-400"></i>
+                                    <span>3. Notify security team</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-white/70">
+                                    <i class="fas fa-check text-green-400"></i>
+                                    <span>4. Log to SIEM system</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-white/60">Triggered: 847 times today</span>
+                                <span class="text-green-400 font-semibold">100% success</span>
+                            </div>
+                        </div>
+
+                        <!-- Playbook 2 -->
+                        <div class="glass rounded-lg p-4 hover:bg-white/10 transition cursor-pointer">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                                        <i class="fas fa-virus text-yellow-400"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-white font-medium">Malware Detection</div>
+                                        <div class="text-white/60 text-xs">Quarantine and analyze</div>
+                                    </div>
+                                </div>
+                                <span class="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs">Active</span>
+                            </div>
+                            <div class="space-y-2 mb-3">
+                                <div class="flex items-center gap-2 text-xs text-white/70">
+                                    <i class="fas fa-check text-green-400"></i>
+                                    <span>1. Detect malware signature</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-white/70">
+                                    <i class="fas fa-check text-green-400"></i>
+                                    <span>2. Isolate infected system</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-white/70">
+                                    <i class="fas fa-check text-green-400"></i>
+                                    <span>3. Run forensic analysis</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-white/70">
+                                    <i class="fas fa-check text-green-400"></i>
+                                    <span>4. Create incident ticket</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-white/60">Triggered: 3 times today</span>
+                                <span class="text-green-400 font-semibold">100% contained</span>
+                            </div>
+                        </div>
+
+                        <!-- Playbook 3 -->
+                        <div class="glass rounded-lg p-4 hover:bg-white/10 transition cursor-pointer">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                                        <i class="fas fa-user-shield text-purple-400"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-white font-medium">Privilege Escalation</div>
+                                        <div class="text-white/60 text-xs">Unauthorized access prevention</div>
+                                    </div>
+                                </div>
+                                <span class="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs">Active</span>
+                            </div>
+                            <div class="space-y-2 mb-3">
+                                <div class="flex items-center gap-2 text-xs text-white/70">
+                                    <i class="fas fa-check text-green-400"></i>
+                                    <span>1. Detect privilege escalation attempt</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-white/70">
+                                    <i class="fas fa-check text-green-400"></i>
+                                    <span>2. Deny access immediately</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-white/70">
+                                    <i class="fas fa-check text-green-400"></i>
+                                    <span>3. Alert security officer</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-white/70">
+                                    <i class="fas fa-check text-green-400"></i>
+                                    <span>4. Review user permissions</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-white/60">Triggered: 23 times today</span>
+                                <span class="text-green-400 font-semibold">100% blocked</span>
+                            </div>
+                        </div>
+
+                        <!-- Playbook 4 -->
+                        <div class="glass rounded-lg p-4 hover:bg-white/10 transition cursor-pointer">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                        <i class="fas fa-database text-blue-400"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-white font-medium">Data Exfiltration</div>
+                                        <div class="text-white/60 text-xs">Prevent data theft</div>
+                                    </div>
+                                </div>
+                                <span class="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs">Active</span>
+                            </div>
+                            <div class="space-y-2 mb-3">
+                                <div class="flex items-center gap-2 text-xs text-white/70">
+                                    <i class="fas fa-check text-green-400"></i>
+                                    <span>1. Detect unusual data transfer volume</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-white/70">
+                                    <i class="fas fa-check text-green-400"></i>
+                                    <span>2. Block outbound traffic</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-white/70">
+                                    <i class="fas fa-check text-green-400"></i>
+                                    <span>3. Suspend user account</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-white/70">
+                                    <i class="fas fa-check text-green-400"></i>
+                                    <span>4. Initiate forensic investigation</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-white/60">Triggered: 1 time today</span>
+                                <span class="text-green-400 font-semibold">100% prevented</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Automated Responses -->
+                <div class="glass rounded-xl p-6">
+                    <h4 class="text-white font-semibold mb-4">Recent Automated Responses</h4>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+                            <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                <i class="fas fa-check text-green-400"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-white text-sm font-medium">Brute Force Attack Blocked</div>
+                                <div class="text-white/60 text-xs">Playbook: Brute Force Response • IP: 192.168.45.123</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-white text-sm">2.3s</div>
+                                <div class="text-white/60 text-xs">Response time</div>
+                            </div>
+                            <div class="text-green-400 text-xs font-semibold">SUCCESS</div>
+                        </div>
+
+                        <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+                            <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                <i class="fas fa-check text-green-400"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-white text-sm font-medium">Suspicious Access Pattern Mitigated</div>
+                                <div class="text-white/60 text-xs">Playbook: Behavioral Analytics • User: j.smith</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-white text-sm">4.7s</div>
+                                <div class="text-white/60 text-xs">Response time</div>
+                            </div>
+                            <div class="text-green-400 text-xs font-semibold">SUCCESS</div>
+                        </div>
+
+                        <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+                            <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                <i class="fas fa-check text-green-400"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-white text-sm font-medium">Malware Quarantined</div>
+                                <div class="text-white/60 text-xs">Playbook: Malware Detection • File: invoice.pdf.exe</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-white text-sm">1.8s</div>
+                                <div class="text-white/60 text-xs">Response time</div>
+                            </div>
+                            <div class="text-green-400 text-xs font-semibold">SUCCESS</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MOCK DATA - Replace in production -->
+            <!-- TODO: Connect to incident response automation system -->
+            <!-- TODO: Integrate with SOAR platform for workflow execution -->
+        </div>
+
+        <!-- Module 4: Compliance Reporting -->
+        <!-- Added 2024-10-30: Advanced Security Operations Center Enhancement -->
+        <div id="security-module-compliance" class="security-module-content">
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-clipboard-check text-green-400"></i>
+                    CJIS Compliance & Security Reporting
+                    <span class="text-xs bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full">Automated</span>
+                </h3>
+                <p class="text-white/70 text-sm mb-6">
+                    Automated compliance monitoring and reporting for CJIS, FedRAMP, FISMA, and other government security standards.
+                </p>
+
+                <!-- Compliance Status Dashboard -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="glass rounded-xl p-4 text-center">
+                        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-green-500/20 flex items-center justify-center">
+                            <i class="fas fa-shield-check text-green-400 text-2xl"></i>
+                        </div>
+                        <div class="text-white font-medium mb-1">CJIS v5.9</div>
+                        <div class="text-2xl font-bold text-green-400">100%</div>
+                        <div class="text-white/60 text-xs mt-1">All controls met</div>
+                    </div>
+
+                    <div class="glass rounded-xl p-4 text-center">
+                        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-green-500/20 flex items-center justify-center">
+                            <i class="fas fa-cloud-upload text-green-400 text-2xl"></i>
+                        </div>
+                        <div class="text-white font-medium mb-1">FedRAMP High</div>
+                        <div class="text-2xl font-bold text-green-400">100%</div>
+                        <div class="text-white/60 text-xs mt-1">Authorized</div>
+                    </div>
+
+                    <div class="glass rounded-xl p-4 text-center">
+                        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-green-500/20 flex items-center justify-center">
+                            <i class="fas fa-file-contract text-green-400 text-2xl"></i>
+                        </div>
+                        <div class="text-white font-medium mb-1">FISMA</div>
+                        <div class="text-2xl font-bold text-green-400">100%</div>
+                        <div class="text-white/60 text-xs mt-1">Compliant</div>
+                    </div>
+
+                    <div class="glass rounded-xl p-4 text-center">
+                        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-green-500/20 flex items-center justify-center">
+                            <i class="fas fa-lock text-green-400 text-2xl"></i>
+                        </div>
+                        <div class="text-white font-medium mb-1">NIST 800-53</div>
+                        <div class="text-2xl font-bold text-green-400">324/324</div>
+                        <div class="text-white/60 text-xs mt-1">Controls active</div>
+                    </div>
+                </div>
+
+                <!-- Available Compliance Reports -->
+                <div class="glass rounded-xl p-6 mb-6">
+                    <h4 class="text-white font-semibold mb-4">Available Compliance Reports</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Report 1 -->
+                        <div class="glass rounded-lg p-4 hover:bg-white/10 transition">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                        <i class="fas fa-file-alt text-blue-400"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-white font-medium">CJIS Security Audit</div>
+                                        <div class="text-white/60 text-xs">Complete security assessment</div>
+                                    </div>
+                                </div>
+                                <span class="text-green-400 text-xs">Current</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 mb-3 text-xs">
+                                <div>
+                                    <span class="text-white/50">Last Updated:</span>
+                                    <span class="text-white ml-1">Today</span>
+                                </div>
+                                <div>
+                                    <span class="text-white/50">Coverage:</span>
+                                    <span class="text-white ml-1">100%</span>
+                                </div>
+                            </div>
+                            <button class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm transition">
+                                <i class="fas fa-download mr-2"></i>Download PDF
+                            </button>
+                        </div>
+
+                        <!-- Report 2 -->
+                        <div class="glass rounded-lg p-4 hover:bg-white/10 transition">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                                        <i class="fas fa-chart-bar text-purple-400"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-white font-medium">Threat Intelligence Summary</div>
+                                        <div class="text-white/60 text-xs">Monthly threat analysis</div>
+                                    </div>
+                                </div>
+                                <span class="text-green-400 text-xs">Current</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 mb-3 text-xs">
+                                <div>
+                                    <span class="text-white/50">Period:</span>
+                                    <span class="text-white ml-1">Oct 2024</span>
+                                </div>
+                                <div>
+                                    <span class="text-white/50">Incidents:</span>
+                                    <span class="text-white ml-1">847</span>
+                                </div>
+                            </div>
+                            <button class="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white text-sm transition">
+                                <i class="fas fa-download mr-2"></i>Download PDF
+                            </button>
+                        </div>
+
+                        <!-- Report 3 -->
+                        <div class="glass rounded-lg p-4 hover:bg-white/10 transition">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                        <i class="fas fa-check-circle text-green-400"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-white font-medium">FedRAMP Continuous Monitoring</div>
+                                        <div class="text-white/60 text-xs">ConMon package</div>
+                                    </div>
+                                </div>
+                                <span class="text-green-400 text-xs">Current</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 mb-3 text-xs">
+                                <div>
+                                    <span class="text-white/50">Status:</span>
+                                    <span class="text-green-400 ml-1">Authorized</span>
+                                </div>
+                                <div>
+                                    <span class="text-white/50">POA&Ms:</span>
+                                    <span class="text-white ml-1">0</span>
+                                </div>
+                            </div>
+                            <button class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white text-sm transition">
+                                <i class="fas fa-download mr-2"></i>Download PDF
+                            </button>
+                        </div>
+
+                        <!-- Report 4 -->
+                        <div class="glass rounded-lg p-4 hover:bg-white/10 transition">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-white font-medium">Incident Response Report</div>
+                                        <div class="text-white/60 text-xs">Response metrics</div>
+                                    </div>
+                                </div>
+                                <span class="text-green-400 text-xs">Current</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 mb-3 text-xs">
+                                <div>
+                                    <span class="text-white/50">Incidents:</span>
+                                    <span class="text-white ml-1">12</span>
+                                </div>
+                                <div>
+                                    <span class="text-white/50">Resolved:</span>
+                                    <span class="text-green-400 ml-1">12 (100%)</span>
+                                </div>
+                            </div>
+                            <button class="w-full px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-white text-sm transition">
+                                <i class="fas fa-download mr-2"></i>Download PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compliance Timeline -->
+                <div class="glass rounded-xl p-6">
+                    <h4 class="text-white font-semibold mb-4">Compliance Activity Timeline</h4>
+                    <div class="space-y-4">
+                        <div class="flex gap-4">
+                            <div class="flex flex-col items-center">
+                                <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                                    <i class="fas fa-check text-green-400"></i>
+                                </div>
+                                <div class="w-0.5 h-full bg-white/20 mt-2"></div>
+                            </div>
+                            <div class="flex-1 pb-6">
+                                <div class="text-white font-medium mb-1">CJIS Audit Completed</div>
+                                <div class="text-white/60 text-sm mb-2">All 13 policy areas assessed and verified</div>
+                                <div class="text-white/50 text-xs">Today, 9:30 AM • Security Team</div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div class="flex flex-col items-center">
+                                <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                    <i class="fas fa-sync text-blue-400"></i>
+                                </div>
+                                <div class="w-0.5 h-full bg-white/20 mt-2"></div>
+                            </div>
+                            <div class="flex-1 pb-6">
+                                <div class="text-white font-medium mb-1">FedRAMP ConMon Package Submitted</div>
+                                <div class="text-white/60 text-sm mb-2">Monthly continuous monitoring deliverables</div>
+                                <div class="text-white/50 text-xs">Yesterday, 4:15 PM • Compliance Officer</div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div class="flex flex-col items-center">
+                                <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                                    <i class="fas fa-shield-check text-purple-400"></i>
+                                </div>
+                                <div class="w-0.5 h-full bg-white/20 mt-2"></div>
+                            </div>
+                            <div class="flex-1 pb-6">
+                                <div class="text-white font-medium mb-1">Security Control Assessment</div>
+                                <div class="text-white/60 text-sm mb-2">NIST 800-53 Rev 5 - All 324 controls validated</div>
+                                <div class="text-white/50 text-xs">3 days ago • Auditor</div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div class="flex flex-col items-center">
+                                <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                                    <i class="fas fa-certificate text-green-400"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-white font-medium mb-1">ISO 27001 Certification Renewed</div>
+                                <div class="text-white/60 text-sm mb-2">Information security management system certified</div>
+                                <div class="text-white/50 text-xs">1 week ago • External Auditor</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MOCK DATA - Replace in production -->
+            <!-- TODO: Connect to compliance management system -->
+            <!-- TODO: Integrate with automated report generation -->
+        </div>
+    </div>
+
+    <script>
+        // Module switching function
+        function switchSecurityModule(moduleName) {
+            // Hide all modules
+            document.querySelectorAll('.security-module-content').forEach(module => {
+                module.classList.remove('active');
+            });
+
+            // Remove active class from all tabs
+            document.querySelectorAll('.security-module-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected module
+            document.getElementById('security-module-' + moduleName).classList.add('active');
+
+            // Add active class to selected tab
+            document.querySelector('[data-module="' + moduleName + '"]').classList.add('active');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Audit Trail - Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <style>
+        /* Blue Ocean Design with Cyberpunk Accents */
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Blockchain Block Styles */
+        .blockchain-block {
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .blockchain-block:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(59, 130, 246, 0.4);
+        }
+
+        .blockchain-block::after {
+            content: '';
+            position: absolute;
+            right: -40px;
+            top: 50%;
+            width: 40px;
+            height: 2px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+        }
+
+        .blockchain-block:last-child::after {
+            display: none;
+        }
+
+        /* Neon Glow Effects */
+        .neon-blue {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.6), 0 0 40px rgba(59, 130, 246, 0.3);
+        }
+
+        .neon-purple {
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.6), 0 0 40px rgba(139, 92, 246, 0.3);
+        }
+
+        .neon-green {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6), 0 0 40px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Block Creation Animation */
+        @keyframes blockCreate {
+            0% {
+                opacity: 0;
+                transform: scale(0.8) translateY(-20px);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .block-creating {
+            animation: blockCreate 0.6s ease-out;
+        }
+
+        /* Hash Verification Pulse */
+        @keyframes hashPulse {
+            0%, 100% {
+                box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(16, 185, 129, 0.8);
+            }
+        }
+
+        .hash-verified {
+            animation: hashPulse 2s ease-in-out infinite;
+        }
+
+        /* Timeline Connector */
+        .timeline-line {
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, #3b82f6, #8b5cf6);
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .timeline-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
+            position: absolute;
+            left: 15px;
+            z-index: 10;
+        }
+
+        /* Tooltip Styles */
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            backdrop-filter: blur(10px);
+            max-width: 300px;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+
+        /* Smart Contract Status */
+        .contract-status {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contract-status::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .contract-status:hover::before {
+            left: 100%;
+        }
+
+        /* Copy Animation */
+        @keyframes copySuccess {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); color: #10b981; }
+            100% { transform: scale(1); }
+        }
+
+        .copy-success {
+            animation: copySuccess 0.3s ease;
+        }
+
+        /* Scrollbar */
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3b82f6, #1e40af);
+            border-radius: 10px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #60a5fa, #3b82f6);
+        }
+    </style>
+</head>
+<body class="text-white p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold mb-2 flex items-center gap-3">
+                <i class="fas fa-cube text-blue-400"></i>
+                Blockchain Audit Trail
+            </h1>
+            <p class="text-white/70">Immutable record of all government actions with cryptographic verification</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="glass rounded-xl p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="text-white/70 text-sm mb-2 block">Department</label>
+                    <select id="filterDepartment" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400" aria-label="Filter by department">
+                        <option value="all">All Departments</option>
+                        <option value="Building Permits">Building Permits</option>
+                        <option value="Tax Services">Tax Services</option>
+                        <option value="Public Works">Public Works</option>
+                        <option value="EPA">EPA</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-white/70 text-sm mb-2 block">Action Type</label>
+                    <select id="filterAction" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400" aria-label="Filter by action type">
+                        <option value="all">All Actions</option>
+                        <option value="document_submit">Document Submit</option>
+                        <option value="approval">Approval</option>
+                        <option value="rejection">Rejection</option>
+                        <option value="status_update">Status Update</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-white/70 text-sm mb-2 block">Date Range</label>
+                    <select id="filterDate" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400" aria-label="Filter by date range">
+                        <option value="24h">Last 24 Hours</option>
+                        <option value="7d">Last 7 Days</option>
+                        <option value="30d">Last 30 Days</option>
+                        <option value="all">All Time</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-white/70 text-sm mb-2 block">View Mode</label>
+                    <select id="viewMode" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400" aria-label="Select view mode">
+                        <option value="blocks">Block Explorer</option>
+                        <option value="timeline">Timeline View</option>
+                        <option value="verification">Hash Verification</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Block Explorer -->
+        <div id="blockExplorerView" class="view-container">
+            <div class="glass rounded-xl p-6 mb-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold flex items-center gap-2">
+                        <i class="fas fa-cubes text-purple-400"></i>
+                        Blockchain Explorer
+                    </h2>
+                    <div class="flex items-center gap-3">
+                        <div class="px-4 py-2 bg-green-500/20 border border-green-500/40 rounded-lg">
+                            <span class="text-green-400 text-sm">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                <span id="blockCount">0</span> Blocks Mined
+                            </span>
+                        </div>
+                        <button id="exportAuditBtn" class="px-4 py-2 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg font-medium hover:shadow-lg transition-all" aria-label="Export audit trail">
+                            <i class="fas fa-download mr-2"></i>Export
+                        </button>
+                        <button id="shareAuditBtn" class="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg font-medium hover:shadow-lg transition-all" aria-label="Share audit trail">
+                            <i class="fas fa-share-alt mr-2"></i>Share
+                        </button>
+                        <button id="createBlockBtn" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg font-medium hover:shadow-lg transition-all neon-blue" aria-label="Create new block">
+                            <i class="fas fa-plus mr-2"></i>Create Block
+                        </button>
+                    </div>
+                </div>
+
+                <div id="blockchainContainer" class="overflow-x-auto scrollbar-thin pb-4">
+                    <div id="blocksList" class="flex gap-10 min-w-max py-4">
+                        <!-- Blocks will be generated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Smart Contract Dashboard -->
+            <div class="glass rounded-xl p-6">
+                <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                    <i class="fas fa-file-contract text-blue-400"></i>
+                    Smart Contract Status
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="smartContractsGrid">
+                    <!-- Smart contracts will be generated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Timeline -->
+        <div id="timelineView" class="view-container hidden">
+            <div class="glass rounded-xl p-6">
+                <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                    <i class="fas fa-history text-blue-400"></i>
+                    Action Timeline
+                </h2>
+                <div class="relative pl-12" id="timelineContainer">
+                    <div class="timeline-line"></div>
+                    <!-- Timeline items will be generated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Hash Verification -->
+        <div id="verificationView" class="view-container hidden">
+            <div class="glass rounded-xl p-6">
+                <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                    <i class="fas fa-shield-alt text-green-400"></i>
+                    Hash Verification Interface
+                </h2>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Verification Input -->
+                    <div>
+                        <label class="text-white/70 text-sm mb-2 block">Enter Document Hash</label>
+                        <input type="text" id="verifyHashInput" placeholder="e.g., a3f5d8c2b1e4..." class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400 mb-4" aria-label="Enter hash to verify">
+                        <button id="verifyHashBtn" class="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg font-medium hover:shadow-lg transition-all" aria-label="Verify hash">
+                            <i class="fas fa-search mr-2"></i>Verify Hash
+                        </button>
+
+                        <div id="verificationResult" class="mt-6 hidden">
+                            <!-- Verification result will appear here -->
+                        </div>
+                    </div>
+
+                    <!-- QR Code Generator -->
+                    <div>
+                        <label class="text-white/70 text-sm mb-2 block">Generate Verification QR Code</label>
+                        <select id="qrBlockSelect" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400 mb-4" aria-label="Select block for QR code">
+                            <option value="">Select a block...</option>
+                        </select>
+                        <div id="qrCodeContainer" class="bg-white p-4 rounded-lg flex items-center justify-center" style="min-height: 200px;">
+                            <p class="text-gray-400">Select a block to generate QR code</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Public Transparency Mode -->
+                <div class="mt-6 p-6 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-white flex items-center gap-2">
+                            <i class="fas fa-eye text-blue-400"></i>
+                            Public Transparency Mode
+                        </h3>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="publicModeToggle" class="w-5 h-5" aria-label="Toggle public transparency mode">
+                            <span class="text-sm text-white/70">Anonymize Data</span>
+                        </label>
+                    </div>
+                    <p class="text-sm text-white/70">
+                        When enabled, sensitive information is anonymized while maintaining cryptographic verification integrity. Citizens can verify government actions without exposing confidential data.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div id="blockchainTooltip" class="tooltip"></div>
+
+    <!-- Block Detail Modal -->
+    <div id="blockModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center">
+        <div class="glass rounded-xl p-8 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto scrollbar-thin">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold">Block Details</h2>
+                <button id="closeModalBtn" class="text-white/70 hover:text-white transition-all" aria-label="Close modal">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div id="blockModalContent">
+                <!-- Block details will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center">
+        <div class="glass rounded-xl p-8 max-w-xl w-full mx-4">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold flex items-center gap-2">
+                    <i class="fas fa-download text-green-400"></i>
+                    Export Audit Trail
+                </h2>
+                <button id="closeExportModalBtn" class="text-white/70 hover:text-white transition-all" aria-label="Close export modal">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                <div>
+                    <label class="text-white/70 text-sm mb-2 block">Export Format</label>
+                    <select id="exportFormat" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400" aria-label="Select export format">
+                        <option value="json">JSON (Complete Data)</option>
+                        <option value="csv">CSV (Spreadsheet)</option>
+                        <option value="pdf">PDF (Report)</option>
+                        <option value="xml">XML (Structured)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-white/70 text-sm mb-2 block">Date Range</label>
+                    <select id="exportDateRange" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400" aria-label="Select date range">
+                        <option value="all">All Blocks</option>
+                        <option value="24h">Last 24 Hours</option>
+                        <option value="7d">Last 7 Days</option>
+                        <option value="30d">Last 30 Days</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="flex items-center gap-3 cursor-pointer p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all">
+                        <input type="checkbox" id="includeMetadata" checked class="w-5 h-5" aria-label="Include metadata">
+                        <div>
+                            <div class="text-white font-medium">Include Metadata</div>
+                            <div class="text-white/70 text-sm">Export with full block metadata and cryptographic details</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div>
+                    <label class="flex items-center gap-3 cursor-pointer p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all">
+                        <input type="checkbox" id="includeSignatures" checked class="w-5 h-5" aria-label="Include signatures">
+                        <div>
+                            <div class="text-white font-medium">Include Digital Signatures</div>
+                            <div class="text-white/70 text-sm">Include cryptographic signatures for verification</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-info-circle text-blue-400 mt-1"></i>
+                        <div class="text-sm text-white/70">
+                            <strong class="text-white">Compliance Notice:</strong> Exported audit trails are cryptographically signed and maintain chain integrity. This export is compliant with CJIS, FedRAMP, and FISMA standards.
+                        </div>
+                    </div>
+                </div>
+
+                <button id="confirmExportBtn" class="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg font-medium hover:shadow-lg transition-all" aria-label="Confirm export">
+                    <i class="fas fa-download mr-2"></i>Export Audit Trail
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div id="shareModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center">
+        <div class="glass rounded-xl p-8 max-w-xl w-full mx-4">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold flex items-center gap-2">
+                    <i class="fas fa-share-alt text-purple-400"></i>
+                    Share Audit Trail
+                </h2>
+                <button id="closeShareModalBtn" class="text-white/70 hover:text-white transition-all" aria-label="Close share modal">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                <div>
+                    <label class="text-white/70 text-sm mb-2 block">Share Access Level</label>
+                    <select id="shareAccessLevel" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400" aria-label="Select access level">
+                        <option value="read">Read Only</option>
+                        <option value="verify">Verify Only (Hash Verification)</option>
+                        <option value="audit">Full Audit Access</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-white/70 text-sm mb-2 block">Link Expiration</label>
+                    <select id="shareExpiration" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400" aria-label="Select expiration time">
+                        <option value="1h">1 Hour</option>
+                        <option value="24h">24 Hours</option>
+                        <option value="7d">7 Days</option>
+                        <option value="30d">30 Days</option>
+                        <option value="never">Never Expire</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-white/70 text-sm mb-2 block">Recipient Email (Optional)</label>
+                    <input type="email" id="recipientEmail" placeholder="auditor@agency.gov" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400" aria-label="Recipient email">
+                </div>
+
+                <div>
+                    <label class="flex items-center gap-3 cursor-pointer p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all">
+                        <input type="checkbox" id="requireAuthentication" class="w-5 h-5" aria-label="Require authentication">
+                        <div>
+                            <div class="text-white font-medium">Require Authentication</div>
+                            <div class="text-white/70 text-sm">Recipients must authenticate with credentials</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div>
+                    <label class="flex items-center gap-3 cursor-pointer p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all">
+                        <input type="checkbox" id="notifyAccess" checked class="w-5 h-5" aria-label="Notify on access">
+                        <div>
+                            <div class="text-white font-medium">Notify on Access</div>
+                            <div class="text-white/70 text-sm">Receive notification when the link is accessed</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div id="generatedLinkContainer" class="hidden">
+                    <label class="text-white/70 text-sm mb-2 block">Secure Share Link</label>
+                    <div class="p-4 bg-black/30 rounded-lg border border-green-500/30">
+                        <div class="font-mono text-sm text-green-400 break-all mb-3" id="generatedLink"></div>
+                        <div class="flex gap-2">
+                            <button id="copyLinkBtn" class="flex-1 px-4 py-2 bg-blue-500/20 border border-blue-500/40 rounded-lg text-blue-300 hover:bg-blue-500/30 transition-all">
+                                <i class="fas fa-copy mr-2"></i>Copy Link
+                            </button>
+                            <button id="qrCodeShareBtn" class="flex-1 px-4 py-2 bg-purple-500/20 border border-purple-500/40 rounded-lg text-purple-300 hover:bg-purple-500/30 transition-all">
+                                <i class="fas fa-qrcode mr-2"></i>QR Code
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+                        <div class="flex items-center justify-between text-sm">
+                            <div>
+                                <div class="text-white/70">Link Expires:</div>
+                                <div class="text-green-400 font-medium" id="expirationTime"></div>
+                            </div>
+                            <div>
+                                <div class="text-white/70">Access Count:</div>
+                                <div class="text-green-400 font-medium">0 / Unlimited</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-shield-alt text-yellow-400 mt-1"></i>
+                        <div class="text-sm text-white/70">
+                            <strong class="text-white">Security Notice:</strong> Shared links are encrypted and tracked. All access is logged in the audit trail. Links can be revoked at any time.
+                        </div>
+                    </div>
+                </div>
+
+                <button id="generateShareLinkBtn" class="w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg font-medium hover:shadow-lg transition-all" aria-label="Generate share link">
+                    <i class="fas fa-link mr-2"></i>Generate Secure Link
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Added 2024-12-09: Blockchain Audit Trail
+        // MOCK DATA - Replace in production
+        // TODO: Connect to blockchain API endpoint
+
+        let blockchain = [];
+        let currentView = 'blocks';
+        let blockIdCounter = 1;
+
+        // SHA-256 Hash Generation (Simulated)
+        async function generateHash(data) {
+            const encoder = new TextEncoder();
+            const dataBuffer = encoder.encode(JSON.stringify(data));
+            const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Initialize with genesis block and sample data
+        async function initializeBlockchain() {
+            // Genesis block
+            const genesisBlock = await createBlock({
+                type: 'genesis',
+                department: 'System',
+                action: 'Blockchain Initialized',
+                data: { message: 'Genesis Block - Govli AI Blockchain' },
+                previousHash: '0'.repeat(64)
+            });
+            blockchain.push(genesisBlock);
+
+            // Sample blocks
+            const sampleBlocks = [
+                {
+                    type: 'document_submit',
+                    department: 'Building Permits',
+                    action: 'Permit Application Submitted',
+                    data: { permitId: 'BP-2024-1847', applicant: 'John D.', address: '123 Main St' }
+                },
+                {
+                    type: 'approval',
+                    department: 'EPA',
+                    action: 'Environmental Impact Approved',
+                    data: { projectId: 'ENV-2024-432', impactScore: 'Low' }
+                },
+                {
+                    type: 'status_update',
+                    department: 'Tax Services',
+                    action: 'Tax Return Processed',
+                    data: { returnId: 'TAX-2024-8923', status: 'Completed' }
+                },
+                {
+                    type: 'document_submit',
+                    department: 'Public Works',
+                    action: 'Infrastructure Inspection Report',
+                    data: { inspectionId: 'INS-2024-556', location: 'Bridge 42' }
+                }
+            ];
+
+            for (const blockData of sampleBlocks) {
+                const block = await createBlock(blockData);
+                blockchain.push(block);
+                await new Promise(resolve => setTimeout(resolve, 100)); // Slight delay for animation
+            }
+
+            renderCurrentView();
+            updateBlockCount();
+            populateQRSelect();
+            initializeSmartContracts();
+        }
+
+        // Create a new block
+        async function createBlock(data) {
+            const previousBlock = blockchain[blockchain.length - 1];
+            const previousHash = previousBlock ? previousBlock.hash : '0'.repeat(64);
+
+            const block = {
+                index: blockIdCounter++,
+                timestamp: new Date().toISOString(),
+                type: data.type,
+                department: data.department,
+                action: data.action,
+                data: data.data,
+                previousHash: previousHash,
+                nonce: Math.floor(Math.random() * 1000000),
+                // Enhanced metadata
+                metadata: {
+                    blockSize: Math.floor(Math.random() * 2000) + 500, // bytes
+                    gasUsed: Math.floor(Math.random() * 100000) + 21000,
+                    gasLimit: 200000,
+                    difficulty: Math.floor(Math.random() * 5000000) + 1000000,
+                    miner: `0x${Math.random().toString(16).substr(2, 40)}`,
+                    minerName: data.minerName || 'Govli Validator Node',
+                    confirmations: 0,
+                    transactionCount: data.transactionCount || 1,
+                    validators: generateValidators(),
+                    consensusAlgorithm: 'Proof of Authority (PoA)',
+                    networkId: 'govli-mainnet',
+                    chainId: 1337,
+                    stateRoot: `0x${Math.random().toString(16).substr(2, 64)}`,
+                    receiptsRoot: `0x${Math.random().toString(16).substr(2, 64)}`,
+                    logsBloom: generateLogsBloom(),
+                    extraData: {
+                        compliance: ['CJIS', 'FedRAMP', 'FISMA'],
+                        auditTrail: true,
+                        publicVerifiable: true,
+                        jurisdiction: data.jurisdiction || 'United States Federal',
+                        regulatoryBody: data.regulatoryBody || 'GSA',
+                        retentionPeriod: '7 years',
+                        classification: data.classification || 'Public Record'
+                    },
+                    performance: {
+                        propagationTime: Math.floor(Math.random() * 500) + 50, // ms
+                        executionTime: Math.floor(Math.random() * 200) + 10, // ms
+                        verificationTime: Math.floor(Math.random() * 100) + 5 // ms
+                    }
+                }
+            };
+
+            block.hash = await generateHash(block);
+            block.signature = await generateSignature(block);
+
+            // Simulate confirmations increasing over time
+            setTimeout(() => {
+                block.metadata.confirmations = Math.floor(Math.random() * 50) + 1;
+            }, 1000);
+
+            return block;
+        }
+
+        // Generate validator nodes
+        function generateValidators() {
+            const validatorNames = [
+                'GSA Primary Node',
+                'DOJ Validator',
+                'Treasury Node',
+                'EPA Validator',
+                'State Dept Node'
+            ];
+
+            const count = Math.floor(Math.random() * 3) + 3; // 3-5 validators
+            return Array.from({length: count}, (_, i) => ({
+                name: validatorNames[i % validatorNames.length],
+                address: `0x${Math.random().toString(16).substr(2, 40)}`,
+                voted: true,
+                stake: Math.floor(Math.random() * 100000) + 50000
+            }));
+        }
+
+        // Generate logs bloom filter (simplified)
+        function generateLogsBloom() {
+            return `0x${Array.from({length: 512}, () =>
+                Math.floor(Math.random() * 16).toString(16)
+            ).join('')}`;
+        }
+
+        // Generate cryptographic signature (simulated)
+        async function generateSignature(block) {
+            const sigData = `${block.hash}:${block.timestamp}`;
+            return await generateHash(sigData);
+        }
+
+        // Render blockchain blocks
+        function renderBlockchain() {
+            const container = document.getElementById('blocksList');
+            container.innerHTML = blockchain.map((block, index) => {
+                const isGenesis = index === 0;
+                const color = isGenesis ? 'purple' : getBlockColor(block.type);
+
+                return `
+                    <div class="blockchain-block glass rounded-xl p-6 min-w-[280px] neon-${color} block-creating"
+                         onclick="showBlockDetails(${index})"
+                         role="button"
+                         tabindex="0"
+                         aria-label="Block ${block.index}">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-cube text-${color}-400 text-2xl"></i>
+                                <span class="font-bold text-lg">Block #${block.index}</span>
+                            </div>
+                            <span class="text-xs px-2 py-1 bg-${color}-500/20 border border-${color}-500/40 rounded-full text-${color}-300">
+                                ${block.type.replace('_', ' ').toUpperCase()}
+                            </span>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div>
+                                <div class="text-white/50 text-xs mb-1">Department</div>
+                                <div class="text-white font-medium">${block.department}</div>
+                            </div>
+
+                            <div>
+                                <div class="text-white/50 text-xs mb-1">Action</div>
+                                <div class="text-white text-sm">${block.action}</div>
+                            </div>
+
+                            <div>
+                                <div class="text-white/50 text-xs mb-1">Hash</div>
+                                <div class="font-mono text-xs text-blue-300 truncate cursor-pointer hover:text-blue-200 transition-all"
+                                     onclick="copyToClipboard('${block.hash}', event)"
+                                     title="Click to copy">
+                                    ${block.hash.substring(0, 16)}...
+                                    <i class="fas fa-copy ml-1 text-white/50"></i>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="text-white/50 text-xs mb-1">Timestamp</div>
+                                <div class="text-white/70 text-xs">${new Date(block.timestamp).toLocaleString()}</div>
+                            </div>
+
+                            <div class="pt-3 border-t border-white/10">
+                                <button class="text-blue-400 text-sm hover:text-blue-300 transition-all"
+                                        onclick="showBlockDetails(${index}); event.stopPropagation();">
+                                    <i class="fas fa-info-circle mr-1"></i>View Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Get block color based on type
+        function getBlockColor(type) {
+            const colors = {
+                genesis: 'purple',
+                document_submit: 'blue',
+                approval: 'green',
+                rejection: 'red',
+                status_update: 'yellow'
+            };
+            return colors[type] || 'blue';
+        }
+
+        // Show block details in modal
+        function showBlockDetails(index) {
+            const block = blockchain[index];
+            const modal = document.getElementById('blockModal');
+            const content = document.getElementById('blockModalContent');
+
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <!-- Header Summary -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                            <div class="text-white/70 text-sm mb-1">Block Index</div>
+                            <div class="text-2xl font-bold text-white">#${block.index}</div>
+                        </div>
+                        <div class="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+                            <div class="text-white/70 text-sm mb-1">Confirmations</div>
+                            <div class="text-2xl font-bold text-green-400">${block.metadata.confirmations}</div>
+                        </div>
+                        <div class="p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                            <div class="text-white/70 text-sm mb-1">Block Size</div>
+                            <div class="text-2xl font-bold text-purple-400">${block.metadata.blockSize} bytes</div>
+                        </div>
+                    </div>
+
+                    <!-- Basic Information -->
+                    <div class="glass-dark rounded-lg p-4">
+                        <h3 class="font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-info-circle text-blue-400"></i>
+                            Basic Information
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <div class="text-white/70 text-sm mb-1">Department</div>
+                                <div class="text-white font-medium">${block.department}</div>
+                            </div>
+                            <div>
+                                <div class="text-white/70 text-sm mb-1">Action Type</div>
+                                <div class="text-white font-medium">${block.type.replace('_', ' ').toUpperCase()}</div>
+                            </div>
+                            <div>
+                                <div class="text-white/70 text-sm mb-1">Action</div>
+                                <div class="text-white">${block.action}</div>
+                            </div>
+                            <div>
+                                <div class="text-white/70 text-sm mb-1">Timestamp</div>
+                                <div class="text-white">${new Date(block.timestamp).toLocaleString()}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transaction Data -->
+                    <div class="glass-dark rounded-lg p-4">
+                        <h3 class="font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-database text-green-400"></i>
+                            Transaction Data
+                        </h3>
+                        <div class="p-4 bg-black/30 rounded-lg font-mono text-sm text-green-400 overflow-x-auto">
+                            ${JSON.stringify(block.data, null, 2)}
+                        </div>
+                    </div>
+
+                    <!-- Cryptographic Hashes -->
+                    <div class="glass-dark rounded-lg p-4">
+                        <h3 class="font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-fingerprint text-purple-400"></i>
+                            Cryptographic Hashes
+                        </h3>
+                        <div class="space-y-3">
+                            <div>
+                                <div class="text-white/70 text-sm mb-2 flex items-center gap-2">
+                                    Block Hash
+                                    <i class="fas fa-question-circle text-blue-400 cursor-help"
+                                       onmouseenter="showTooltip(event, 'A unique cryptographic fingerprint of this block. Any change to the block data will completely change this hash.')"
+                                       onmouseleave="hideTooltip()"></i>
+                                </div>
+                                <div class="p-3 bg-black/30 rounded-lg font-mono text-xs text-blue-300 break-all flex items-center justify-between">
+                                    <span>${block.hash}</span>
+                                    <button onclick="copyToClipboard('${block.hash}')" class="ml-2 text-white/70 hover:text-white transition-all">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-white/70 text-sm mb-2 flex items-center gap-2">
+                                    Previous Hash
+                                    <i class="fas fa-question-circle text-blue-400 cursor-help"
+                                       onmouseenter="showTooltip(event, 'Hash of the previous block in the chain. This creates an immutable link between blocks.')"
+                                       onmouseleave="hideTooltip()"></i>
+                                </div>
+                                <div class="p-3 bg-black/30 rounded-lg font-mono text-xs text-purple-300 break-all">
+                                    ${block.previousHash}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-white/70 text-sm mb-2">State Root</div>
+                                <div class="p-3 bg-black/30 rounded-lg font-mono text-xs text-cyan-300 break-all">
+                                    ${block.metadata.stateRoot}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-white/70 text-sm mb-2">Receipts Root</div>
+                                <div class="p-3 bg-black/30 rounded-lg font-mono text-xs text-orange-300 break-all">
+                                    ${block.metadata.receiptsRoot}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Digital Signature & Verification -->
+                    <div class="glass-dark rounded-lg p-4">
+                        <h3 class="font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-signature text-green-400"></i>
+                            Digital Signature
+                        </h3>
+                        <div class="p-3 bg-black/30 rounded-lg font-mono text-xs text-green-300 break-all mb-3">
+                            ${block.signature}
+                        </div>
+                        <div class="flex items-center gap-2 text-green-400 text-sm">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Signature Verified - Block is Authentic</span>
+                        </div>
+                    </div>
+
+                    <!-- Validator Consensus -->
+                    <div class="glass-dark rounded-lg p-4">
+                        <h3 class="font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-users text-blue-400"></i>
+                            Validator Consensus (${block.metadata.consensusAlgorithm})
+                        </h3>
+                        <div class="space-y-2">
+                            ${block.metadata.validators.map(validator => `
+                                <div class="p-3 bg-white/5 rounded-lg flex items-center justify-between">
+                                    <div class="flex-1">
+                                        <div class="text-white font-medium text-sm">${validator.name}</div>
+                                        <div class="text-white/50 text-xs font-mono">${validator.address}</div>
+                                    </div>
+                                    <div class="flex items-center gap-4">
+                                        <div class="text-right">
+                                            <div class="text-white/70 text-xs">Stake</div>
+                                            <div class="text-blue-400 font-medium text-sm">${validator.stake.toLocaleString()}</div>
+                                        </div>
+                                        <div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                                            <i class="fas fa-check text-green-400 text-xs"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Network & Mining Details -->
+                    <div class="glass-dark rounded-lg p-4">
+                        <h3 class="font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-network-wired text-purple-400"></i>
+                            Network & Mining Details
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <div class="text-white/70 text-sm mb-1">Miner</div>
+                                <div class="text-white font-medium text-sm mb-1">${block.metadata.minerName}</div>
+                                <div class="text-white/50 text-xs font-mono">${block.metadata.miner}</div>
+                            </div>
+                            <div>
+                                <div class="text-white/70 text-sm mb-1">Network</div>
+                                <div class="text-white">${block.metadata.networkId}</div>
+                            </div>
+                            <div>
+                                <div class="text-white/70 text-sm mb-1">Chain ID</div>
+                                <div class="text-white font-mono">${block.metadata.chainId}</div>
+                            </div>
+                            <div>
+                                <div class="text-white/70 text-sm mb-1">Nonce</div>
+                                <div class="text-white font-mono">${block.nonce}</div>
+                            </div>
+                            <div>
+                                <div class="text-white/70 text-sm mb-1">Difficulty</div>
+                                <div class="text-white font-mono">${block.metadata.difficulty.toLocaleString()}</div>
+                            </div>
+                            <div>
+                                <div class="text-white/70 text-sm mb-1">Transaction Count</div>
+                                <div class="text-white">${block.metadata.transactionCount}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gas & Performance -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="glass-dark rounded-lg p-4">
+                            <h3 class="font-bold text-white mb-4 flex items-center gap-2">
+                                <i class="fas fa-gas-pump text-yellow-400"></i>
+                                Gas Metrics
+                            </h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="text-white/70 text-sm mb-1">Gas Used</div>
+                                    <div class="text-white font-mono">${block.metadata.gasUsed.toLocaleString()}</div>
+                                </div>
+                                <div>
+                                    <div class="text-white/70 text-sm mb-1">Gas Limit</div>
+                                    <div class="text-white font-mono">${block.metadata.gasLimit.toLocaleString()}</div>
+                                </div>
+                                <div>
+                                    <div class="text-white/70 text-sm mb-1">Utilization</div>
+                                    <div class="w-full bg-white/10 rounded-full h-2 mb-1">
+                                        <div class="bg-gradient-to-r from-yellow-400 to-orange-500 h-2 rounded-full"
+                                             style="width: ${(block.metadata.gasUsed / block.metadata.gasLimit * 100).toFixed(1)}%">
+                                        </div>
+                                    </div>
+                                    <div class="text-white text-sm">${(block.metadata.gasUsed / block.metadata.gasLimit * 100).toFixed(1)}%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-dark rounded-lg p-4">
+                            <h3 class="font-bold text-white mb-4 flex items-center gap-2">
+                                <i class="fas fa-tachometer-alt text-green-400"></i>
+                                Performance Metrics
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <span class="text-white/70 text-sm">Propagation Time</span>
+                                    <span class="text-white font-mono text-sm">${block.metadata.performance.propagationTime}ms</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-white/70 text-sm">Execution Time</span>
+                                    <span class="text-white font-mono text-sm">${block.metadata.performance.executionTime}ms</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-white/70 text-sm">Verification Time</span>
+                                    <span class="text-white font-mono text-sm">${block.metadata.performance.verificationTime}ms</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Compliance & Governance -->
+                    <div class="glass-dark rounded-lg p-4">
+                        <h3 class="font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-gavel text-blue-400"></i>
+                            Compliance & Governance
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <div class="text-white/70 text-sm mb-2">Compliance Standards</div>
+                                <div class="flex gap-2 flex-wrap">
+                                    ${block.metadata.extraData.compliance.map(std => `
+                                        <span class="px-3 py-1 bg-blue-500/20 border border-blue-500/40 rounded-full text-blue-300 text-xs">
+                                            ${std}
+                                        </span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-white/70 text-sm mb-1">Jurisdiction</div>
+                                <div class="text-white">${block.metadata.extraData.jurisdiction}</div>
+                            </div>
+                            <div>
+                                <div class="text-white/70 text-sm mb-1">Regulatory Body</div>
+                                <div class="text-white">${block.metadata.extraData.regulatoryBody}</div>
+                            </div>
+                            <div>
+                                <div class="text-white/70 text-sm mb-1">Retention Period</div>
+                                <div class="text-white">${block.metadata.extraData.retentionPeriod}</div>
+                            </div>
+                            <div>
+                                <div class="text-white/70 text-sm mb-1">Classification</div>
+                                <div class="text-white">${block.metadata.extraData.classification}</div>
+                            </div>
+                            <div>
+                                <div class="text-white/70 text-sm mb-1">Public Verifiable</div>
+                                <div class="text-green-400">
+                                    <i class="fas fa-${block.metadata.extraData.publicVerifiable ? 'check' : 'times'}-circle mr-1"></i>
+                                    ${block.metadata.extraData.publicVerifiable ? 'Yes' : 'No'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logs Bloom Filter -->
+                    <div class="glass-dark rounded-lg p-4">
+                        <h3 class="font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-filter text-cyan-400"></i>
+                            Logs Bloom Filter
+                            <i class="fas fa-question-circle text-blue-400 cursor-help text-sm"
+                               onmouseenter="showTooltip(event, 'Bloom filter for quick event log searches. Allows efficient checking if an event might exist in this block.')"
+                               onmouseleave="hideTooltip()"></i>
+                        </h3>
+                        <div class="p-3 bg-black/30 rounded-lg font-mono text-xs text-cyan-300 break-all max-h-24 overflow-y-auto scrollbar-thin">
+                            ${block.metadata.logsBloom}
+                        </div>
+                    </div>
+
+                    <!-- Verification Status -->
+                    <div class="pt-4 border-t border-white/10">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="flex items-center gap-2 text-green-400">
+                                <i class="fas fa-check-circle"></i>
+                                <span class="text-sm">Block Verified</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-green-400">
+                                <i class="fas fa-lock"></i>
+                                <span class="text-sm">Immutable</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-green-400">
+                                <i class="fas fa-shield-alt"></i>
+                                <span class="text-sm">Audit Trail Active</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // Close modal
+        document.getElementById('closeModalBtn').addEventListener('click', () => {
+            const modal = document.getElementById('blockModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        });
+
+        // Render timeline view
+        function renderTimeline() {
+            const container = document.getElementById('timelineContainer');
+            container.innerHTML = '<div class="timeline-line"></div>' +
+                blockchain.map((block, index) => {
+                    const color = getBlockColor(block.type);
+                    return `
+                        <div class="relative pl-8 pb-8" style="padding-top: ${index === 0 ? '0' : '20px'}">
+                            <div class="timeline-dot" style="top: 8px;"></div>
+                            <div class="glass rounded-xl p-4 hover:shadow-lg transition-all cursor-pointer"
+                                 onclick="showBlockDetails(${index})"
+                                 role="button"
+                                 tabindex="0"
+                                 aria-label="Timeline block ${block.index}">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-cube text-${color}-400"></i>
+                                        <span class="font-bold">Block #${block.index}</span>
+                                    </div>
+                                    <span class="text-xs text-white/50">${new Date(block.timestamp).toLocaleTimeString()}</span>
+                                </div>
+                                <div class="text-sm text-white/90 mb-1">${block.action}</div>
+                                <div class="flex items-center gap-4 text-xs text-white/70">
+                                    <span><i class="fas fa-building mr-1"></i>${block.department}</span>
+                                    <span><i class="fas fa-fingerprint mr-1"></i>${block.hash.substring(0, 12)}...</span>
+                                </div>
+                                <div class="mt-2 pt-2 border-t border-white/10 flex items-center gap-2">
+                                    <i class="fas fa-signature text-green-400 text-xs"></i>
+                                    <span class="text-xs text-green-400">Cryptographically Signed</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+        }
+
+        // Copy to clipboard
+        function copyToClipboard(text, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                const icon = event?.target.closest('.fa-copy');
+                if (icon) {
+                    icon.classList.add('copy-success');
+                    setTimeout(() => icon.classList.remove('copy-success'), 300);
+                }
+                showNotification('Hash copied to clipboard!', 'success');
+            });
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const colors = {
+                success: 'green',
+                error: 'red',
+                info: 'blue'
+            };
+            const color = colors[type] || 'blue';
+
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 bg-${color}-500/90 border border-${color}-400 rounded-lg text-white font-medium shadow-lg z-50`;
+            notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : 'info'}-circle mr-2"></i>${message}`;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 2000);
+        }
+
+        // Tooltip functions
+        function showTooltip(event, text) {
+            const tooltip = document.getElementById('blockchainTooltip');
+            tooltip.innerHTML = text;
+            tooltip.style.left = event.pageX + 10 + 'px';
+            tooltip.style.top = event.pageY - 30 + 'px';
+            tooltip.classList.add('show');
+        }
+
+        function hideTooltip() {
+            document.getElementById('blockchainTooltip').classList.remove('show');
+        }
+
+        // Update block count
+        function updateBlockCount() {
+            document.getElementById('blockCount').textContent = blockchain.length;
+        }
+
+        // View switching
+        document.getElementById('viewMode').addEventListener('change', (e) => {
+            currentView = e.target.value;
+            renderCurrentView();
+        });
+
+        function renderCurrentView() {
+            // Hide all views
+            document.querySelectorAll('.view-container').forEach(view => view.classList.add('hidden'));
+
+            // Show selected view
+            switch(currentView) {
+                case 'blocks':
+                    document.getElementById('blockExplorerView').classList.remove('hidden');
+                    renderBlockchain();
+                    break;
+                case 'timeline':
+                    document.getElementById('timelineView').classList.remove('hidden');
+                    renderTimeline();
+                    break;
+                case 'verification':
+                    document.getElementById('verificationView').classList.remove('hidden');
+                    break;
+            }
+        }
+
+        // Create new block
+        document.getElementById('createBlockBtn').addEventListener('click', async () => {
+            const departments = ['Building Permits', 'Tax Services', 'Public Works', 'EPA'];
+            const actions = ['Document Submitted', 'Status Updated', 'Approval Granted', 'Inspection Completed'];
+
+            const newBlockData = {
+                type: 'document_submit',
+                department: departments[Math.floor(Math.random() * departments.length)],
+                action: actions[Math.floor(Math.random() * actions.length)],
+                data: {
+                    id: `DOC-${Date.now()}`,
+                    timestamp: new Date().toISOString()
+                }
+            };
+
+            const block = await createBlock(newBlockData);
+            blockchain.push(block);
+            renderCurrentView();
+            updateBlockCount();
+            populateQRSelect();
+            showNotification('New block created successfully!', 'success');
+        });
+
+        // Hash verification
+        document.getElementById('verifyHashBtn').addEventListener('click', async () => {
+            const input = document.getElementById('verifyHashInput').value.trim();
+            const resultDiv = document.getElementById('verificationResult');
+
+            if (!input) {
+                showNotification('Please enter a hash to verify', 'error');
+                return;
+            }
+
+            const foundBlock = blockchain.find(block => block.hash === input || block.hash.startsWith(input));
+
+            resultDiv.classList.remove('hidden');
+
+            if (foundBlock) {
+                resultDiv.innerHTML = `
+                    <div class="p-6 bg-green-500/20 border border-green-500/40 rounded-lg hash-verified">
+                        <div class="flex items-center gap-3 mb-4">
+                            <i class="fas fa-check-circle text-green-400 text-3xl"></i>
+                            <div>
+                                <div class="text-xl font-bold text-green-400">Hash Verified!</div>
+                                <div class="text-sm text-white/70">Document is authentic and unmodified</div>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-white/70">Block:</span>
+                                <span class="text-white font-medium">#${foundBlock.index}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-white/70">Department:</span>
+                                <span class="text-white font-medium">${foundBlock.department}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-white/70">Action:</span>
+                                <span class="text-white font-medium">${foundBlock.action}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-white/70">Timestamp:</span>
+                                <span class="text-white font-medium">${new Date(foundBlock.timestamp).toLocaleString()}</span>
+                            </div>
+                        </div>
+                        <button onclick="showBlockDetails(${blockchain.indexOf(foundBlock)})" class="mt-4 w-full px-4 py-2 bg-green-500/30 border border-green-500/50 rounded-lg text-green-300 hover:bg-green-500/40 transition-all">
+                            View Full Block Details
+                        </button>
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="p-6 bg-red-500/20 border border-red-500/40 rounded-lg">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-times-circle text-red-400 text-3xl"></i>
+                            <div>
+                                <div class="text-xl font-bold text-red-400">Verification Failed</div>
+                                <div class="text-sm text-white/70">Hash not found in blockchain</div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-white/70 mt-4">
+                            This hash does not match any block in the current blockchain. The document may be invalid, tampered with, or not yet registered.
+                        </p>
+                    </div>
+                `;
+            }
+        });
+
+        // QR Code generation
+        function populateQRSelect() {
+            const select = document.getElementById('qrBlockSelect');
+            select.innerHTML = '<option value="">Select a block...</option>' +
+                blockchain.map((block, index) =>
+                    `<option value="${index}">Block #${block.index} - ${block.action}</option>`
+                ).join('');
+        }
+
+        document.getElementById('qrBlockSelect').addEventListener('change', (e) => {
+            const index = e.target.value;
+            const container = document.getElementById('qrCodeContainer');
+
+            if (index === '') {
+                container.innerHTML = '<p class="text-gray-400">Select a block to generate QR code</p>';
+                return;
+            }
+
+            const block = blockchain[index];
+            container.innerHTML = '';
+
+            const qrData = JSON.stringify({
+                blockIndex: block.index,
+                hash: block.hash,
+                timestamp: block.timestamp,
+                verifyUrl: `https://govli.verify/${block.hash}`
+            });
+
+            QRCode.toCanvas(qrData, { width: 200, margin: 2 }, (error, canvas) => {
+                if (error) {
+                    container.innerHTML = '<p class="text-red-400">Error generating QR code</p>';
+                    return;
+                }
+                container.appendChild(canvas);
+            });
+        });
+
+        // Smart Contracts
+        function initializeSmartContracts() {
+            const contracts = [
+                {
+                    name: 'Permit Auto-Approval',
+                    status: 'active',
+                    executions: 847,
+                    lastRun: '2 minutes ago',
+                    icon: 'fa-file-contract',
+                    color: 'green'
+                },
+                {
+                    name: 'Tax Filing Validator',
+                    status: 'active',
+                    executions: 1243,
+                    lastRun: '5 minutes ago',
+                    icon: 'fa-calculator',
+                    color: 'blue'
+                },
+                {
+                    name: 'Compliance Checker',
+                    status: 'pending',
+                    executions: 432,
+                    lastRun: '15 minutes ago',
+                    icon: 'fa-shield-alt',
+                    color: 'yellow'
+                }
+            ];
+
+            const grid = document.getElementById('smartContractsGrid');
+            grid.innerHTML = contracts.map(contract => `
+                <div class="glass-dark rounded-xl p-6 contract-status">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-${contract.color}-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas ${contract.icon} text-${contract.color}-400 text-xl"></i>
+                        </div>
+                        <span class="px-3 py-1 bg-${contract.color}-500/20 border border-${contract.color}-500/40 rounded-full text-${contract.color}-400 text-xs font-medium">
+                            ${contract.status.toUpperCase()}
+                        </span>
+                    </div>
+                    <h3 class="font-bold text-white mb-2">${contract.name}</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between text-white/70">
+                            <span>Executions:</span>
+                            <span class="text-white font-medium">${contract.executions.toLocaleString()}</span>
+                        </div>
+                        <div class="flex justify-between text-white/70">
+                            <span>Last Run:</span>
+                            <span class="text-white font-medium">${contract.lastRun}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Public transparency mode
+        document.getElementById('publicModeToggle').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                showNotification('Public transparency mode enabled - Data anonymized', 'info');
+            } else {
+                showNotification('Full data mode enabled', 'info');
+            }
+        });
+
+        // Filter functionality
+        const filters = {
+            department: document.getElementById('filterDepartment'),
+            action: document.getElementById('filterAction'),
+            date: document.getElementById('filterDate')
+        };
+
+        Object.values(filters).forEach(filter => {
+            filter.addEventListener('change', () => {
+                // TODO: Implement filtering logic
+                showNotification('Filters applied', 'info');
+            });
+        });
+
+        // Export functionality
+        document.getElementById('exportAuditBtn').addEventListener('click', () => {
+            document.getElementById('exportModal').classList.remove('hidden');
+            document.getElementById('exportModal').classList.add('flex');
+        });
+
+        document.getElementById('closeExportModalBtn').addEventListener('click', () => {
+            document.getElementById('exportModal').classList.add('hidden');
+            document.getElementById('exportModal').classList.remove('flex');
+        });
+
+        document.getElementById('confirmExportBtn').addEventListener('click', () => {
+            const format = document.getElementById('exportFormat').value;
+            const dateRange = document.getElementById('exportDateRange').value;
+            const includeMetadata = document.getElementById('includeMetadata').checked;
+            const includeSignatures = document.getElementById('includeSignatures').checked;
+
+            // Filter blocks based on date range
+            let filteredBlocks = blockchain;
+            if (dateRange !== 'all') {
+                const now = Date.now();
+                const ranges = {
+                    '24h': 24 * 60 * 60 * 1000,
+                    '7d': 7 * 24 * 60 * 60 * 1000,
+                    '30d': 30 * 24 * 60 * 60 * 1000
+                };
+                const cutoff = now - ranges[dateRange];
+                filteredBlocks = blockchain.filter(block =>
+                    new Date(block.timestamp).getTime() > cutoff
+                );
+            }
+
+            // Prepare export data
+            const exportData = {
+                exportDate: new Date().toISOString(),
+                totalBlocks: filteredBlocks.length,
+                dateRange: dateRange,
+                compliance: ['CJIS', 'FedRAMP', 'FISMA'],
+                chainIntegrity: 'Verified',
+                blocks: filteredBlocks.map(block => {
+                    const blockData = {
+                        index: block.index,
+                        timestamp: block.timestamp,
+                        department: block.department,
+                        action: block.action,
+                        type: block.type,
+                        data: block.data,
+                        hash: block.hash,
+                        previousHash: block.previousHash
+                    };
+
+                    if (includeMetadata) {
+                        blockData.metadata = block.metadata;
+                    }
+
+                    if (includeSignatures) {
+                        blockData.signature = block.signature;
+                    }
+
+                    return blockData;
+                })
+            };
+
+            // Export based on format
+            let blob, filename;
+            switch (format) {
+                case 'json':
+                    blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                    filename = `blockchain-audit-${new Date().toISOString().split('T')[0]}.json`;
+                    break;
+                case 'csv':
+                    const csvData = convertToCSV(filteredBlocks);
+                    blob = new Blob([csvData], { type: 'text/csv' });
+                    filename = `blockchain-audit-${new Date().toISOString().split('T')[0]}.csv`;
+                    break;
+                case 'xml':
+                    const xmlData = convertToXML(exportData);
+                    blob = new Blob([xmlData], { type: 'application/xml' });
+                    filename = `blockchain-audit-${new Date().toISOString().split('T')[0]}.xml`;
+                    break;
+                case 'pdf':
+                    showNotification('PDF export will be generated...', 'info');
+                    // In production, this would generate a proper PDF
+                    blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                    filename = `blockchain-audit-${new Date().toISOString().split('T')[0]}.pdf.json`;
+                    break;
+            }
+
+            // Download file
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            document.getElementById('exportModal').classList.add('hidden');
+            document.getElementById('exportModal').classList.remove('flex');
+            showNotification(`Audit trail exported as ${format.toUpperCase()}`, 'success');
+        });
+
+        // CSV conversion
+        function convertToCSV(blocks) {
+            const headers = ['Block Index', 'Timestamp', 'Department', 'Action Type', 'Action', 'Hash', 'Previous Hash'];
+            const rows = blocks.map(block => [
+                block.index,
+                new Date(block.timestamp).toLocaleString(),
+                block.department,
+                block.type,
+                block.action,
+                block.hash,
+                block.previousHash
+            ]);
+
+            return [headers, ...rows].map(row => row.join(',')).join('\n');
+        }
+
+        // XML conversion
+        function convertToXML(data) {
+            let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+            xml += '<AuditTrail>\n';
+            xml += `  <ExportDate>${data.exportDate}</ExportDate>\n`;
+            xml += `  <TotalBlocks>${data.totalBlocks}</TotalBlocks>\n`;
+            xml += `  <Compliance>${data.compliance.join(', ')}</Compliance>\n`;
+            xml += '  <Blocks>\n';
+
+            data.blocks.forEach(block => {
+                xml += '    <Block>\n';
+                xml += `      <Index>${block.index}</Index>\n`;
+                xml += `      <Timestamp>${block.timestamp}</Timestamp>\n`;
+                xml += `      <Department>${block.department}</Department>\n`;
+                xml += `      <Action>${block.action}</Action>\n`;
+                xml += `      <Hash>${block.hash}</Hash>\n`;
+                xml += `      <PreviousHash>${block.previousHash}</PreviousHash>\n`;
+                xml += '    </Block>\n';
+            });
+
+            xml += '  </Blocks>\n';
+            xml += '</AuditTrail>';
+            return xml;
+        }
+
+        // Share functionality
+        document.getElementById('shareAuditBtn').addEventListener('click', () => {
+            document.getElementById('shareModal').classList.remove('hidden');
+            document.getElementById('shareModal').classList.add('flex');
+            document.getElementById('generatedLinkContainer').classList.add('hidden');
+        });
+
+        document.getElementById('closeShareModalBtn').addEventListener('click', () => {
+            document.getElementById('shareModal').classList.add('hidden');
+            document.getElementById('shareModal').classList.remove('flex');
+        });
+
+        document.getElementById('generateShareLinkBtn').addEventListener('click', () => {
+            const accessLevel = document.getElementById('shareAccessLevel').value;
+            const expiration = document.getElementById('shareExpiration').value;
+            const recipientEmail = document.getElementById('recipientEmail').value;
+            const requireAuth = document.getElementById('requireAuthentication').checked;
+            const notifyAccess = document.getElementById('notifyAccess').checked;
+
+            // Generate secure token
+            const token = generateSecureToken();
+
+            // Calculate expiration time
+            let expirationDate;
+            const expirationTimes = {
+                '1h': 1 * 60 * 60 * 1000,
+                '24h': 24 * 60 * 60 * 1000,
+                '7d': 7 * 24 * 60 * 60 * 1000,
+                '30d': 30 * 24 * 60 * 60 * 1000,
+                'never': null
+            };
+
+            if (expiration === 'never') {
+                expirationDate = 'Never';
+            } else {
+                const expirationTime = new Date(Date.now() + expirationTimes[expiration]);
+                expirationDate = expirationTime.toLocaleString();
+            }
+
+            // Generate share link
+            const shareLink = `https://govli.audit/share/${token}?access=${accessLevel}&auth=${requireAuth}`;
+
+            // Display generated link
+            document.getElementById('generatedLink').textContent = shareLink;
+            document.getElementById('expirationTime').textContent = expirationDate;
+            document.getElementById('generatedLinkContainer').classList.remove('hidden');
+
+            // TODO: In production, send email if recipient is provided
+            if (recipientEmail) {
+                console.log(`Share link would be sent to: ${recipientEmail}`);
+            }
+
+            showNotification('Secure share link generated!', 'success');
+        });
+
+        // Generate secure token
+        function generateSecureToken() {
+            return Array.from({length: 32}, () =>
+                Math.floor(Math.random() * 16).toString(16)
+            ).join('');
+        }
+
+        // Copy share link
+        document.getElementById('copyLinkBtn').addEventListener('click', () => {
+            const link = document.getElementById('generatedLink').textContent;
+            copyToClipboard(link);
+        });
+
+        // QR Code for share link
+        document.getElementById('qrCodeShareBtn').addEventListener('click', () => {
+            const link = document.getElementById('generatedLink').textContent;
+
+            // Create modal for QR code display
+            const qrModal = document.createElement('div');
+            qrModal.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center';
+            qrModal.innerHTML = `
+                <div class="glass rounded-xl p-8 max-w-md w-full mx-4">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold">Share Link QR Code</h3>
+                        <button class="text-white/70 hover:text-white" onclick="this.closest('.fixed').remove()">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div id="qrShareDisplay" class="bg-white p-4 rounded-lg flex items-center justify-center"></div>
+                    <p class="text-sm text-white/70 mt-4 text-center">Scan this QR code to access the shared audit trail</p>
+                </div>
+            `;
+            document.body.appendChild(qrModal);
+
+            const qrContainer = qrModal.querySelector('#qrShareDisplay');
+            QRCode.toCanvas(link, { width: 300, margin: 2 }, (error, canvas) => {
+                if (!error) {
+                    qrContainer.appendChild(canvas);
+                }
+            });
+        });
+
+        // Initialize
+        initializeBlockchain();
+    </script>
+</body>
+</html>

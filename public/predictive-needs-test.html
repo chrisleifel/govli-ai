@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictive Citizen Needs Engine - Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .glass:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Top banner alert animation */
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .alert-banner {
+            animation: slideDown 0.5s ease-out;
+        }
+
+        /* Timeline styles */
+        .timeline-connector {
+            position: relative;
+        }
+
+        .timeline-connector::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 40px;
+            bottom: -20px;
+            width: 2px;
+            background: linear-gradient(180deg, #3b82f6, #8b5cf6);
+        }
+
+        .timeline-dot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+
+        /* Journey map visualization */
+        .journey-node {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .journey-node:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        .journey-path {
+            stroke-dasharray: 5, 5;
+            animation: dash 20s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -1000;
+            }
+        }
+
+        /* Confidence meter */
+        .confidence-meter {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            transition: width 0.5s ease;
+        }
+
+        /* Service bundle card */
+        .bundle-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .bundle-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Privacy toggle */
+        .privacy-toggle {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .privacy-toggle.active {
+            background: #10b981;
+        }
+
+        .privacy-toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+
+        .privacy-toggle.active .privacy-toggle-slider {
+            transform: translateX(24px);
+        }
+
+        /* Notification priority badge */
+        .priority-high {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Top Alert Banner -->
+        <div id="topAlertBanner" class="alert-banner mb-6">
+            <!-- Dynamic alerts will be injected here -->
+        </div>
+
+        <!-- Header -->
+        <div class="glass p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-white mb-2">🎯 Predictive Citizen Needs Engine</h1>
+                    <p class="text-white/70">AI-powered service recommendations based on your life events</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-white/60 mb-1">Prediction Accuracy</div>
+                    <div class="text-3xl font-bold text-green-400">92.3%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Citizen Profile Dashboard -->
+        <div class="glass p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white">Your Predicted Needs</h2>
+                <select id="personaSelector" class="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 focus:border-blue-500 focus:outline-none" onchange="switchPersona(this.value)">
+                    <option value="homeowner">Homeowner Persona</option>
+                    <option value="newparent">New Parent Persona</option>
+                    <option value="business">Business Owner Persona</option>
+                    <option value="student">Student Persona</option>
+                </select>
+            </div>
+
+            <div id="predictedNeedsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Predicted needs will be injected here -->
+            </div>
+        </div>
+
+        <!-- Life Event Timeline -->
+        <div class="glass p-6 mb-6">
+            <h2 class="text-xl font-bold text-white mb-4">📅 Your Life Event Timeline</h2>
+            <div id="lifeEventTimeline" class="space-y-6">
+                <!-- Timeline events will be injected here -->
+            </div>
+        </div>
+
+        <!-- Smart Service Bundling -->
+        <div class="glass p-6 mb-6">
+            <h2 class="text-xl font-bold text-white mb-4">📦 Smart Service Bundles</h2>
+            <p class="text-white/70 mb-4">Save time with pre-grouped services for common life events</p>
+            <div id="serviceBundles" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Service bundles will be injected here -->
+            </div>
+        </div>
+
+        <!-- Proactive Notification Center -->
+        <div class="glass p-6 mb-6">
+            <h2 class="text-xl font-bold text-white mb-4">🔔 Proactive Notifications</h2>
+            <div class="flex items-center justify-between mb-4">
+                <p class="text-white/70">AI-prioritized messages based on urgency and relevance</p>
+                <button onclick="markAllRead()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors">
+                    Mark All Read
+                </button>
+            </div>
+            <div id="notificationCenter" class="space-y-3">
+                <!-- Notifications will be injected here -->
+            </div>
+        </div>
+
+        <!-- Journey Mapping Visualization -->
+        <div class="glass p-6 mb-6">
+            <h2 class="text-xl font-bold text-white mb-4">🗺️ Citizen Journey Map</h2>
+            <p class="text-white/70 mb-4">Typical lifecycle stages and recommended services</p>
+            <div id="journeyMap" class="relative h-96 overflow-x-auto">
+                <svg width="1200" height="300" class="w-full">
+                    <!-- Journey nodes -->
+                    <circle cx="100" cy="150" r="40" class="journey-node fill-blue-500" onclick="showJourneyDetails('moving')"/>
+                    <text x="100" y="155" text-anchor="middle" class="fill-white text-sm font-bold">Moving</text>
+
+                    <circle cx="300" cy="150" r="40" class="journey-node fill-purple-500" onclick="showJourneyDetails('homeowner')"/>
+                    <text x="300" y="155" text-anchor="middle" class="fill-white text-sm font-bold">New Home</text>
+
+                    <circle cx="500" cy="150" r="40" class="journey-node fill-green-500" onclick="showJourneyDetails('renovation')"/>
+                    <text x="500" y="155" text-anchor="middle" class="fill-white text-sm font-bold">Renovate</text>
+
+                    <circle cx="700" cy="150" r="40" class="journey-node fill-yellow-500" onclick="showJourneyDetails('business')"/>
+                    <text x="700" y="155" text-anchor="middle" class="fill-white text-sm font-bold">Start Biz</text>
+
+                    <circle cx="900" cy="150" r="40" class="journey-node fill-red-500" onclick="showJourneyDetails('parent')"/>
+                    <text x="900" y="155" text-anchor="middle" class="fill-white text-sm font-bold">New Baby</text>
+
+                    <circle cx="1100" cy="150" r="40" class="journey-node fill-indigo-500" onclick="showJourneyDetails('retirement')"/>
+                    <text x="1100" y="155" text-anchor="middle" class="fill-white text-sm font-bold">Retire</text>
+
+                    <!-- Connecting paths -->
+                    <line x1="140" y1="150" x2="260" y2="150" class="journey-path stroke-white/30 stroke-2" stroke-width="2"/>
+                    <line x1="340" y1="150" x2="460" y2="150" class="journey-path stroke-white/30 stroke-2" stroke-width="2"/>
+                    <line x1="540" y1="150" x2="660" y2="150" class="journey-path stroke-white/30 stroke-2" stroke-width="2"/>
+                    <line x1="740" y1="150" x2="860" y2="150" class="journey-path stroke-white/30 stroke-2" stroke-width="2"/>
+                    <line x1="940" y1="150" x2="1060" y2="150" class="journey-path stroke-white/30 stroke-2" stroke-width="2"/>
+                </svg>
+            </div>
+            <div id="journeyDetails" class="mt-4 p-4 rounded-lg bg-white/5 hidden">
+                <!-- Journey stage details will appear here -->
+            </div>
+        </div>
+
+        <!-- Accuracy Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="glass p-6">
+                <h3 class="text-lg font-bold text-white mb-4">📊 Prediction Performance</h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-white/80">Overall Accuracy</span>
+                            <span class="text-green-400 font-bold">92.3%</span>
+                        </div>
+                        <div class="confidence-meter">
+                            <div class="confidence-fill" style="width: 92.3%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-white/80">Timing Precision</span>
+                            <span class="text-blue-400 font-bold">87.1%</span>
+                        </div>
+                        <div class="confidence-meter">
+                            <div class="confidence-fill bg-gradient-to-r from-blue-500 to-cyan-500" style="width: 87.1%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-white/80">Service Relevance</span>
+                            <span class="text-purple-400 font-bold">94.8%</span>
+                        </div>
+                        <div class="confidence-meter">
+                            <div class="confidence-fill bg-gradient-to-r from-purple-500 to-pink-500" style="width: 94.8%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+                    <div class="text-sm text-green-400 font-bold mb-1">✓ Prediction Success</div>
+                    <div class="text-sm text-white/70">327 out of 354 predictions were accurate this month</div>
+                </div>
+            </div>
+
+            <!-- A/B Testing Dashboard -->
+            <div class="glass p-6">
+                <h3 class="text-lg font-bold text-white mb-4">🧪 A/B Testing Results</h3>
+                <div class="space-y-3">
+                    <div class="p-3 rounded-lg bg-white/5">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-white/90">Email vs SMS Notifications</span>
+                            <span class="text-green-400">SMS +23%</span>
+                        </div>
+                        <div class="text-sm text-white/60">SMS notifications have 23% higher engagement</div>
+                    </div>
+                    <div class="p-3 rounded-lg bg-white/5">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-white/90">Service Bundle Display</span>
+                            <span class="text-blue-400">Cards +15%</span>
+                        </div>
+                        <div class="text-sm text-white/60">Card layout performs better than list view</div>
+                    </div>
+                    <div class="p-3 rounded-lg bg-white/5">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-white/90">Prediction Timing</span>
+                            <span class="text-purple-400">2 weeks optimal</span>
+                        </div>
+                        <div class="text-sm text-white/60">Notifications 2 weeks before deadline get best response</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Privacy Controls -->
+        <div class="glass p-6">
+            <h2 class="text-xl font-bold text-white mb-4">🔒 Privacy & Control Center</h2>
+            <p class="text-white/70 mb-6">You have full control over what data we use for predictions</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-bold text-white mb-3">Data Sources</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                            <div>
+                                <div class="text-white/90">Property Records</div>
+                                <div class="text-sm text-white/60">Address changes, ownership</div>
+                            </div>
+                            <div class="privacy-toggle active" onclick="togglePrivacy(this)">
+                                <div class="privacy-toggle-slider"></div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                            <div>
+                                <div class="text-white/90">Business Licenses</div>
+                                <div class="text-sm text-white/60">Renewal dates, status</div>
+                            </div>
+                            <div class="privacy-toggle active" onclick="togglePrivacy(this)">
+                                <div class="privacy-toggle-slider"></div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                            <div>
+                                <div class="text-white/90">Permit History</div>
+                                <div class="text-sm text-white/60">Construction, inspections</div>
+                            </div>
+                            <div class="privacy-toggle active" onclick="togglePrivacy(this)">
+                                <div class="privacy-toggle-slider"></div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                            <div>
+                                <div class="text-white/90">Tax Records</div>
+                                <div class="text-sm text-white/60">Payment history, due dates</div>
+                            </div>
+                            <div class="privacy-toggle" onclick="togglePrivacy(this)">
+                                <div class="privacy-toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-white mb-3">Prediction Settings</h3>
+                    <div class="space-y-3">
+                        <div class="p-3 rounded-lg bg-white/5">
+                            <div class="text-white/90 mb-2">Notification Timing</div>
+                            <select class="w-full px-3 py-2 rounded-lg bg-white/10 text-white border border-white/20 focus:border-blue-500 focus:outline-none">
+                                <option>2 weeks before</option>
+                                <option selected>1 month before</option>
+                                <option>3 months before</option>
+                            </select>
+                        </div>
+                        <div class="p-3 rounded-lg bg-white/5">
+                            <div class="text-white/90 mb-2">Confidence Threshold</div>
+                            <input type="range" min="50" max="100" value="75" class="w-full">
+                            <div class="text-sm text-white/60 mt-1">Only show predictions above 75% confidence</div>
+                        </div>
+                        <div class="p-3 rounded-lg bg-white/5">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-white/90">Learning Mode</div>
+                                    <div class="text-sm text-white/60">Improve predictions over time</div>
+                                </div>
+                                <div class="privacy-toggle active" onclick="togglePrivacy(this)">
+                                    <div class="privacy-toggle-slider"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                <div class="flex items-start gap-3">
+                    <div class="text-2xl">ℹ️</div>
+                    <div>
+                        <div class="font-bold text-blue-400 mb-1">Privacy First Design</div>
+                        <div class="text-sm text-white/80">
+                            All predictions are made using only the data sources you've enabled. You can disable any source at any time,
+                            and we'll immediately stop using that data. Your data is never shared with third parties.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // MOCK DATA - Replace in production
+        // TODO: Connect to prediction API endpoint /api/citizen-predictions
+        // TODO: Integrate with citizen data services
+        // SECURITY TODO: Validate all user inputs
+        // TODO: Add authentication check for citizen access
+        // TODO: Implement real-time learning algorithm
+
+        const personas = {
+            homeowner: {
+                name: 'Sarah Johnson - Homeowner',
+                needs: [
+                    { title: 'Property Tax Due', desc: 'Payment due March 15th', confidence: 95, urgency: 'high', icon: '💰' },
+                    { title: 'Trash Collection Change', desc: 'New schedule starts next Monday', confidence: 88, urgency: 'medium', icon: '🗑️' },
+                    { title: 'Water Bill Auto-Pay', desc: 'Set up recurring payments', confidence: 72, urgency: 'low', icon: '💧' }
+                ],
+                timeline: [
+                    { date: '2024-03-15', event: 'Property Tax Payment Due', services: ['Pay Online', 'Set Up Auto-Pay'], past: false },
+                    { date: '2024-02-01', event: 'Moved to New Address', services: ['Update Voter Registration', 'Register Pets'], past: true },
+                    { date: '2024-04-30', event: 'Annual Lawn Treatment License', services: ['Renew License', 'Update Property Info'], past: false }
+                ]
+            },
+            newparent: {
+                name: 'Maria Garcia - New Parent',
+                needs: [
+                    { title: 'Birth Certificate', desc: 'Apply within 30 days', confidence: 98, urgency: 'high', icon: '📜' },
+                    { title: 'Childcare Assistance', desc: 'You may qualify for subsidy', confidence: 85, urgency: 'medium', icon: '👶' },
+                    { title: 'Park Program Registration', desc: 'Summer activities now open', confidence: 68, urgency: 'low', icon: '🏞️' }
+                ],
+                timeline: [
+                    { date: '2024-02-20', event: 'Baby Born', services: ['Birth Certificate', 'Health Insurance'], past: true },
+                    { date: '2024-03-01', event: 'Childcare Search', services: ['Daycare Licensing Info', 'Subsidy Application'], past: false },
+                    { date: '2024-06-01', event: 'Maternity Leave Ends', services: ['Childcare Enrollment', 'Work Permits Update'], past: false }
+                ]
+            },
+            business: {
+                name: 'David Chen - Business Owner',
+                needs: [
+                    { title: 'Business License Renewal', desc: 'Expires in 30 days - renew now', confidence: 99, urgency: 'high', icon: '📋' },
+                    { title: 'Health Inspection Due', desc: 'Annual inspection required', confidence: 91, urgency: 'high', icon: '🏥' },
+                    { title: 'New Signage Permit', desc: 'Based on recent inquiries', confidence: 65, urgency: 'low', icon: '🪧' }
+                ],
+                timeline: [
+                    { date: '2024-03-10', event: 'Business License Expires', services: ['Renew License', 'Update Business Info'], past: false },
+                    { date: '2024-03-15', event: 'Health Inspection', services: ['Schedule Inspection', 'Review Checklist'], past: false },
+                    { date: '2024-01-15', event: 'Opened New Location', services: ['Occupancy Permit', 'Fire Inspection'], past: true }
+                ]
+            },
+            student: {
+                name: 'Alex Rodriguez - Student',
+                needs: [
+                    { title: 'Library Card Renewal', desc: 'Expires this month', confidence: 82, urgency: 'medium', icon: '📚' },
+                    { title: 'Summer Job Permit', desc: 'Apply now for summer work', confidence: 76, urgency: 'medium', icon: '💼' },
+                    { title: 'Recreation Pass', desc: 'Student discount available', confidence: 58, urgency: 'low', icon: '🎟️' }
+                ],
+                timeline: [
+                    { date: '2024-03-01', event: 'Library Card Expires', services: ['Renew Card', 'Update Student Status'], past: false },
+                    { date: '2024-06-01', event: 'Summer Break Starts', services: ['Work Permit', 'Recreation Programs'], past: false },
+                    { date: '2024-09-01', event: 'School Year Begins', services: ['Parking Permit', 'Transit Pass'], past: false }
+                ]
+            }
+        };
+
+        const serviceBundles = [
+            {
+                title: 'New Homeowner Package',
+                services: ['Property Tax Setup', 'Voter Registration', 'Trash/Recycling', 'Water/Sewer Account'],
+                savings: '$45 in fees',
+                icon: '🏠',
+                color: 'blue'
+            },
+            {
+                title: 'New Parent Bundle',
+                services: ['Birth Certificate', 'Childcare Licensing', 'Park Programs', 'Health Services'],
+                savings: 'Save 2 hours',
+                icon: '👶',
+                color: 'purple'
+            },
+            {
+                title: 'Business Starter Kit',
+                services: ['Business License', 'Zoning Approval', 'Health Permit', 'Signage Permit'],
+                savings: '$120 discount',
+                icon: '💼',
+                color: 'green'
+            },
+            {
+                title: 'Moving Package',
+                services: ['Address Change', 'Voter Registration', 'Pet Registration', 'Parking Permits'],
+                savings: 'Save 3 hours',
+                icon: '📦',
+                color: 'yellow'
+            },
+            {
+                title: 'Home Renovation Bundle',
+                services: ['Building Permit', 'Electrical Inspection', 'Plumbing Approval', 'Final Inspection'],
+                savings: '$75 in fees',
+                icon: '🔨',
+                color: 'red'
+            },
+            {
+                title: 'Student Services',
+                services: ['Library Card', 'Recreation Pass', 'Transit Pass', 'Work Permit'],
+                savings: '40% student discount',
+                icon: '🎓',
+                color: 'indigo'
+            }
+        ];
+
+        const notifications = [
+            { id: 1, title: 'Property Tax Due Soon', message: 'Payment due March 15th - set up auto-pay to avoid late fees', priority: 'high', time: '2 hours ago', read: false },
+            { id: 2, title: 'Business License Expiring', message: 'Renew your license in the next 30 days to avoid penalties', priority: 'high', time: '5 hours ago', read: false },
+            { id: 3, title: 'Voter Registration Update Needed', message: 'We detected you moved - update your voter registration', priority: 'medium', time: '1 day ago', read: false },
+            { id: 4, title: 'New Construction Permit Approved', message: 'Electrical inspection needed within 2 weeks', priority: 'medium', time: '2 days ago', read: true },
+            { id: 5, title: 'Summer Recreation Programs Open', message: 'Early bird discount ends March 1st', priority: 'low', time: '3 days ago', read: true }
+        ];
+
+        let currentPersona = 'homeowner';
+
+        function initializePage() {
+            loadTopBanner();
+            loadPredictedNeeds(currentPersona);
+            loadTimeline(currentPersona);
+            loadServiceBundles();
+            loadNotifications();
+        }
+
+        function loadTopBanner() {
+            const banner = document.getElementById('topAlertBanner');
+            const alerts = [
+                { type: 'warning', icon: '⚠️', title: 'Property Tax Due', message: 'Payment due March 15th - set up auto-pay?', action: 'property-tax' },
+                { type: 'info', icon: 'ℹ️', title: 'Business License Expiring', message: 'Renew now to avoid $150 late fee', action: 'business-license' }
+            ];
+
+            banner.innerHTML = alerts.map((alert, index) => `
+                <div class="glass p-4 mb-3 border-l-4 ${alert.type === 'warning' ? 'border-yellow-500' : 'border-blue-500'}">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${alert.icon}</span>
+                            <div>
+                                <div class="font-bold text-white">${alert.title}</div>
+                                <div class="text-white/80 text-sm">${alert.message}</div>
+                            </div>
+                        </div>
+                        <button onclick="handleAlertAction('${alert.action}')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-colors">
+                            Take Action
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function handleAlertAction(action) {
+            if (action === 'property-tax') {
+                alert('🏛️ Property Tax Payment\n\nRedirecting to payment portal...\n\n✓ Set up auto-pay\n✓ View payment history\n✓ Apply for exemptions\n\n[In production, this would open the payment portal]');
+            } else if (action === 'business-license') {
+                alert('📋 Business License Renewal\n\nYour license expires in 30 days.\n\n✓ Renew online now\n✓ Update business information\n✓ Pay renewal fee: $150\n\n[In production, this would open the renewal form]');
+            }
+        }
+
+        function loadPredictedNeeds(persona) {
+            const grid = document.getElementById('predictedNeedsGrid');
+            const needs = personas[persona].needs;
+
+            grid.innerHTML = needs.map((need, index) => {
+                const hoverBorder = need.urgency === 'high' ? 'hover:border-red-500/50' :
+                                   need.urgency === 'medium' ? 'hover:border-yellow-500/50' : 'hover:border-blue-500/50';
+                return `
+                    <div class="p-4 rounded-lg bg-white/5 border border-white/10 ${hoverBorder} transition-all">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="text-3xl">${need.icon}</div>
+                            <span class="px-2 py-1 rounded text-xs font-bold ${getUrgencyBadge(need.urgency)}">${need.urgency.toUpperCase()}</span>
+                        </div>
+                        <div class="font-bold text-white mb-1">${need.title}</div>
+                        <div class="text-sm text-white/70 mb-3">${need.desc}</div>
+                        <div class="flex items-center justify-between">
+                            <div class="text-sm text-white/60">Confidence: ${need.confidence}%</div>
+                            <button onclick="viewNeedDetails('${need.title}', '${need.desc}', ${need.confidence}, '${need.urgency}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors">
+                                View
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function viewNeedDetails(title, desc, confidence, urgency) {
+            const urgencyText = urgency === 'high' ? '🔴 High Priority' : urgency === 'medium' ? '🟡 Medium Priority' : '🔵 Low Priority';
+            const recommendations = urgency === 'high' ?
+                '\n\n📋 Recommended Actions:\n• Complete this within 7 days\n• Set up reminders\n• Gather required documents' :
+                urgency === 'medium' ?
+                '\n\n📋 Recommended Actions:\n• Complete within 30 days\n• Review requirements\n• Plan ahead' :
+                '\n\n📋 Recommended Actions:\n• Complete when convenient\n• No immediate deadline\n• Optional service';
+
+            alert(`${title}\n\n${desc}\n\n${urgencyText}\nPrediction Confidence: ${confidence}%${recommendations}\n\n[In production, this would open a detailed service page]`);
+        }
+
+        function loadTimeline(persona) {
+            const timeline = document.getElementById('lifeEventTimeline');
+            const events = personas[persona].timeline;
+
+            timeline.innerHTML = events.map((event, index) => `
+                <div class="flex gap-4 timeline-connector">
+                    <div class="timeline-dot ${event.past ? 'opacity-50' : ''}">
+                        <span class="text-white text-xl">${event.past ? '✓' : '📅'}</span>
+                    </div>
+                    <div class="flex-1 pb-6">
+                        <div class="font-bold text-white mb-1">${event.date}</div>
+                        <div class="text-lg text-white/90 mb-2">${event.event}</div>
+                        <div class="flex flex-wrap gap-2">
+                            ${event.services.map(service => `
+                                <span class="px-3 py-1 rounded-lg bg-blue-500/20 text-blue-400 text-sm">
+                                    ${service}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadServiceBundles() {
+            const container = document.getElementById('serviceBundles');
+            const colorMap = {
+                blue: { bg: 'bg-gradient-to-br from-blue-500/20 to-blue-600/10', border: 'border-blue-500/30', text: 'text-blue-400', btn: 'bg-blue-600 hover:bg-blue-700' },
+                purple: { bg: 'bg-gradient-to-br from-purple-500/20 to-purple-600/10', border: 'border-purple-500/30', text: 'text-purple-400', btn: 'bg-purple-600 hover:bg-purple-700' },
+                green: { bg: 'bg-gradient-to-br from-green-500/20 to-green-600/10', border: 'border-green-500/30', text: 'text-green-400', btn: 'bg-green-600 hover:bg-green-700' },
+                yellow: { bg: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/10', border: 'border-yellow-500/30', text: 'text-yellow-400', btn: 'bg-yellow-600 hover:bg-yellow-700' },
+                red: { bg: 'bg-gradient-to-br from-red-500/20 to-red-600/10', border: 'border-red-500/30', text: 'text-red-400', btn: 'bg-red-600 hover:bg-red-700' },
+                indigo: { bg: 'bg-gradient-to-br from-indigo-500/20 to-indigo-600/10', border: 'border-indigo-500/30', text: 'text-indigo-400', btn: 'bg-indigo-600 hover:bg-indigo-700' }
+            };
+
+            container.innerHTML = serviceBundles.map((bundle, index) => {
+                const colors = colorMap[bundle.color];
+                return `
+                    <div class="bundle-card p-4 rounded-lg ${colors.bg} border ${colors.border}">
+                        <div class="text-3xl mb-3">${bundle.icon}</div>
+                        <div class="font-bold text-white mb-2">${bundle.title}</div>
+                        <div class="text-sm text-white/70 mb-3">${bundle.services.length} services included</div>
+                        <div class="${colors.text} font-bold mb-3">${bundle.savings}</div>
+                        <button onclick="getBundleDetails(${index})" class="w-full px-4 py-2 ${colors.btn} text-white rounded-lg font-bold transition-colors">
+                            Get Bundle
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getBundleDetails(index) {
+            const bundle = serviceBundles[index];
+            const serviceList = bundle.services.map(s => `• ${s}`).join('\n');
+            alert(`${bundle.icon} ${bundle.title}\n\n📦 Included Services:\n${serviceList}\n\n💰 ${bundle.savings}\n\n✓ One-click application\n✓ Pre-filled forms\n✓ Automatic deadline tracking\n\n[In production, this would start the bundled application process]`);
+        }
+
+        function loadNotifications() {
+            const container = document.getElementById('notificationCenter');
+            container.innerHTML = notifications.map(notif => `
+                <div class="p-4 rounded-lg bg-white/5 border border-white/10 ${notif.read ? 'opacity-60' : ''}">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start gap-3 flex-1">
+                            <div class="w-3 h-3 rounded-full mt-1 ${notif.priority === 'high' ? 'priority-high' : notif.priority === 'medium' ? 'bg-yellow-500' : 'bg-blue-500'}"></div>
+                            <div class="flex-1">
+                                <div class="font-bold text-white mb-1">${notif.title}</div>
+                                <div class="text-sm text-white/70 mb-2">${notif.message}</div>
+                                <div class="text-xs text-white/50">${notif.time}</div>
+                            </div>
+                        </div>
+                        <button class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors">
+                            ${notif.read ? 'View' : 'Action'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function switchPersona(persona) {
+            currentPersona = persona;
+            loadPredictedNeeds(persona);
+            loadTimeline(persona);
+        }
+
+        function getUrgencyColor(urgency) {
+            return urgency === 'high' ? 'red' : urgency === 'medium' ? 'yellow' : 'blue';
+        }
+
+        function getUrgencyBadge(urgency) {
+            if (urgency === 'high') return 'bg-red-500/20 text-red-400';
+            if (urgency === 'medium') return 'bg-yellow-500/20 text-yellow-400';
+            return 'bg-blue-500/20 text-blue-400';
+        }
+
+        function togglePrivacy(element) {
+            element.classList.toggle('active');
+        }
+
+        function markAllRead() {
+            notifications.forEach(n => n.read = true);
+            loadNotifications();
+        }
+
+        function showJourneyDetails(stage) {
+            const details = {
+                moving: { title: 'Moving to New Address', services: ['Address Change', 'Voter Registration', 'Utility Setup', 'Pet Registration'] },
+                homeowner: { title: 'New Homeowner', services: ['Property Tax Setup', 'Trash Service', 'Water Account', 'Homestead Exemption'] },
+                renovation: { title: 'Home Renovation', services: ['Building Permit', 'Electrical Inspection', 'Plumbing Approval', 'Final Inspection'] },
+                business: { title: 'Start a Business', services: ['Business License', 'Zoning Approval', 'Health Permit', 'Tax Registration'] },
+                parent: { title: 'New Parent', services: ['Birth Certificate', 'Childcare Licensing', 'Health Insurance', 'Park Programs'] },
+                retirement: { title: 'Retirement', services: ['Senior Services', 'Property Tax Relief', 'Recreation Programs', 'Health Services'] }
+            };
+
+            const detail = details[stage];
+            const container = document.getElementById('journeyDetails');
+            container.classList.remove('hidden');
+            container.innerHTML = `
+                <div class="font-bold text-white mb-2">${detail.title}</div>
+                <div class="text-white/70 mb-3">Common services for this life stage:</div>
+                <div class="flex flex-wrap gap-2">
+                    ${detail.services.map(service => `
+                        <span class="px-3 py-1 rounded-lg bg-blue-500/20 text-blue-400 text-sm">
+                            ${service}
+                        </span>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Initialize on load
+        initializePage();
+    </script>
+</body>
+</html>

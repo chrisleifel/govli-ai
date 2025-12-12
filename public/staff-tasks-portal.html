@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Govli AI - Staff Tasks</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="config.js"></script>
+    <style>
+        :root {
+            --deep-ocean: #0a1628;
+            --ocean-dark: #0c4a6e;
+            --ocean-primary: #0369a1;
+            --azure-blue: #0284c7;
+            --sky-blue: #0ea5e9;
+            --cyan-bright: #06b6d4;
+            --teal-accent: #14b8a6;
+            --emerald-success: #10b981;
+            --glass-bg: rgba(15, 23, 42, 0.75);
+            --glass-border: rgba(6, 182, 212, 0.25);
+            --glow-cyan: rgba(6, 182, 212, 0.4);
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg,
+                #0a1628 0%,
+                #0c2340 25%,
+                #0e3a5f 50%,
+                #1e3a5f 75%,
+                #164e7f 100%
+            );
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .task-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .task-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .task-card.urgent {
+            border-left-color: #ef4444;
+        }
+
+        .task-card.high {
+            border-left-color: #f59e0b;
+        }
+
+        .task-card.medium {
+            border-left-color: #3b82f6;
+        }
+
+        .task-card.low {
+            border-left-color: #10b981;
+        }
+
+        .workflow-step {
+            position: relative;
+        }
+
+        .workflow-step::after {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 40px;
+            width: 2px;
+            height: calc(100% - 20px);
+            background: rgba(6, 182, 212, 0.3);
+        }
+
+        .workflow-step:last-child::after {
+            display: none;
+        }
+
+        .step-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .step-completed {
+            background: #10b981;
+            color: white;
+        }
+
+        .step-current {
+            background: #3b82f6;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .step-pending {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .step-skipped {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+            }
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .badge-in-progress {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .badge-completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        .badge-urgent {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .badge-high {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .badge-medium {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .badge-low {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <!-- Header -->
+    <header class="glass sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <i class="fas fa-tasks text-3xl text-cyan-400"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">Staff Tasks</h1>
+                        <p class="text-sm text-gray-400">Workflow Task Management</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="window.location.href='index.html'" class="glass px-4 py-2 rounded-lg text-white hover:border-cyan-500 transition-all">
+                        <i class="fas fa-home mr-2"></i>
+                        Portal Hub
+                    </button>
+                    <div class="glass px-4 py-2 rounded-lg">
+                        <span class="text-gray-400 text-sm">Welcome,</span>
+                        <span class="text-white font-semibold ml-2" id="userName">Staff</span>
+                    </div>
+                    <button onclick="logout()" class="glass px-4 py-2 rounded-lg text-white hover:bg-red-500/20 transition">
+                        <i class="fas fa-sign-out-alt mr-2"></i>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400">Total Tasks</span>
+                    <i class="fas fa-list text-cyan-400 text-xl"></i>
+                </div>
+                <div class="text-3xl font-bold text-white" id="totalTasks">0</div>
+            </div>
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400">Pending</span>
+                    <i class="fas fa-clock text-yellow-400 text-xl"></i>
+                </div>
+                <div class="text-3xl font-bold text-yellow-400" id="pendingTasks">0</div>
+            </div>
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400">In Progress</span>
+                    <i class="fas fa-spinner text-blue-400 text-xl"></i>
+                </div>
+                <div class="text-3xl font-bold text-blue-400" id="inProgressTasks">0</div>
+            </div>
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400">Completed Today</span>
+                    <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                </div>
+                <div class="text-3xl font-bold text-green-400" id="completedTasks">0</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="glass rounded-xl p-6 mb-8">
+            <div class="flex flex-wrap gap-4">
+                <select id="statusFilter" class="glass px-4 py-2 rounded-lg text-white border border-cyan-500/30">
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                </select>
+                <select id="priorityFilter" class="glass px-4 py-2 rounded-lg text-white border border-cyan-500/30">
+                    <option value="">All Priorities</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </select>
+                <button onclick="loadTasks()" class="px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition">
+                    <i class="fas fa-sync mr-2"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Tasks List -->
+        <div id="tasksList" class="space-y-4">
+            <!-- Tasks will be loaded here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="glass rounded-xl p-12 text-center hidden">
+            <i class="fas fa-tasks text-6xl text-gray-600 mb-4"></i>
+            <h3 class="text-xl font-semibold text-white mb-2">No Tasks Found</h3>
+            <p class="text-gray-400">All caught up! No pending tasks at the moment.</p>
+        </div>
+    </main>
+
+    <!-- Task Detail Modal -->
+    <div id="taskModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50" onclick="closeModal(event)">
+        <div class="glass rounded-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="p-6 border-b border-cyan-500/30">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white mb-1" id="modalTaskTitle"></h2>
+                        <p class="text-gray-400" id="modalTaskPermit"></p>
+                    </div>
+                    <button onclick="closeTaskModal()" class="text-gray-400 hover:text-white">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <!-- Task Details -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-gray-400 text-sm">Status</label>
+                        <div id="modalTaskStatus" class="mt-1"></div>
+                    </div>
+                    <div>
+                        <label class="text-gray-400 text-sm">Priority</label>
+                        <div id="modalTaskPriority" class="mt-1"></div>
+                    </div>
+                    <div>
+                        <label class="text-gray-400 text-sm">Type</label>
+                        <div class="text-white mt-1" id="modalTaskType"></div>
+                    </div>
+                    <div>
+                        <label class="text-gray-400 text-sm">Created</label>
+                        <div class="text-white mt-1" id="modalTaskCreated"></div>
+                    </div>
+                </div>
+
+                <!-- Task Description -->
+                <div>
+                    <label class="text-gray-400 text-sm">Description</label>
+                    <p class="text-white mt-2" id="modalTaskDescription"></p>
+                </div>
+
+                <!-- Workflow Timeline -->
+                <div>
+                    <label class="text-gray-400 text-sm mb-4 block">Workflow Progress</label>
+                    <div id="modalWorkflowTimeline" class="space-y-4">
+                        <!-- Timeline will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Completion Form -->
+                <div id="completionForm" class="hidden">
+                    <div class="glass rounded-lg p-6 space-y-4">
+                        <h3 class="text-lg font-semibold text-white">Complete Task</h3>
+                        <div>
+                            <label class="text-gray-400 text-sm block mb-2">Result</label>
+                            <select id="taskResult" class="glass w-full px-4 py-2 rounded-lg text-white border border-cyan-500/30">
+                                <option value="approved">Approve</option>
+                                <option value="rejected">Reject</option>
+                                <option value="needs_revision">Needs Revision</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-gray-400 text-sm block mb-2">Notes</label>
+                            <textarea id="taskNotes" rows="4" class="glass w-full px-4 py-2 rounded-lg text-white border border-cyan-500/30" placeholder="Add your review notes..."></textarea>
+                        </div>
+                        <div class="flex gap-4">
+                            <button onclick="completeTask()" class="flex-1 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg transition font-semibold">
+                                <i class="fas fa-check mr-2"></i>
+                                Complete Task
+                            </button>
+                            <button onclick="hideCompletionForm()" class="px-6 py-3 glass hover:bg-white/5 text-white rounded-lg transition">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <button id="showCompletionBtn" onclick="showCompletionForm()" class="w-full px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition font-semibold">
+                    <i class="fas fa-edit mr-2"></i>
+                    Start Working on Task
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTask = null;
+        let allTasks = [];
+
+        // Check authentication
+        window.onload = async function() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = 'citizen-permits-login.html';
+                return;
+            }
+
+            // Load user info
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            document.getElementById('userName').textContent = userInfo.name || 'Staff';
+
+            // Load tasks
+            await loadTasks();
+
+            // Auto-refresh every 30 seconds
+            setInterval(loadTasks, 30000);
+        };
+
+        async function loadTasks() {
+            try {
+                const statusFilter = document.getElementById('statusFilter').value;
+                const priorityFilter = document.getElementById('priorityFilter').value;
+
+                let url = API_CONFIG.ENDPOINTS.TASKS.LIST;
+                const params = new URLSearchParams();
+                if (statusFilter) params.append('status', statusFilter);
+                if (priorityFilter) params.append('priority', priorityFilter);
+                if (params.toString()) url += '?' + params.toString();
+
+                const response = await apiCall(url);
+                allTasks = response.tasks || [];
+
+                updateStats(allTasks);
+                renderTasks(allTasks);
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+                showError('Failed to load tasks');
+            }
+        }
+
+        function updateStats(tasks) {
+            const total = tasks.length;
+            const pending = tasks.filter(t => t.status === 'pending').length;
+            const inProgress = tasks.filter(t => t.status === 'in_progress').length;
+
+            // Completed today
+            const today = new Date().toDateString();
+            const completed = tasks.filter(t =>
+                t.status === 'completed' &&
+                new Date(t.completedAt).toDateString() === today
+            ).length;
+
+            document.getElementById('totalTasks').textContent = total;
+            document.getElementById('pendingTasks').textContent = pending;
+            document.getElementById('inProgressTasks').textContent = inProgress;
+            document.getElementById('completedTasks').textContent = completed;
+        }
+
+        function renderTasks(tasks) {
+            const container = document.getElementById('tasksList');
+            const emptyState = document.getElementById('emptyState');
+
+            if (tasks.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            container.innerHTML = tasks.map(task => `
+                <div class="task-card glass rounded-xl p-6 cursor-pointer hover:border-cyan-500/50 ${task.priority || 'medium'}"
+                     onclick="showTaskDetail('${task.id}')">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="text-lg font-semibold text-white">${task.title}</h3>
+                                <span class="badge badge-${task.status}">${task.status.replace('_', ' ')}</span>
+                                <span class="badge badge-${task.priority || 'medium'}">${task.priority || 'medium'}</span>
+                            </div>
+                            <p class="text-gray-400 text-sm mb-3">${task.description || 'Review and process this task'}</p>
+                            <div class="flex items-center gap-4 text-sm text-gray-400">
+                                <span><i class="fas fa-file-alt mr-2"></i>${task.Permit?.permitNumber || 'N/A'}</span>
+                                <span><i class="fas fa-tag mr-2"></i>${task.type}</span>
+                                <span><i class="fas fa-clock mr-2"></i>${formatDate(task.createdAt)}</span>
+                            </div>
+                        </div>
+                        <button class="glass px-4 py-2 rounded-lg text-cyan-400 hover:text-cyan-300 transition">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function showTaskDetail(taskId) {
+            currentTask = allTasks.find(t => t.id === taskId);
+            if (!currentTask) return;
+
+            // Populate modal
+            document.getElementById('modalTaskTitle').textContent = currentTask.title;
+            document.getElementById('modalTaskPermit').textContent = `Permit: ${currentTask.Permit?.permitNumber || 'N/A'}`;
+            document.getElementById('modalTaskStatus').innerHTML = `<span class="badge badge-${currentTask.status}">${currentTask.status.replace('_', ' ')}</span>`;
+            document.getElementById('modalTaskPriority').innerHTML = `<span class="badge badge-${currentTask.priority || 'medium'}">${currentTask.priority || 'medium'}</span>`;
+            document.getElementById('modalTaskType').textContent = currentTask.type;
+            document.getElementById('modalTaskCreated').textContent = formatDate(currentTask.createdAt);
+            document.getElementById('modalTaskDescription').textContent = currentTask.description || 'Review and process this task';
+
+            // Load workflow execution if available
+            if (currentTask.workflowExecutionId) {
+                await loadWorkflowTimeline(currentTask.workflowExecutionId);
+            }
+
+            // Show/hide completion form
+            document.getElementById('completionForm').classList.add('hidden');
+            const showBtn = document.getElementById('showCompletionBtn');
+            if (currentTask.status === 'completed') {
+                showBtn.classList.add('hidden');
+            } else {
+                showBtn.classList.remove('hidden');
+            }
+
+            // Show modal
+            document.getElementById('taskModal').classList.remove('hidden');
+            document.getElementById('taskModal').classList.add('flex');
+        }
+
+        async function loadWorkflowTimeline(executionId) {
+            try {
+                const response = await apiCall(API_CONFIG.ENDPOINTS.WORKFLOWS.EXECUTION_GET(executionId));
+                const execution = response.execution;
+                const steps = execution.stepHistory || [];
+
+                const timeline = document.getElementById('modalWorkflowTimeline');
+                timeline.innerHTML = steps.map((step, index) => `
+                    <div class="workflow-step flex items-start gap-4">
+                        <div class="step-dot ${step.skipped ? 'step-skipped' : 'step-completed'}">
+                            ${step.skipped ? '<i class="fas fa-forward"></i>' : '<i class="fas fa-check"></i>'}
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-1">
+                                <h4 class="text-white font-semibold">${step.stepName}</h4>
+                                ${step.skipped ? '<span class="text-xs text-yellow-400">Skipped</span>' : '<span class="text-xs text-green-400">Completed</span>'}
+                            </div>
+                            <p class="text-sm text-gray-400">${step.stepType}</p>
+                            <p class="text-xs text-gray-500 mt-1">${formatDate(step.timestamp)}</p>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading workflow timeline:', error);
+            }
+        }
+
+        function showCompletionForm() {
+            document.getElementById('completionForm').classList.remove('hidden');
+            document.getElementById('showCompletionBtn').classList.add('hidden');
+        }
+
+        function hideCompletionForm() {
+            document.getElementById('completionForm').classList.add('hidden');
+            document.getElementById('showCompletionBtn').classList.remove('hidden');
+        }
+
+        async function completeTask() {
+            if (!currentTask) return;
+
+            try {
+                const result = document.getElementById('taskResult').value;
+                const notes = document.getElementById('taskNotes').value;
+
+                const response = await apiCall(
+                    API_CONFIG.ENDPOINTS.TASKS.COMPLETE(currentTask.id),
+                    {
+                        method: 'PATCH',
+                        body: JSON.stringify({ result, notes })
+                    }
+                );
+
+                closeTaskModal();
+                await loadTasks();
+                showSuccess('Task completed successfully!');
+            } catch (error) {
+                console.error('Error completing task:', error);
+                showError('Failed to complete task');
+            }
+        }
+
+        function closeTaskModal() {
+            document.getElementById('taskModal').classList.add('hidden');
+            document.getElementById('taskModal').classList.remove('flex');
+            currentTask = null;
+        }
+
+        function closeModal(event) {
+            if (event.target.id === 'taskModal') {
+                closeTaskModal();
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            return date.toLocaleDateString();
+        }
+
+        function showSuccess(message) {
+            alert(message); // Replace with better notification system
+        }
+
+        function showError(message) {
+            alert('Error: ' + message); // Replace with better notification system
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userInfo');
+            window.location.href = 'citizen-permits-login.html';
+        }
+
+        // Listen for status and priority filter changes
+        document.getElementById('statusFilter').addEventListener('change', loadTasks);
+        document.getElementById('priorityFilter').addEventListener('change', loadTasks);
+    </script>
+</body>
+</html>

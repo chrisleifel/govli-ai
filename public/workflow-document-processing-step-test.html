@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Processing Workflow Step - Govli AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #8b5cf6 100%);
+            min-height: 100vh;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .cjis-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .cjis-badge::before {
+            content: '🔒';
+            font-size: 0.875rem;
+        }
+
+        .step-library-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .step-library-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .step-library-item.selected {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .config-panel {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .field-mapping {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .confidence-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .confidence-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .confidence-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .workflow-template {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .workflow-template:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .step-flow {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 12px 0;
+        }
+
+        .step-box {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            border-radius: 8px;
+            padding: 8px 16px;
+            text-align: center;
+            flex: 1;
+        }
+
+        .arrow {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 1.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #3b82f6;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                <i class="fas fa-magic text-purple-400"></i>
+                Document Processing Workflow Step
+                <span class="cjis-badge">CJIS COMPLIANT</span>
+            </h1>
+            <p class="text-white/70">Configure intelligent OCR automation for your workflows</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column: Step Type Library -->
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-th-large text-blue-400"></i>
+                    Step Library
+                </h3>
+
+                <div class="space-y-3">
+                    <div class="step-library-item" onclick="selectStepType('form')" aria-label="Select form step type">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-file-alt text-blue-400"></i>
+                            <span class="font-bold text-white text-sm">Form Submission</span>
+                        </div>
+                        <div class="text-xs text-white/60">Collect information from citizens</div>
+                    </div>
+
+                    <div class="step-library-item" onclick="selectStepType('approval')" aria-label="Select approval step type">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-check-circle text-green-400"></i>
+                            <span class="font-bold text-white text-sm">Approval</span>
+                        </div>
+                        <div class="text-xs text-white/60">Review and approve requests</div>
+                    </div>
+
+                    <div id="docProcessingStep" class="step-library-item selected" onclick="selectStepType('document')" aria-label="Select document processing step type">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-magic text-purple-400"></i>
+                            <span class="font-bold text-white text-sm">Document Processing</span>
+                        </div>
+                        <div class="text-xs text-white/60">AI-powered OCR and data extraction</div>
+                        <div class="mt-2 flex items-center gap-2">
+                            <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded border border-purple-500/30">NEW</span>
+                            <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded border border-green-500/30">AI</span>
+                        </div>
+                    </div>
+
+                    <div class="step-library-item" onclick="selectStepType('notification')" aria-label="Select notification step type">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-bell text-yellow-400"></i>
+                            <span class="font-bold text-white text-sm">Send Notification</span>
+                        </div>
+                        <div class="text-xs text-white/60">Email or SMS alerts</div>
+                    </div>
+
+                    <div class="step-library-item" onclick="selectStepType('payment')" aria-label="Select payment step type">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-dollar-sign text-green-400"></i>
+                            <span class="font-bold text-white text-sm">Payment</span>
+                        </div>
+                        <div class="text-xs text-white/60">Collect fees and payments</div>
+                    </div>
+
+                    <div class="step-library-item" onclick="selectStepType('inspection')" aria-label="Select inspection step type">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-clipboard-check text-orange-400"></i>
+                            <span class="font-bold text-white text-sm">Inspection</span>
+                        </div>
+                        <div class="text-xs text-white/60">Schedule and conduct inspections</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Column: Configuration Panel -->
+            <div class="glass rounded-xl p-6 lg:col-span-2">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-cog text-purple-400"></i>
+                    Document Processing Configuration
+                </h3>
+
+                <div class="config-panel space-y-6">
+                    <!-- Document Type Selection -->
+                    <div>
+                        <label class="block text-sm font-bold text-white mb-2">Document Type</label>
+                        <select id="documentType" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-400" onchange="updateFieldMappings()">
+                            <option value="drivers_license">Driver's License</option>
+                            <option value="utility_bill">Utility Bill (Address Verification)</option>
+                            <option value="business_card">Business Card</option>
+                            <option value="tax_bill">Property Tax Bill</option>
+                            <option value="permit">Previous Permit</option>
+                            <option value="building_permit">Building Permit Application</option>
+                            <option value="police_report">Police Report</option>
+                            <option value="invoice">Invoice/Receipt</option>
+                            <option value="custom">Custom Template...</option>
+                        </select>
+                        <p class="text-xs text-white/60 mt-1">Select the type of document to process</p>
+                    </div>
+
+                    <!-- Confidence Threshold -->
+                    <div>
+                        <label class="block text-sm font-bold text-white mb-2">
+                            Confidence Threshold: <span id="confidenceValue" class="text-blue-400">85%</span>
+                        </label>
+                        <input type="range" id="confidenceSlider" class="confidence-slider" min="50" max="99" value="85" oninput="updateConfidenceValue(this.value)">
+                        <div class="flex justify-between text-xs text-white/60 mt-1">
+                            <span>50% (More automation)</span>
+                            <span>99% (More accuracy)</span>
+                        </div>
+                        <p class="text-xs text-white/60 mt-2">Fields below this threshold will require manual review</p>
+                    </div>
+
+                    <!-- Field Extraction Mapping -->
+                    <div>
+                        <label class="block text-sm font-bold text-white mb-3">Field Extraction Mapping</label>
+                        <div id="fieldMappings" class="space-y-2">
+                            <!-- Field mappings will be inserted here -->
+                        </div>
+                        <button class="btn-secondary text-sm mt-3" onclick="addCustomField()" aria-label="Add custom field mapping">
+                            <i class="fas fa-plus mr-2"></i>Add Custom Field
+                        </button>
+                    </div>
+
+                    <!-- Auto-Fill Options -->
+                    <div>
+                        <label class="block text-sm font-bold text-white mb-3">Auto-Fill Options</label>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-sm text-white">Enable auto-fill for high-confidence fields</div>
+                                    <div class="text-xs text-white/60 mt-1">Automatically populate form fields with extracted data</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="autoFillEnabled" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-sm text-white">Highlight auto-filled fields</div>
+                                    <div class="text-xs text-white/60 mt-1">Visual indicator for fields filled by AI</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="highlightEnabled" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-sm text-white">Require confirmation before submission</div>
+                                    <div class="text-xs text-white/60 mt-1">User must review extracted data</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="confirmationRequired" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Conditional Routing -->
+                    <div>
+                        <label class="block text-sm font-bold text-white mb-3">Conditional Routing</label>
+                        <div class="bg-white/5 rounded-lg p-4 border border-white/10">
+                            <div class="text-sm text-white mb-3">Route based on confidence level:</div>
+
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-32 text-sm text-white/70">High (&gt; 85%)</div>
+                                    <i class="fas fa-arrow-right text-white/50"></i>
+                                    <select class="flex-1 bg-white/10 border border-white/20 rounded px-3 py-1 text-sm text-white focus:outline-none focus:border-green-400">
+                                        <option>Auto-approve and continue</option>
+                                        <option>Send for quick review</option>
+                                        <option>Notify applicant</option>
+                                    </select>
+                                </div>
+
+                                <div class="flex items-center gap-3">
+                                    <div class="w-32 text-sm text-white/70">Medium (70-85%)</div>
+                                    <i class="fas fa-arrow-right text-white/50"></i>
+                                    <select class="flex-1 bg-white/10 border border-white/20 rounded px-3 py-1 text-sm text-white focus:outline-none focus:border-yellow-400">
+                                        <option>Send for review</option>
+                                        <option>Request corrections</option>
+                                        <option>Auto-approve and continue</option>
+                                    </select>
+                                </div>
+
+                                <div class="flex items-center gap-3">
+                                    <div class="w-32 text-sm text-white/70">Low (&lt; 70%)</div>
+                                    <i class="fas fa-arrow-right text-white/50"></i>
+                                    <select class="flex-1 bg-white/10 border border-white/20 rounded px-3 py-1 text-sm text-white focus:outline-none focus:border-red-400">
+                                        <option>Send for manual review</option>
+                                        <option>Reject and request resubmission</option>
+                                        <option>Send for review</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quality Control -->
+                    <div>
+                        <label class="block text-sm font-bold text-white mb-3">Quality Control</label>
+                        <div class="bg-white/5 rounded-lg p-4 border border-white/10 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-sm text-white">PII Detection & Masking</div>
+                                    <div class="text-xs text-white/60 mt-1">Automatically detect and protect sensitive data</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="piiProtection" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-sm text-white">Document Validation</div>
+                                    <div class="text-xs text-white/60 mt-1">Check for expired dates, invalid formats</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="docValidation" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-sm text-white">Duplicate Detection</div>
+                                    <div class="text-xs text-white/60 mt-1">Flag if document already submitted</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="duplicateDetection">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CJIS Compliance Notice -->
+                    <div class="bg-gradient-to-r from-green-600/10 to-blue-600/10 rounded-lg p-4 border border-green-500/30">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-shield-alt text-green-400 text-xl"></i>
+                            <div>
+                                <div class="text-sm font-bold text-white mb-1">CJIS Compliance Features</div>
+                                <div class="text-xs text-white/70 mb-2">All document processing steps include:</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded border border-green-500/30">AES-256 Encryption</span>
+                                    <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded border border-green-500/30">Audit Logging</span>
+                                    <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded border border-green-500/30">PII Protection</span>
+                                    <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded border border-green-500/30">Secure Storage</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex gap-3 pt-4 border-t border-white/20">
+                        <button class="btn-primary flex-1" onclick="saveConfiguration()" aria-label="Save workflow step configuration">
+                            <i class="fas fa-save mr-2"></i>Save Configuration
+                        </button>
+                        <button class="btn-secondary" onclick="testConfiguration()" aria-label="Test configuration with sample document">
+                            <i class="fas fa-vial mr-2"></i>Test
+                        </button>
+                        <button class="btn-secondary" onclick="viewTemplates()" aria-label="View workflow templates">
+                            <i class="fas fa-th-list mr-2"></i>Templates
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sample Workflow Templates -->
+        <div class="glass rounded-xl p-6 mt-8">
+            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-layer-group text-blue-400"></i>
+                Pre-Built Workflow Templates
+            </h3>
+            <p class="text-white/70 mb-6">Click any template to load a complete workflow with document processing</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Building Permit Template -->
+                <div class="workflow-template" onclick="loadTemplate('building_permit')" aria-label="Load Building Permit workflow template">
+                    <div class="flex items-center gap-3 mb-3">
+                        <i class="fas fa-building text-blue-400 text-2xl"></i>
+                        <div>
+                            <div class="font-bold text-white">Building Permit Application</div>
+                            <div class="text-xs text-white/60">6 steps • ~14 days</div>
+                        </div>
+                    </div>
+                    <div class="step-flow">
+                        <div class="step-box text-xs text-white">Submit</div>
+                        <i class="fas fa-arrow-right arrow"></i>
+                        <div class="step-box text-xs text-white bg-purple-500/20">OCR Docs</div>
+                        <i class="fas fa-arrow-right arrow"></i>
+                        <div class="step-box text-xs text-white">Review</div>
+                    </div>
+                    <div class="mt-3 text-xs text-white/60">Processes: Site plans, building plans, contractor licenses</div>
+                </div>
+
+                <!-- Business License Template -->
+                <div class="workflow-template" onclick="loadTemplate('business_license')" aria-label="Load Business License workflow template">
+                    <div class="flex items-center gap-3 mb-3">
+                        <i class="fas fa-briefcase text-green-400 text-2xl"></i>
+                        <div>
+                            <div class="font-bold text-white">Business License Application</div>
+                            <div class="text-xs text-white/60">5 steps • ~7 days</div>
+                        </div>
+                    </div>
+                    <div class="step-flow">
+                        <div class="step-box text-xs text-white">Submit</div>
+                        <i class="fas fa-arrow-right arrow"></i>
+                        <div class="step-box text-xs text-white bg-purple-500/20">OCR Docs</div>
+                        <i class="fas fa-arrow-right arrow"></i>
+                        <div class="step-box text-xs text-white">Approve</div>
+                    </div>
+                    <div class="mt-3 text-xs text-white/60">Processes: EIN verification, address proof, owner ID</div>
+                </div>
+
+                <!-- Tax Appeal Template -->
+                <div class="workflow-template" onclick="loadTemplate('tax_appeal')" aria-label="Load Tax Appeal workflow template">
+                    <div class="flex items-center gap-3 mb-3">
+                        <i class="fas fa-file-invoice-dollar text-yellow-400 text-2xl"></i>
+                        <div>
+                            <div class="font-bold text-white">Property Tax Appeal</div>
+                            <div class="text-xs text-white/60">4 steps • ~30 days</div>
+                        </div>
+                    </div>
+                    <div class="step-flow">
+                        <div class="step-box text-xs text-white">Submit</div>
+                        <i class="fas fa-arrow-right arrow"></i>
+                        <div class="step-box text-xs text-white bg-purple-500/20">OCR Tax Bill</div>
+                        <i class="fas fa-arrow-right arrow"></i>
+                        <div class="step-box text-xs text-white">Review</div>
+                    </div>
+                    <div class="mt-3 text-xs text-white/60">Processes: Tax bills, comparable sales, appraisals</div>
+                </div>
+
+                <!-- Invoice Processing Template -->
+                <div class="workflow-template" onclick="loadTemplate('invoice_processing')" aria-label="Load Invoice Processing workflow template">
+                    <div class="flex items-center gap-3 mb-3">
+                        <i class="fas fa-receipt text-purple-400 text-2xl"></i>
+                        <div>
+                            <div class="font-bold text-white">Invoice/Receipt Processing</div>
+                            <div class="text-xs text-white/60">3 steps • ~2 days</div>
+                        </div>
+                    </div>
+                    <div class="step-flow">
+                        <div class="step-box text-xs text-white">Upload</div>
+                        <i class="fas fa-arrow-right arrow"></i>
+                        <div class="step-box text-xs text-white bg-purple-500/20">Extract Data</div>
+                        <i class="fas fa-arrow-right arrow"></i>
+                        <div class="step-box text-xs text-white">Payment</div>
+                    </div>
+                    <div class="mt-3 text-xs text-white/60">Processes: Vendor invoices, receipts, payment records</div>
+                </div>
+
+                <!-- Police Report Template -->
+                <div class="workflow-template" onclick="loadTemplate('police_report')" aria-label="Load Police Report workflow template">
+                    <div class="flex items-center gap-3 mb-3">
+                        <i class="fas fa-shield-alt text-red-400 text-2xl"></i>
+                        <div>
+                            <div class="font-bold text-white">Police Report Filing</div>
+                            <div class="text-xs text-white/60">4 steps • ~3 days</div>
+                        </div>
+                    </div>
+                    <div class="step-flow">
+                        <div class="step-box text-xs text-white">Submit</div>
+                        <i class="fas fa-arrow-right arrow"></i>
+                        <div class="step-box text-xs text-white bg-purple-500/20">OCR Report</div>
+                        <i class="fas fa-arrow-right arrow"></i>
+                        <div class="step-box text-xs text-white">Investigation</div>
+                    </div>
+                    <div class="mt-3 text-xs text-white/60">Processes: Incident reports, evidence photos, witness statements</div>
+                </div>
+
+                <!-- Parking Permit Template -->
+                <div class="workflow-template" onclick="loadTemplate('parking_permit')" aria-label="Load Parking Permit workflow template">
+                    <div class="flex items-center gap-3 mb-3">
+                        <i class="fas fa-parking text-orange-400 text-2xl"></i>
+                        <div>
+                            <div class="font-bold text-white">Parking Permit Application</div>
+                            <div class="text-xs text-white/60">3 steps • ~1 day</div>
+                        </div>
+                    </div>
+                    <div class="step-flow">
+                        <div class="step-box text-xs text-white">Apply</div>
+                        <i class="fas fa-arrow-right arrow"></i>
+                        <div class="step-box text-xs text-white bg-purple-500/20">Verify Docs</div>
+                        <i class="fas fa-arrow-right arrow"></i>
+                        <div class="step-box text-xs text-white">Issue</div>
+                    </div>
+                    <div class="mt-3 text-xs text-white/60">Processes: Vehicle registration, address proof, driver's license</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // SECURITY TODO: Implement CJIS-compliant document storage with AES-256 encryption
+        // SECURITY TODO: Add role-based access control for workflow configuration
+        // TODO: Connect to workflow API endpoint /api/workflows/steps
+        // TODO: Integrate with document processing API /api/documents/process
+        // SECURITY TODO: Implement audit logging for all configuration changes
+        // TODO: Add workflow testing/simulation feature
+        // TODO: Export workflow templates as JSON for sharing
+        // TODO: Import custom workflow templates
+
+        const FIELD_TEMPLATES = {
+            drivers_license: [
+                { name: 'firstName', label: 'First Name', workflowField: 'applicant_first_name' },
+                { name: 'lastName', label: 'Last Name', workflowField: 'applicant_last_name' },
+                { name: 'address', label: 'Street Address', workflowField: 'street_address' },
+                { name: 'city', label: 'City', workflowField: 'city' },
+                { name: 'state', label: 'State', workflowField: 'state' },
+                { name: 'zip', label: 'ZIP Code', workflowField: 'zip_code' },
+                { name: 'dob', label: 'Date of Birth', workflowField: 'date_of_birth' },
+                { name: 'licenseNumber', label: 'License Number', workflowField: 'id_number' }
+            ],
+            utility_bill: [
+                { name: 'accountNumber', label: 'Account Number', workflowField: 'account_id' },
+                { name: 'customerName', label: 'Customer Name', workflowField: 'applicant_name' },
+                { name: 'serviceAddress', label: 'Service Address', workflowField: 'property_address' },
+                { name: 'billingDate', label: 'Billing Date', workflowField: 'document_date' }
+            ],
+            building_permit: [
+                { name: 'ownerName', label: 'Property Owner', workflowField: 'applicant_name' },
+                { name: 'propertyAddress', label: 'Property Address', workflowField: 'property_address' },
+                { name: 'projectDescription', label: 'Project Description', workflowField: 'description' },
+                { name: 'contractorLicense', label: 'Contractor License', workflowField: 'contractor_id' },
+                { name: 'estimatedCost', label: 'Estimated Cost', workflowField: 'project_cost' },
+                { name: 'startDate', label: 'Start Date', workflowField: 'start_date' }
+            ],
+            police_report: [
+                { name: 'incidentDate', label: 'Incident Date', workflowField: 'incident_date' },
+                { name: 'location', label: 'Location', workflowField: 'incident_location' },
+                { name: 'licensePlate', label: 'License Plate', workflowField: 'vehicle_plate' },
+                { name: 'driverName', label: 'Driver Name', workflowField: 'driver_name' },
+                { name: 'insurancePolicy', label: 'Insurance Policy', workflowField: 'insurance_number' }
+            ],
+            tax_bill: [
+                { name: 'ownerName', label: 'Property Owner', workflowField: 'applicant_name' },
+                { name: 'parcelNumber', label: 'Parcel Number', workflowField: 'parcel_id' },
+                { name: 'propertyAddress', label: 'Property Address', workflowField: 'property_address' },
+                { name: 'assessedValue', label: 'Assessed Value', workflowField: 'assessed_value' },
+                { name: 'taxAmount', label: 'Tax Amount', workflowField: 'tax_amount' }
+            ]
+        };
+
+        let selectedStepType = 'document';
+
+        // Initialize field mappings on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateFieldMappings();
+        });
+
+        function selectStepType(type) {
+            selectedStepType = type;
+
+            // Update visual selection
+            document.querySelectorAll('.step-library-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+
+            // Show appropriate configuration panel
+            if (type === 'document') {
+                // Already showing document processing config
+            } else {
+                alert(`Configuration panel for "${type}" step type would load here.\n\nFor this demo, only Document Processing is fully configured.`);
+            }
+        }
+
+        function updateConfidenceValue(value) {
+            document.getElementById('confidenceValue').textContent = value + '%';
+        }
+
+        function updateFieldMappings() {
+            const docType = document.getElementById('documentType').value;
+            const mappingsContainer = document.getElementById('fieldMappings');
+            mappingsContainer.innerHTML = '';
+
+            const fields = FIELD_TEMPLATES[docType] || FIELD_TEMPLATES.drivers_license;
+
+            fields.forEach(field => {
+                const mapping = document.createElement('div');
+                mapping.className = 'field-mapping';
+                mapping.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm font-bold text-white">${field.label}</div>
+                        <button class="text-red-400 hover:text-red-300 text-xs" onclick="removeField(this)" aria-label="Remove field mapping">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="flex gap-2 items-center">
+                        <div class="flex-1">
+                            <div class="text-xs text-white/60 mb-1">Extract from document:</div>
+                            <input type="text" value="${field.name}" class="w-full bg-white/5 border border-white/20 rounded px-3 py-1 text-sm text-white focus:outline-none focus:border-purple-400" placeholder="Field name">
+                        </div>
+                        <i class="fas fa-arrow-right text-white/50 mt-4"></i>
+                        <div class="flex-1">
+                            <div class="text-xs text-white/60 mb-1">Map to workflow field:</div>
+                            <input type="text" value="${field.workflowField}" class="w-full bg-white/5 border border-white/20 rounded px-3 py-1 text-sm text-white focus:outline-none focus:border-blue-400" placeholder="Workflow field">
+                        </div>
+                    </div>
+                `;
+                mappingsContainer.appendChild(mapping);
+            });
+        }
+
+        function addCustomField() {
+            const mappingsContainer = document.getElementById('fieldMappings');
+            const mapping = document.createElement('div');
+            mapping.className = 'field-mapping';
+            mapping.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <div class="text-sm font-bold text-white">
+                        <input type="text" placeholder="Field Label" class="bg-white/5 border border-white/20 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-purple-400">
+                    </div>
+                    <button class="text-red-400 hover:text-red-300 text-xs" onclick="removeField(this)" aria-label="Remove custom field">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <div class="flex-1">
+                        <div class="text-xs text-white/60 mb-1">Extract from document:</div>
+                        <input type="text" placeholder="custom_field" class="w-full bg-white/5 border border-white/20 rounded px-3 py-1 text-sm text-white focus:outline-none focus:border-purple-400">
+                    </div>
+                    <i class="fas fa-arrow-right text-white/50 mt-4"></i>
+                    <div class="flex-1">
+                        <div class="text-xs text-white/60 mb-1">Map to workflow field:</div>
+                        <input type="text" placeholder="workflow_field" class="w-full bg-white/5 border border-white/20 rounded px-3 py-1 text-sm text-white focus:outline-none focus:border-blue-400">
+                    </div>
+                </div>
+            `;
+            mappingsContainer.appendChild(mapping);
+        }
+
+        function removeField(button) {
+            button.closest('.field-mapping').remove();
+        }
+
+        function saveConfiguration() {
+            const config = {
+                stepType: 'document_processing',
+                documentType: document.getElementById('documentType').value,
+                confidenceThreshold: parseInt(document.getElementById('confidenceSlider').value),
+                autoFillEnabled: document.getElementById('autoFillEnabled').checked,
+                highlightEnabled: document.getElementById('highlightEnabled').checked,
+                confirmationRequired: document.getElementById('confirmationRequired').checked,
+                piiProtection: document.getElementById('piiProtection').checked,
+                docValidation: document.getElementById('docValidation').checked,
+                duplicateDetection: document.getElementById('duplicateDetection').checked,
+                fieldMappings: []
+            };
+
+            // Collect field mappings
+            document.querySelectorAll('.field-mapping').forEach(mapping => {
+                const inputs = mapping.querySelectorAll('input');
+                if (inputs.length >= 2) {
+                    config.fieldMappings.push({
+                        source: inputs[0].value,
+                        target: inputs[1].value
+                    });
+                }
+            });
+
+            console.log('Workflow step configuration:', config);
+            alert('✅ Configuration Saved!\n\nDocument Processing step has been configured and added to your workflow.\n\nNext steps:\n• Test with sample document\n• Add conditional routing\n• Connect to approval step\n\nTODO: POST to /api/workflows/steps/save');
+
+            // TODO: Save to API
+            console.log('TODO: POST to /api/workflows/steps/save', config);
+        }
+
+        function testConfiguration() {
+            alert('🧪 Test Configuration\n\nThis will:\n1. Upload a sample document\n2. Run OCR extraction\n3. Show confidence scores\n4. Simulate workflow routing\n\nTODO: Implement test mode with sample documents');
+            console.log('TODO: Implement configuration testing');
+        }
+
+        function viewTemplates() {
+            // Scroll to templates section
+            const templatesSection = document.querySelector('.workflow-template').closest('.glass');
+            templatesSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function loadTemplate(templateName) {
+            const templates = {
+                building_permit: {
+                    name: 'Building Permit Application',
+                    steps: 6,
+                    duration: '14 days',
+                    documents: ['Building Plans', 'Site Plans', 'Contractor License'],
+                    description: 'Complete workflow for building permit applications with automated document processing'
+                },
+                business_license: {
+                    name: 'Business License Application',
+                    steps: 5,
+                    duration: '7 days',
+                    documents: ['EIN Verification', 'Address Proof', 'Owner ID'],
+                    description: 'Streamlined business license application with auto-verification'
+                },
+                tax_appeal: {
+                    name: 'Property Tax Appeal',
+                    steps: 4,
+                    duration: '30 days',
+                    documents: ['Tax Bill', 'Comparable Sales', 'Appraisal'],
+                    description: 'Property tax appeal workflow with document analysis'
+                },
+                invoice_processing: {
+                    name: 'Invoice/Receipt Processing',
+                    steps: 3,
+                    duration: '2 days',
+                    documents: ['Vendor Invoices', 'Receipts', 'Payment Records'],
+                    description: 'Automated invoice processing and payment workflow'
+                },
+                police_report: {
+                    name: 'Police Report Filing',
+                    steps: 4,
+                    duration: '3 days',
+                    documents: ['Incident Report', 'Evidence Photos', 'Witness Statements'],
+                    description: 'Police report submission with CJIS-compliant document handling'
+                },
+                parking_permit: {
+                    name: 'Parking Permit Application',
+                    steps: 3,
+                    duration: '1 day',
+                    documents: ['Vehicle Registration', 'Address Proof', 'Driver License'],
+                    description: 'Fast-track parking permit with auto-verification'
+                }
+            };
+
+            const template = templates[templateName];
+            if (!template) return;
+
+            alert(`📋 Loading Template: ${template.name}\n\n` +
+                  `Steps: ${template.steps}\n` +
+                  `Est. Duration: ${template.duration}\n\n` +
+                  `Documents to Process:\n${template.documents.map(d => '• ' + d).join('\n')}\n\n` +
+                  `${template.description}\n\n` +
+                  `TODO: Load complete workflow template into builder`);
+
+            console.log('TODO: Load template into workflow builder:', template);
+        }
+    </script>
+</body>
+</html>

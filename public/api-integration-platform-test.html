@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Integration Platform - Govli AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #8b5cf6 100%);
+            min-height: 100vh;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .tab-button {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .tab-button.active {
+            background: rgba(59, 130, 246, 0.3);
+            border-bottom: 3px solid #3b82f6;
+        }
+
+        .api-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .api-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .flow-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            animation: flow 2s linear infinite;
+        }
+
+        @keyframes flow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        .terminal {
+            background: rgba(0, 0, 0, 0.5);
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #10b981;
+        }
+
+        .drag-block {
+            cursor: move;
+            transition: all 0.3s ease;
+        }
+
+        .drag-block:hover {
+            transform: scale(1.05);
+        }
+
+        .compatibility-score {
+            background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981);
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                <i class="fas fa-plug text-blue-400"></i>
+                API Integration Platform
+                <span class="text-sm bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-full">CJIS Compliant</span>
+            </h1>
+            <p class="text-white/70">Intelligent API Discovery, Transformation & Orchestration for Government Systems</p>
+        </div>
+
+        <!-- Module Navigation Tabs -->
+        <div class="glass rounded-xl p-2 mb-6 overflow-x-auto">
+            <div class="flex gap-2 min-w-max">
+                <button onclick="switchModule('discovery')" class="tab-button active px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap" data-module="discovery">
+                    <i class="fas fa-search mr-2"></i>API Discovery
+                </button>
+                <button onclick="switchModule('transformer')" class="tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap" data-module="transformer">
+                    <i class="fas fa-exchange-alt mr-2"></i>Data Transformer
+                </button>
+                <button onclick="switchModule('orchestrator')" class="tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap" data-module="orchestrator">
+                    <i class="fas fa-project-diagram mr-2"></i>Logic Orchestrator
+                </button>
+                <button onclick="switchModule('sync')" class="tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap" data-module="sync">
+                    <i class="fas fa-sync mr-2"></i>Sync Engine
+                </button>
+                <button onclick="switchModule('security')" class="tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap" data-module="security">
+                    <i class="fas fa-shield-alt mr-2"></i>Security & Governance
+                </button>
+                <button onclick="switchModule('errors')" class="tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap" data-module="errors">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>Error Handling
+                </button>
+                <button onclick="switchModule('marketplace')" class="tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap" data-module="marketplace">
+                    <i class="fas fa-store mr-2"></i>API Marketplace
+                </button>
+                <button onclick="switchModule('workspace')" class="tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap" data-module="workspace">
+                    <i class="fas fa-users mr-2"></i>Collaborative Workspace
+                </button>
+            </div>
+        </div>
+
+        <!-- Module 1: API Discovery -->
+        <div id="module-discovery" class="module-content">
+            <!-- Natural Language Search -->
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-search text-blue-400"></i>
+                    Intelligent API Search
+                </h3>
+                <div class="relative">
+                    <input type="text"
+                           id="apiSearch"
+                           placeholder="Try: 'Find me all DMV databases with vehicle registration data' or 'Show APIs for tax assessment'"
+                           class="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button onclick="searchAPIs()" class="absolute right-3 top-1/2 -translate-y-1/2 px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white font-medium hover:shadow-lg transition-all">
+                        <i class="fas fa-magic mr-2"></i>AI Search
+                    </button>
+                </div>
+                <div class="mt-3 flex gap-2 flex-wrap">
+                    <span class="text-xs text-white/50">Quick searches:</span>
+                    <button onclick="quickSearch('DMV')" class="text-xs px-3 py-1 bg-white/10 hover:bg-white/20 rounded-full text-blue-400 border border-blue-500/30 transition-all">DMV Records</button>
+                    <button onclick="quickSearch('Criminal')" class="text-xs px-3 py-1 bg-white/10 hover:bg-white/20 rounded-full text-blue-400 border border-blue-500/30 transition-all">Criminal Database</button>
+                    <button onclick="quickSearch('Tax')" class="text-xs px-3 py-1 bg-white/10 hover:bg-white/20 rounded-full text-blue-400 border border-blue-500/30 transition-all">Tax Systems</button>
+                    <button onclick="quickSearch('Property')" class="text-xs px-3 py-1 bg-white/10 hover:bg-white/20 rounded-full text-blue-400 border border-blue-500/30 transition-all">Property Records</button>
+                </div>
+            </div>
+
+            <!-- Search Results Grid -->
+            <div id="apiResults" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Results populated by JavaScript -->
+            </div>
+
+            <!-- API Health Dashboard -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-heartbeat text-green-400"></i>
+                        API Health Monitor
+                    </h3>
+                    <div id="healthDashboard" class="space-y-3">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-sitemap text-purple-400"></i>
+                        API Relationship Map
+                    </h3>
+                    <div class="bg-black/20 rounded-lg h-64 flex items-center justify-center">
+                        <canvas id="apiRelationshipChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 2: Data Transformer -->
+        <div id="module-transformer" class="module-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Source Data -->
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4">
+                        <i class="fas fa-database text-blue-400 mr-2"></i>Source Data
+                    </h3>
+                    <div class="bg-black/30 rounded-lg p-4 h-96 overflow-y-auto terminal">
+                        <div id="sourceData"></div>
+                    </div>
+                </div>
+
+                <!-- Transformations -->
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4">
+                        <i class="fas fa-magic text-purple-400 mr-2"></i>Transformations
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="drag-block p-3 bg-white/10 rounded-lg border border-purple-500/30">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-white font-medium text-sm">Format Name</span>
+                                <i class="fas fa-grip-vertical text-white/50"></i>
+                            </div>
+                            <div class="text-xs text-white/60">FirstName LastName → Last, First M.</div>
+                        </div>
+                        <div class="drag-block p-3 bg-white/10 rounded-lg border border-blue-500/30">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-white font-medium text-sm">Normalize Address</span>
+                                <i class="fas fa-grip-vertical text-white/50"></i>
+                            </div>
+                            <div class="text-xs text-white/60">Street abbreviations + ZIP+4</div>
+                        </div>
+                        <div class="drag-block p-3 bg-white/10 rounded-lg border border-green-500/30">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-white font-medium text-sm">Convert Date Format</span>
+                                <i class="fas fa-grip-vertical text-white/50"></i>
+                            </div>
+                            <div class="text-xs text-white/60">MM/DD/YYYY → ISO 8601</div>
+                        </div>
+                        <button onclick="addTransformation()" class="w-full py-2 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white text-sm font-medium hover:shadow-lg transition-all">
+                            <i class="fas fa-plus mr-2"></i>Add Transformation
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Output Data -->
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4">
+                        <i class="fas fa-check-circle text-green-400 mr-2"></i>Output Data
+                    </h3>
+                    <div class="bg-black/30 rounded-lg p-4 h-96 overflow-y-auto terminal">
+                        <div id="outputData"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Quality Score -->
+            <div class="glass rounded-xl p-6 mt-6">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-chart-line text-yellow-400"></i>
+                    Data Quality Assessment
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-green-400">94%</div>
+                        <div class="text-sm text-white/60">Completeness</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-blue-400">89%</div>
+                        <div class="text-sm text-white/60">Accuracy</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-purple-400">96%</div>
+                        <div class="text-sm text-white/60">Consistency</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-yellow-400">91%</div>
+                        <div class="text-sm text-white/60">Validity</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 3: Logic Orchestrator -->
+        <div id="module-orchestrator" class="module-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Workflow Canvas -->
+                <div class="lg:col-span-2 glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-project-diagram text-blue-400"></i>
+                        Workflow Canvas
+                    </h3>
+                    <div class="bg-black/20 rounded-lg p-6 h-96 relative overflow-auto">
+                        <div id="workflowCanvas" class="relative min-h-full"></div>
+                    </div>
+                    <div class="mt-4 flex gap-2">
+                        <button onclick="addCondition()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm font-medium transition-all">
+                            <i class="fas fa-code-branch mr-2"></i>Add Condition
+                        </button>
+                        <button onclick="addAction()" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white text-sm font-medium transition-all">
+                            <i class="fas fa-play mr-2"></i>Add Action
+                        </button>
+                        <button onclick="simulateWorkflow()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white text-sm font-medium transition-all">
+                            <i class="fas fa-vial mr-2"></i>Simulate
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Workflow Library -->
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4">
+                        <i class="fas fa-book text-purple-400 mr-2"></i>Workflow Templates
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-white/10 rounded-lg border border-white/20 hover:bg-white/15 cursor-pointer transition-all">
+                            <div class="font-medium text-white mb-1">Building Permit Routing</div>
+                            <div class="text-xs text-white/60">Multi-tier approval with cost thresholds</div>
+                        </div>
+                        <div class="p-3 bg-white/10 rounded-lg border border-white/20 hover:bg-white/15 cursor-pointer transition-all">
+                            <div class="font-medium text-white mb-1">Emergency Dispatch</div>
+                            <div class="text-xs text-white/60">Priority-based routing by severity</div>
+                        </div>
+                        <div class="p-3 bg-white/10 rounded-lg border border-white/20 hover:bg-white/15 cursor-pointer transition-all">
+                            <div class="font-medium text-white mb-1">Grant Application</div>
+                            <div class="text-xs text-white/60">Compliance checks + review routing</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 4: Sync Reconciliation -->
+        <div id="module-sync" class="module-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Sync Timeline -->
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-clock text-blue-400"></i>
+                        Sync Timeline
+                    </h3>
+                    <div id="syncTimeline" class="space-y-3 max-h-96 overflow-y-auto">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Conflict Resolution -->
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                        Conflict Queue <span class="text-sm bg-red-500/20 text-red-400 px-2 py-1 rounded-full ml-2">3 Pending</span>
+                    </h3>
+                    <div id="conflictQueue" class="space-y-3">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sync Health Dashboard -->
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-lg font-bold text-white mb-4">Sync Performance Metrics</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-green-400">99.8%</div>
+                        <div class="text-sm text-white/60">Success Rate</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-blue-400">1.2s</div>
+                        <div class="text-sm text-white/60">Avg Latency</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-purple-400">15K</div>
+                        <div class="text-sm text-white/60">Records/hour</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-yellow-400">3</div>
+                        <div class="text-sm text-white/60">Conflicts</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 5: Security & Governance -->
+        <div id="module-security" class="module-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-white/70">Threat Level</span>
+                        <i class="fas fa-shield-alt text-green-400"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-green-400 mb-1">LOW</div>
+                    <div class="text-xs text-white/60">No active threats detected</div>
+                </div>
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-white/70">Compliance Score</span>
+                        <i class="fas fa-check-circle text-blue-400"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-blue-400 mb-1">96/100</div>
+                    <div class="text-xs text-white/60">CJIS + FedRAMP + FISMA</div>
+                </div>
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-white/70">API Calls Today</span>
+                        <i class="fas fa-chart-bar text-purple-400"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-purple-400 mb-1">247K</div>
+                    <div class="text-xs text-white/60">$3,240 estimated cost</div>
+                </div>
+            </div>
+
+            <!-- Compliance Dashboard -->
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-certificate text-green-400"></i>
+                    Compliance Status
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-white text-sm">CJIS Compliance</span>
+                            <span class="text-green-400 font-medium">98%</span>
+                        </div>
+                        <div class="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-green-500 to-green-400" style="width: 98%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-white text-sm">FedRAMP Authorization</span>
+                            <span class="text-blue-400 font-medium">94%</span>
+                        </div>
+                        <div class="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-blue-500 to-blue-400" style="width: 94%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-white text-sm">FISMA Controls</span>
+                            <span class="text-purple-400 font-medium">96%</span>
+                        </div>
+                        <div class="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-purple-500 to-purple-400" style="width: 96%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit Trail -->
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-history text-yellow-400"></i>
+                    Recent Audit Trail
+                </h3>
+                <div class="bg-black/30 rounded-lg p-4 h-64 overflow-y-auto terminal">
+                    <div id="auditLog"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 6: Error Handling -->
+        <div id="module-errors" class="module-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="glass rounded-xl p-4">
+                    <div class="text-sm text-white/70 mb-1">Total Errors (24h)</div>
+                    <div class="text-2xl font-bold text-red-400">127</div>
+                    <div class="text-xs text-white/50 mt-1">↓ 23% from yesterday</div>
+                </div>
+                <div class="glass rounded-xl p-4">
+                    <div class="text-sm text-white/70 mb-1">Auto-Recovered</div>
+                    <div class="text-2xl font-bold text-green-400">94</div>
+                    <div class="text-xs text-white/50 mt-1">74% success rate</div>
+                </div>
+                <div class="glass rounded-xl p-4">
+                    <div class="text-sm text-white/70 mb-1">Manual Review</div>
+                    <div class="text-2xl font-bold text-yellow-400">28</div>
+                    <div class="text-xs text-white/50 mt-1">Requires attention</div>
+                </div>
+                <div class="glass rounded-xl p-4">
+                    <div class="text-sm text-white/70 mb-1">Failed Retries</div>
+                    <div class="text-2xl font-bold text-red-400">5</div>
+                    <div class="text-xs text-white/50 mt-1">Escalated to team</div>
+                </div>
+            </div>
+
+            <!-- Error Categories -->
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-chart-pie text-blue-400"></i>
+                    Error Breakdown by Category
+                </h3>
+                <div id="errorCategories" class="space-y-3">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Dead Letter Queue -->
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-inbox text-yellow-400"></i>
+                    Dead Letter Queue
+                </h3>
+                <div id="deadLetterQueue" class="space-y-3">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 7: API Marketplace -->
+        <div id="module-marketplace" class="module-content hidden">
+            <!-- Search & Filters -->
+            <div class="glass rounded-xl p-6 mb-6">
+                <div class="flex gap-4 mb-4">
+                    <input type="text"
+                           placeholder="Search connectors..."
+                           class="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select class="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option>All Categories</option>
+                        <option>Public Safety</option>
+                        <option>Regulatory</option>
+                        <option>Administrative</option>
+                        <option>Infrastructure</option>
+                    </select>
+                </div>
+                <div class="flex gap-2 flex-wrap">
+                    <button class="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm border border-blue-500/30">CJIS Certified</button>
+                    <button class="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm border border-white/20 transition-all">FedRAMP</button>
+                    <button class="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm border border-white/20 transition-all">Free Tier</button>
+                    <button class="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm border border-white/20 transition-all">Most Popular</button>
+                </div>
+            </div>
+
+            <!-- Connector Gallery -->
+            <div id="connectorGallery" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Module 8: Collaborative Workspace -->
+        <div id="module-workspace" class="module-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Workflow Editor -->
+                <div class="lg:col-span-2 glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-code text-blue-400"></i>
+                        Collaborative Editor
+                        <span class="text-sm bg-green-500/20 text-green-400 px-2 py-1 rounded-full ml-auto">4 users online</span>
+                    </h3>
+                    <div class="bg-black/30 rounded-lg p-4 h-96 overflow-y-auto terminal relative">
+                        <!-- Collaboration cursors -->
+                        <div class="absolute top-4 left-4 flex gap-2">
+                            <div class="flex items-center gap-1 text-xs">
+                                <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+                                <span class="text-blue-400">John (Dev)</span>
+                            </div>
+                            <div class="flex items-center gap-1 text-xs">
+                                <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                                <span class="text-green-400">Sarah (QA)</span>
+                            </div>
+                        </div>
+                        <div id="collaborativeCode" class="mt-8"></div>
+                    </div>
+                </div>
+
+                <!-- Team Chat & Activity -->
+                <div class="space-y-6">
+                    <!-- Team Chat -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-lg font-bold text-white mb-4">
+                            <i class="fas fa-comments text-green-400 mr-2"></i>Team Chat
+                        </h3>
+                        <div class="bg-black/20 rounded-lg p-3 h-48 overflow-y-auto mb-3">
+                            <div id="teamChat" class="space-y-2"></div>
+                        </div>
+                        <input type="text"
+                               placeholder="Type a message..."
+                               class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+
+                    <!-- Activity Feed -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-lg font-bold text-white mb-4">
+                            <i class="fas fa-bell text-yellow-400 mr-2"></i>Activity
+                        </h3>
+                        <div id="activityFeed" class="space-y-2 max-h-48 overflow-y-auto">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Details Modal -->
+    <div id="errorModal" class="modal">
+        <div class="modal-content glass rounded-xl p-6 m-4 w-full">
+            <div class="flex items-start justify-between mb-6">
+                <div>
+                    <h3 class="text-2xl font-bold text-white mb-2" id="modalTitle">Error Details</h3>
+                    <p class="text-white/70 text-sm" id="modalSubtitle"></p>
+                </div>
+                <button onclick="closeErrorModal()" class="text-white/70 hover:text-white text-2xl transition-all">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div id="modalContent" class="space-y-6">
+                <!-- Content populated by JavaScript -->
+            </div>
+
+            <div class="flex gap-3 mt-6">
+                <button onclick="retryError()" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white font-medium hover:shadow-lg transition-all">
+                    <i class="fas fa-redo mr-2"></i>Retry Request
+                </button>
+                <button onclick="escalateError()" class="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-white font-medium transition-all">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>Escalate to Team
+                </button>
+                <button onclick="closeErrorModal()" class="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-lg text-white font-medium transition-all">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // TODO: Connect to API management backend
+        // TODO: Integrate with government API catalogs (data.gov, api.gov)
+        // TODO: Implement real-time collaboration via WebSocket
+        // SECURITY TODO: Implement credential encryption and rotation
+        // SECURITY TODO: Add RBAC for API access control
+        // SECURITY TODO: Implement audit logging for all API operations
+
+        // MOCK DATA - Replace in production
+        const MOCK_APIS = [
+            {
+                id: 'api001',
+                name: 'FBI NCIC Database',
+                category: 'Public Safety',
+                description: 'National Crime Information Center - Criminal records and warrants',
+                compatibility: 92,
+                auth: 'OAuth 2.0 + CJIS',
+                rateLimit: '1000 req/hour',
+                uptime: 99.9,
+                latency: 245,
+                status: 'healthy',
+                compliance: ['CJIS', 'FISMA'],
+                cost: '$0.05/call'
+            },
+            {
+                id: 'api002',
+                name: 'State DMV Registry',
+                category: 'Administrative',
+                description: 'Vehicle registration, drivers license verification',
+                compatibility: 87,
+                auth: 'API Key',
+                rateLimit: '5000 req/hour',
+                uptime: 98.5,
+                latency: 180,
+                status: 'healthy',
+                compliance: ['FISMA'],
+                cost: '$0.02/call'
+            },
+            {
+                id: 'api003',
+                name: 'Grants.gov API',
+                category: 'Administrative',
+                description: 'Federal grant opportunities and application tracking',
+                compatibility: 95,
+                auth: 'OAuth 2.0',
+                rateLimit: '10000 req/hour',
+                uptime: 99.7,
+                latency: 320,
+                status: 'healthy',
+                compliance: ['FedRAMP', 'FISMA'],
+                cost: 'Free'
+            },
+            {
+                id: 'api004',
+                name: 'IRS Tax API',
+                category: 'Regulatory',
+                description: 'Tax assessment and payment processing',
+                compatibility: 89,
+                auth: 'JWT + 2FA',
+                rateLimit: '500 req/hour',
+                uptime: 99.95,
+                latency: 410,
+                status: 'healthy',
+                compliance: ['FISMA', 'IRS Publication 1075'],
+                cost: '$0.10/call'
+            },
+            {
+                id: 'api005',
+                name: 'Property Records System',
+                category: 'Administrative',
+                description: 'Land records, deeds, and property assessments',
+                compatibility: 84,
+                auth: 'API Key',
+                rateLimit: '2000 req/hour',
+                uptime: 97.8,
+                latency: 290,
+                status: 'degraded',
+                compliance: ['FISMA'],
+                cost: '$0.03/call'
+            },
+            {
+                id: 'api006',
+                name: 'Court Case Management',
+                category: 'Public Safety',
+                description: 'Court records, case status, and scheduling',
+                compatibility: 91,
+                auth: 'SAML 2.0',
+                rateLimit: '3000 req/hour',
+                uptime: 99.2,
+                latency: 265,
+                status: 'healthy',
+                compliance: ['CJIS', 'FISMA'],
+                cost: '$0.04/call'
+            },
+            {
+                id: 'api007',
+                name: '911 Dispatch System',
+                category: 'Public Safety',
+                description: 'Emergency call routing and resource dispatch',
+                compatibility: 93,
+                auth: 'OAuth 2.0 + CJIS',
+                rateLimit: '10000 req/hour',
+                uptime: 99.99,
+                latency: 125,
+                status: 'healthy',
+                compliance: ['CJIS', 'NENA', 'FISMA'],
+                cost: '$0.08/call'
+            },
+            {
+                id: 'api008',
+                name: 'NOAA Weather API',
+                category: 'Infrastructure',
+                description: 'Weather forecasts and disaster alerts',
+                compatibility: 96,
+                auth: 'API Key',
+                rateLimit: '50000 req/hour',
+                uptime: 99.6,
+                latency: 195,
+                status: 'healthy',
+                compliance: ['FISMA'],
+                cost: 'Free'
+            }
+        ];
+
+        const MOCK_ERRORS = [
+            { type: 'Timeout', count: 45, percentage: 35, color: 'red' },
+            { type: 'Auth Failure', count: 28, percentage: 22, color: 'yellow' },
+            { type: 'Rate Limit', count: 23, percentage: 18, color: 'orange' },
+            { type: 'Bad Request', count: 18, percentage: 14, color: 'blue' },
+            { type: 'Server Error', count: 13, percentage: 11, color: 'purple' }
+        ];
+
+        const MOCK_CONFLICTS = [
+            {
+                id: 'conf001',
+                record: 'Citizen Record #12847',
+                field: 'address',
+                system1: 'Citizen Portal: 123 Main St, Springfield',
+                system2: 'Tax Database: 456 Oak Ave, Springfield',
+                timestamp: '2 minutes ago'
+            },
+            {
+                id: 'conf002',
+                record: 'Property Assessment #8392',
+                field: 'value',
+                system1: 'Assessor DB: $425,000',
+                system2: 'Tax System: $398,000',
+                timestamp: '15 minutes ago'
+            },
+            {
+                id: 'conf003',
+                record: 'Business License #BR-4721',
+                field: 'status',
+                system1: 'License System: Active',
+                system2: 'Inspection DB: Suspended',
+                timestamp: '1 hour ago'
+            }
+        ];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderAPIResults(MOCK_APIS);
+            renderHealthDashboard();
+            renderErrorCategories();
+            renderDeadLetterQueue();
+            renderConflictQueue();
+            renderSyncTimeline();
+            renderConnectorGallery();
+            renderSourceData();
+            renderAuditLog();
+            renderTeamChat();
+            renderActivityFeed();
+            renderWorkflowCanvas();
+        });
+
+        function switchModule(moduleName) {
+            // Update tabs
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-module="${moduleName}"]`).classList.add('active');
+
+            // Update content
+            document.querySelectorAll('.module-content').forEach(module => {
+                module.classList.add('hidden');
+            });
+            document.getElementById(`module-${moduleName}`).classList.remove('hidden');
+        }
+
+        function renderAPIResults(apis) {
+            const container = document.getElementById('apiResults');
+            if (!container) return;
+
+            container.innerHTML = apis.map(api => `
+                <div class="api-card glass rounded-xl p-6">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <h4 class="font-bold text-white mb-1">${api.name}</h4>
+                            <p class="text-xs text-white/60">${api.category}</p>
+                        </div>
+                        <div class="status-dot bg-${api.status === 'healthy' ? 'green' : 'yellow'}-400"></div>
+                    </div>
+                    <p class="text-sm text-white/70 mb-3">${api.description}</p>
+
+                    <div class="mb-3">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-white/60">Compatibility</span>
+                            <span class="text-white font-medium">${api.compatibility}%</span>
+                        </div>
+                        <div class="compatibility-score relative overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"></div>
+                            <div class="absolute inset-0 bg-black/50" style="width: ${100 - api.compatibility}%; margin-left: ${api.compatibility}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+                        <div>
+                            <span class="text-white/50">Auth:</span>
+                            <span class="text-white ml-1">${api.auth}</span>
+                        </div>
+                        <div>
+                            <span class="text-white/50">Rate:</span>
+                            <span class="text-white ml-1">${api.rateLimit}</span>
+                        </div>
+                        <div>
+                            <span class="text-white/50">Uptime:</span>
+                            <span class="text-green-400 ml-1">${api.uptime}%</span>
+                        </div>
+                        <div>
+                            <span class="text-white/50">Latency:</span>
+                            <span class="text-blue-400 ml-1">${api.latency}ms</span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-1 mb-3 flex-wrap">
+                        ${api.compliance.map(badge => `
+                            <span class="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-full border border-green-500/30">${badge}</span>
+                        `).join('')}
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-yellow-400 font-medium">${api.cost}</span>
+                        <button onclick="connectAPI('${api.id}')" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white text-sm font-medium hover:shadow-lg transition-all">
+                            Connect
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderHealthDashboard() {
+            const container = document.getElementById('healthDashboard');
+            if (!container) return;
+
+            const healthyAPIs = MOCK_APIS.filter(api => api.status === 'healthy').length;
+            const degradedAPIs = MOCK_APIS.filter(api => api.status === 'degraded').length;
+
+            container.innerHTML = `
+                <div class="flex items-center justify-between p-3 bg-green-600/10 border border-green-500/30 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                        <div>
+                            <div class="text-white font-medium">Healthy APIs</div>
+                            <div class="text-xs text-white/60">${healthyAPIs} systems operational</div>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-green-400">${healthyAPIs}</div>
+                </div>
+
+                <div class="flex items-center justify-between p-3 bg-yellow-600/10 border border-yellow-500/30 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+                        <div>
+                            <div class="text-white font-medium">Degraded APIs</div>
+                            <div class="text-xs text-white/60">Performance issues detected</div>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-yellow-400">${degradedAPIs}</div>
+                </div>
+
+                <div class="flex items-center justify-between p-3 bg-blue-600/10 border border-blue-500/30 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-clock text-blue-400 text-xl"></i>
+                        <div>
+                            <div class="text-white font-medium">Avg Response Time</div>
+                            <div class="text-xs text-white/60">Across all APIs</div>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-blue-400">254ms</div>
+                </div>
+            `;
+        }
+
+        function renderErrorCategories() {
+            const container = document.getElementById('errorCategories');
+            if (!container) return;
+
+            container.innerHTML = MOCK_ERRORS.map(error => `
+                <div class="p-3 bg-white/5 rounded-lg">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-white font-medium">${error.type}</span>
+                        <span class="text-${error.color}-400">${error.count} errors</span>
+                    </div>
+                    <div class="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                        <div class="h-full bg-${error.color}-500" style="width: ${error.percentage}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderDeadLetterQueue() {
+            const container = document.getElementById('deadLetterQueue');
+            if (!container) return;
+
+            const errors = [
+                {
+                    id: 'err001',
+                    title: 'DMV API Timeout',
+                    description: 'Failed after 3 retry attempts - Request ID: req_8472hdj',
+                    time: '5 min ago',
+                    severity: 'critical',
+                    api: 'State DMV Registry',
+                    endpoint: '/api/v2/vehicles/registration',
+                    method: 'POST',
+                    statusCode: 504,
+                    requestPayload: {
+                        vin: '1HGBH41JXMN109186',
+                        plate: 'ABC1234',
+                        state: 'IL'
+                    },
+                    errorMessage: 'Gateway Timeout - Upstream server failed to respond within 30s',
+                    retryAttempts: 3,
+                    lastRetry: '2024-10-21 14:18:32',
+                    stackTrace: 'Error: ETIMEDOUT\n  at TLSSocket.emit (events.js:400:28)\n  at Socket._onTimeout (net.js:482:8)',
+                    recommendations: [
+                        'Check DMV API server status',
+                        'Verify network connectivity',
+                        'Consider increasing timeout threshold',
+                        'Contact DMV API support if issue persists'
+                    ]
+                },
+                {
+                    id: 'err002',
+                    title: 'Auth Token Expired',
+                    description: 'FBI NCIC API - Token refresh required',
+                    time: '12 min ago',
+                    severity: 'high',
+                    api: 'FBI NCIC Database',
+                    endpoint: '/api/ncic/v1/warrants/search',
+                    method: 'GET',
+                    statusCode: 401,
+                    requestPayload: {
+                        query: 'John Doe',
+                        jurisdiction: 'IL',
+                        recordType: 'warrant'
+                    },
+                    errorMessage: 'Unauthorized - JWT token expired at 2024-10-21 14:10:00 UTC',
+                    retryAttempts: 0,
+                    lastRetry: null,
+                    stackTrace: 'Error: 401 Unauthorized\n  at validateToken (auth.js:156)\n  at middleware (index.js:89)',
+                    recommendations: [
+                        'Refresh OAuth token using refresh_token',
+                        'Verify CJIS credentials are still valid',
+                        'Check token expiration policies',
+                        'Implement automatic token rotation'
+                    ]
+                }
+            ];
+
+            container.innerHTML = errors.map(error => `
+                <div class="p-4 bg-${error.severity === 'critical' ? 'red' : 'yellow'}-600/10 border border-${error.severity === 'critical' ? 'red' : 'yellow'}-500/30 rounded-lg">
+                    <div class="flex items-start justify-between mb-2">
+                        <div class="flex-1">
+                            <div class="text-white font-medium mb-1">${error.title}</div>
+                            <div class="text-xs text-white/60">${error.description}</div>
+                        </div>
+                        <span class="text-xs text-${error.severity === 'critical' ? 'red' : 'yellow'}-400">${error.time}</span>
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <button onclick="retryFromQueue('${error.id}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-white text-xs transition-all">
+                            ${error.id === 'err002' ? 'Refresh Token' : 'Retry'}
+                        </button>
+                        <button onclick="showErrorDetails('${error.id}')" class="px-3 py-1 bg-white/10 hover:bg-white/20 rounded text-white text-xs transition-all">View Details</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Store errors for modal access
+            window.DEAD_LETTER_ERRORS = errors;
+        }
+
+        function showErrorDetails(errorId) {
+            const error = window.DEAD_LETTER_ERRORS.find(e => e.id === errorId);
+            if (!error) return;
+
+            document.getElementById('modalTitle').textContent = error.title;
+            document.getElementById('modalSubtitle').textContent = `${error.api} • ${error.time}`;
+
+            const modalContent = document.getElementById('modalContent');
+            modalContent.innerHTML = `
+                <!-- Status Overview -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="glass rounded-lg p-4">
+                        <div class="text-white/70 text-sm mb-1">Severity</div>
+                        <div class="text-xl font-bold text-${error.severity === 'critical' ? 'red' : 'yellow'}-400 uppercase">${error.severity}</div>
+                    </div>
+                    <div class="glass rounded-lg p-4">
+                        <div class="text-white/70 text-sm mb-1">Status Code</div>
+                        <div class="text-xl font-bold text-white">${error.statusCode}</div>
+                    </div>
+                    <div class="glass rounded-lg p-4">
+                        <div class="text-white/70 text-sm mb-1">Retry Attempts</div>
+                        <div class="text-xl font-bold text-white">${error.retryAttempts}/3</div>
+                    </div>
+                </div>
+
+                <!-- Request Details -->
+                <div class="glass rounded-lg p-4">
+                    <h4 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                        <i class="fas fa-info-circle text-blue-400"></i>
+                        Request Details
+                    </h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex">
+                            <span class="text-white/70 w-32">API:</span>
+                            <span class="text-white font-medium">${error.api}</span>
+                        </div>
+                        <div class="flex">
+                            <span class="text-white/70 w-32">Endpoint:</span>
+                            <span class="text-blue-400 font-mono text-xs">${error.endpoint}</span>
+                        </div>
+                        <div class="flex">
+                            <span class="text-white/70 w-32">Method:</span>
+                            <span class="text-green-400 font-bold">${error.method}</span>
+                        </div>
+                        ${error.lastRetry ? `
+                        <div class="flex">
+                            <span class="text-white/70 w-32">Last Retry:</span>
+                            <span class="text-white">${error.lastRetry}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <!-- Error Message -->
+                <div class="glass rounded-lg p-4">
+                    <h4 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                        <i class="fas fa-exclamation-circle text-red-400"></i>
+                        Error Message
+                    </h4>
+                    <div class="bg-black/30 rounded-lg p-3 text-red-400 font-mono text-xs">
+                        ${error.errorMessage}
+                    </div>
+                </div>
+
+                <!-- Request Payload -->
+                <div class="glass rounded-lg p-4">
+                    <h4 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                        <i class="fas fa-code text-purple-400"></i>
+                        Request Payload
+                    </h4>
+                    <div class="bg-black/30 rounded-lg p-3 terminal overflow-x-auto">
+                        <pre class="text-green-400 text-xs">${JSON.stringify(error.requestPayload, null, 2)}</pre>
+                    </div>
+                </div>
+
+                <!-- Stack Trace -->
+                <div class="glass rounded-lg p-4">
+                    <h4 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                        <i class="fas fa-bug text-yellow-400"></i>
+                        Stack Trace
+                    </h4>
+                    <div class="bg-black/30 rounded-lg p-3 terminal overflow-x-auto">
+                        <pre class="text-yellow-400 text-xs">${error.stackTrace}</pre>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="glass rounded-lg p-4">
+                    <h4 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                        <i class="fas fa-lightbulb text-green-400"></i>
+                        Recommendations
+                    </h4>
+                    <ul class="space-y-2">
+                        ${error.recommendations.map(rec => `
+                            <li class="flex items-start gap-2 text-sm">
+                                <i class="fas fa-check text-green-400 mt-1"></i>
+                                <span class="text-white/80">${rec}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+
+            document.getElementById('errorModal').classList.add('active');
+            window.currentErrorId = errorId;
+        }
+
+        function closeErrorModal() {
+            document.getElementById('errorModal').classList.remove('active');
+            window.currentErrorId = null;
+        }
+
+        function retryError() {
+            const errorId = window.currentErrorId;
+            if (!errorId) return;
+
+            const error = window.DEAD_LETTER_ERRORS.find(e => e.id === errorId);
+            console.log('Retrying error:', error.title);
+
+            // TODO: Implement actual retry logic
+            alert(`Retrying: ${error.title}\n\nSending request to: ${error.endpoint}\nMethod: ${error.method}\n\nTODO: Connect to retry service`);
+            closeErrorModal();
+        }
+
+        function escalateError() {
+            const errorId = window.currentErrorId;
+            if (!errorId) return;
+
+            const error = window.DEAD_LETTER_ERRORS.find(e => e.id === errorId);
+            console.log('Escalating error:', error.title);
+
+            // TODO: Implement escalation workflow
+            alert(`Escalating to Team\n\nError: ${error.title}\nSeverity: ${error.severity}\nAPI: ${error.api}\n\nNotifications will be sent to:\n• DevOps Team\n• API Support\n• Security Team (CJIS compliance)\n\nTODO: Connect to incident management system`);
+            closeErrorModal();
+        }
+
+        function retryFromQueue(errorId) {
+            const error = window.DEAD_LETTER_ERRORS.find(e => e.id === errorId);
+            console.log('Retrying from queue:', error.title);
+
+            // TODO: Implement actual retry logic
+            alert(`Retrying: ${error.title}\n\nSending request to: ${error.endpoint}\nMethod: ${error.method}\n\nTODO: Connect to retry service`);
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeErrorModal();
+            }
+        });
+
+        function renderConflictQueue() {
+            const container = document.getElementById('conflictQueue');
+            if (!container) return;
+
+            container.innerHTML = MOCK_CONFLICTS.map(conflict => `
+                <div class="p-4 bg-yellow-600/10 border border-yellow-500/30 rounded-lg">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-white font-medium">${conflict.record}</span>
+                        <span class="text-xs text-white/50">${conflict.timestamp}</span>
+                    </div>
+                    <div class="text-xs text-white/70 mb-2">Field: <span class="text-yellow-400">${conflict.field}</span></div>
+                    <div class="grid grid-cols-2 gap-2 mb-3 text-xs">
+                        <div class="p-2 bg-white/5 rounded">
+                            <div class="text-white/50 mb-1">System A</div>
+                            <div class="text-white">${conflict.system1}</div>
+                        </div>
+                        <div class="p-2 bg-white/5 rounded">
+                            <div class="text-white/50 mb-1">System B</div>
+                            <div class="text-white">${conflict.system2}</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white text-xs transition-all">Use System A</button>
+                        <button class="flex-1 px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded text-white text-xs transition-all">Use System B</button>
+                        <button class="px-3 py-2 bg-white/10 hover:bg-white/20 rounded text-white text-xs transition-all">Manual Merge</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderSyncTimeline() {
+            const container = document.getElementById('syncTimeline');
+            if (!container) return;
+
+            const events = [
+                { type: 'success', system: 'DMV → Property Records', count: '2,847 records', time: '2 min ago', icon: 'check-circle', color: 'green' },
+                { type: 'warning', system: 'Tax System → Finance', count: '3 conflicts detected', time: '8 min ago', icon: 'exclamation-triangle', color: 'yellow' },
+                { type: 'success', system: 'Court → Case Management', count: '1,523 records', time: '15 min ago', icon: 'check-circle', color: 'green' },
+                { type: 'error', system: 'FBI NCIC → Police CAD', count: 'Connection timeout', time: '22 min ago', icon: 'times-circle', color: 'red' },
+                { type: 'success', system: 'Citizen Portal → CRM', count: '847 records', time: '35 min ago', icon: 'check-circle', color: 'green' }
+            ];
+
+            container.innerHTML = events.map(event => `
+                <div class="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+                    <i class="fas fa-${event.icon} text-${event.color}-400 mt-1"></i>
+                    <div class="flex-1">
+                        <div class="text-white font-medium text-sm">${event.system}</div>
+                        <div class="text-xs text-white/60">${event.count}</div>
+                    </div>
+                    <span class="text-xs text-white/50">${event.time}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderConnectorGallery() {
+            const container = document.getElementById('connectorGallery');
+            if (!container) return;
+
+            container.innerHTML = MOCK_APIS.map(api => `
+                <div class="api-card glass rounded-xl p-6">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-plug text-white text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white">${api.name}</h4>
+                                <p class="text-xs text-white/60">${api.category}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-sm text-white/70 mb-3">${api.description}</p>
+
+                    <div class="flex gap-1 mb-3 flex-wrap">
+                        ${api.compliance.map(badge => `
+                            <span class="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-full border border-green-500/30">${badge}</span>
+                        `).join('')}
+                    </div>
+
+                    <div class="flex items-center gap-4 text-xs text-white/60 mb-4">
+                        <div class="flex items-center gap-1">
+                            <i class="fas fa-star text-yellow-400"></i>
+                            <span>4.8</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <i class="fas fa-download text-blue-400"></i>
+                            <span>1.2K installs</span>
+                        </div>
+                    </div>
+
+                    <button onclick="installConnector('${api.id}')" class="w-full py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white text-sm font-medium hover:shadow-lg transition-all">
+                        <i class="fas fa-download mr-2"></i>Install Connector
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function renderSourceData() {
+            const container = document.getElementById('sourceData');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="text-green-400 text-xs">// Source Record from DMV API</div>
+                <div class="text-white text-xs mt-2">
+                {<br>
+                &nbsp;&nbsp;"firstName": "John",<br>
+                &nbsp;&nbsp;"lastName": "Smith",<br>
+                &nbsp;&nbsp;"address": "123 Main St",<br>
+                &nbsp;&nbsp;"dob": "03/15/1985",<br>
+                &nbsp;&nbsp;"phone": "555-0123"<br>
+                }
+                </div>
+            `;
+
+            const output = document.getElementById('outputData');
+            if (output) {
+                output.innerHTML = `
+                    <div class="text-green-400 text-xs">// Transformed Record</div>
+                    <div class="text-white text-xs mt-2">
+                    {<br>
+                    &nbsp;&nbsp;"name": "Smith, John M.",<br>
+                    &nbsp;&nbsp;"address": "123 Main Street, Springfield, IL 62701",<br>
+                    &nbsp;&nbsp;"dob": "1985-03-15T00:00:00Z",<br>
+                    &nbsp;&nbsp;"phone": "(555) 012-3456"<br>
+                    }
+                    </div>
+                `;
+            }
+        }
+
+        function renderAuditLog() {
+            const container = document.getElementById('auditLog');
+            if (!container) return;
+
+            const logs = [
+                '[2024-10-21 14:23:15] USER: admin@springfield.gov | ACTION: API_ACCESS | TARGET: FBI_NCIC | STATUS: SUCCESS',
+                '[2024-10-21 14:22:48] USER: jsmith@springfield.gov | ACTION: DATA_QUERY | TARGET: DMV_REGISTRY | STATUS: SUCCESS',
+                '[2024-10-21 14:22:12] USER: security_bot | ACTION: THREAT_SCAN | TARGET: ALL_APIS | STATUS: CLEAR',
+                '[2024-10-21 14:21:55] USER: admin@springfield.gov | ACTION: CREDENTIAL_ROTATION | TARGET: IRS_API | STATUS: SUCCESS',
+                '[2024-10-21 14:21:33] USER: sjohnson@springfield.gov | ACTION: API_ACCESS | TARGET: PROPERTY_RECORDS | STATUS: SUCCESS'
+            ];
+
+            container.innerHTML = logs.map(log => `
+                <div class="text-green-400 text-xs mb-1">${log}</div>
+            `).join('');
+        }
+
+        function renderTeamChat() {
+            const container = document.getElementById('teamChat');
+            if (!container) return;
+
+            const messages = [
+                { user: 'John', role: 'Dev', msg: 'Added new DMV connector', time: '2 min ago', color: 'blue' },
+                { user: 'Sarah', role: 'QA', msg: 'Testing the integration now', time: '1 min ago', color: 'green' },
+                { user: 'Mike', role: 'Security', msg: 'Compliance check passed ✓', time: '30 sec ago', color: 'purple' }
+            ];
+
+            container.innerHTML = messages.map(m => `
+                <div class="text-xs">
+                    <span class="text-${m.color}-400 font-medium">${m.user} (${m.role})</span>
+                    <span class="text-white/70">: ${m.msg}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderActivityFeed() {
+            const container = document.getElementById('activityFeed');
+            if (!container) return;
+
+            const activities = [
+                { icon: 'code', text: 'John pushed changes to main', time: '2 min ago', color: 'blue' },
+                { icon: 'check', text: 'Sarah approved PR #247', time: '5 min ago', color: 'green' },
+                { icon: 'comment', text: 'Mike commented on API connector', time: '8 min ago', color: 'yellow' },
+                { icon: 'rocket', text: 'Deployed to staging environment', time: '12 min ago', color: 'purple' }
+            ];
+
+            container.innerHTML = activities.map(a => `
+                <div class="flex items-start gap-2 text-xs">
+                    <i class="fas fa-${a.icon} text-${a.color}-400 mt-0.5"></i>
+                    <div class="flex-1">
+                        <div class="text-white/80">${a.text}</div>
+                        <div class="text-white/50">${a.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderWorkflowCanvas() {
+            const container = document.getElementById('workflowCanvas');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="absolute top-4 left-4 p-4 bg-green-600/20 border-2 border-green-500 rounded-lg text-white text-sm">
+                    <i class="fas fa-play-circle mr-2"></i>Start
+                </div>
+                <div class="absolute top-32 left-4 p-4 bg-blue-600/20 border-2 border-blue-500 rounded-lg text-white text-sm">
+                    <i class="fas fa-question-circle mr-2"></i>Cost > $50K?
+                </div>
+                <div class="absolute top-32 right-4 p-4 bg-purple-600/20 border-2 border-purple-500 rounded-lg text-white text-sm">
+                    <i class="fas fa-cog mr-2"></i>Route to Review
+                </div>
+                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 p-4 bg-red-600/20 border-2 border-red-500 rounded-lg text-white text-sm">
+                    <i class="fas fa-flag-checkered mr-2"></i>End
+                </div>
+            `;
+        }
+
+        // Interactive Functions
+        function searchAPIs() {
+            const query = document.getElementById('apiSearch').value;
+            console.log('Searching for:', query);
+            // TODO: Implement natural language API search
+            alert(`Searching for: "${query}"\n\nFound ${MOCK_APIS.length} matching APIs\n\nTODO: Connect to API catalog search engine`);
+        }
+
+        function quickSearch(category) {
+            const filtered = MOCK_APIS.filter(api =>
+                api.name.toLowerCase().includes(category.toLowerCase()) ||
+                api.description.toLowerCase().includes(category.toLowerCase())
+            );
+            renderAPIResults(filtered);
+        }
+
+        function connectAPI(apiId) {
+            const api = MOCK_APIS.find(a => a.id === apiId);
+            console.log('Connecting to API:', api.name);
+            // TODO: Implement API connection wizard
+            alert(`Connecting to ${api.name}\n\nAuthentication: ${api.auth}\nRate Limit: ${api.rateLimit}\n\nTODO: Open connection wizard with credential configuration`);
+        }
+
+        function addTransformation() {
+            console.log('Adding new transformation');
+            // TODO: Open transformation editor
+            alert('Add Transformation\n\nSelect transformation type:\n• Format conversion\n• Data validation\n• Field mapping\n• Custom function\n\nTODO: Implement transformation builder');
+        }
+
+        function addCondition() {
+            console.log('Adding workflow condition');
+            // TODO: Open condition editor
+            alert('Add Condition\n\nConfigure conditional logic:\n• IF-THEN-ELSE\n• AND/OR gates\n• Field comparisons\n• Time-based rules\n\nTODO: Implement visual condition builder');
+        }
+
+        function addAction() {
+            console.log('Adding workflow action');
+            // TODO: Open action selector
+            alert('Add Action\n\nSelect action type:\n• API call\n• Data transformation\n• Send notification\n• Route to system\n\nTODO: Implement action configuration');
+        }
+
+        function simulateWorkflow() {
+            console.log('Simulating workflow');
+            // TODO: Run workflow simulation
+            alert('Workflow Simulation\n\nRunning 100 test scenarios...\n\n✓ Success: 94\n⚠ Warnings: 5\n✗ Errors: 1\n\nTODO: Implement workflow simulator with historical data');
+        }
+
+        function installConnector(apiId) {
+            const api = MOCK_APIS.find(a => a.id === apiId);
+            console.log('Installing connector:', api.name);
+            // TODO: Implement connector installation wizard
+            alert(`Installing ${api.name} Connector\n\nSteps:\n1. Verify compliance requirements\n2. Configure authentication\n3. Set rate limits\n4. Test connection\n5. Deploy to production\n\nTODO: Open installation wizard`);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 's') {
+                    e.preventDefault();
+                    alert('💾 Save function\n\nTODO: Implement configuration save');
+                }
+            }
+        });
+
+        console.log('🚀 API Integration Platform initialized');
+        console.log('📊 Loaded', MOCK_APIS.length, 'government APIs');
+        console.log('🔒 CJIS Compliance: ENABLED');
+        console.log('✅ All systems operational');
+    </script>
+</body>
+</html>

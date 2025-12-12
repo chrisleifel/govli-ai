@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CJIS Security Compliance Configuration - Govli AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%);
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .config-card {
+            transition: all 0.3s ease;
+        }
+
+        .config-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #10b981;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        .audit-log-entry {
+            border-left: 3px solid;
+            transition: all 0.3s ease;
+        }
+
+        .audit-log-entry:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.35s;
+            transform-origin: 50% 50%;
+        }
+
+        .compliance-chart {
+            position: relative;
+            width: 200px;
+            height: 200px;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="glass rounded-xl p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-white mb-2">
+                        <i class="fas fa-shield-alt mr-3"></i>CJIS Security Compliance Configuration
+                    </h1>
+                    <p class="text-white/70">Enhanced authentication, FIPS 140-2 encryption, and comprehensive audit logging</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span class="badge bg-green-500/20 text-green-400">
+                        <i class="fas fa-check-circle mr-1"></i>CJIS Compliant
+                    </span>
+                    <span class="badge bg-blue-500/20 text-blue-400">
+                        <i class="fas fa-certificate mr-1"></i>FIPS 140-2
+                    </span>
+                    <span class="badge bg-purple-500/20 text-purple-400">
+                        <i class="fas fa-lock mr-1"></i>FISMA Certified
+                    </span>
+                </div>
+            </div>
+
+            <!-- Compliance Score -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div class="glass rounded-lg p-4">
+                    <div class="text-white/70 text-sm mb-1">Overall Compliance</div>
+                    <div class="text-2xl font-bold text-green-400">98.7%</div>
+                    <div class="text-green-400 text-sm mt-1"><i class="fas fa-check mr-1"></i>Excellent</div>
+                </div>
+                <div class="glass rounded-lg p-4">
+                    <div class="text-white/70 text-sm mb-1">Authentication</div>
+                    <div class="text-2xl font-bold text-green-400">100%</div>
+                    <div class="text-green-400 text-sm mt-1"><i class="fas fa-user-shield mr-1"></i>Enforced</div>
+                </div>
+                <div class="glass rounded-lg p-4">
+                    <div class="text-white/70 text-sm mb-1">Encryption</div>
+                    <div class="text-2xl font-bold text-green-400">100%</div>
+                    <div class="text-green-400 text-sm mt-1"><i class="fas fa-key mr-1"></i>FIPS Mode</div>
+                </div>
+                <div class="glass rounded-lg p-4">
+                    <div class="text-white/70 text-sm mb-1">Audit Logging</div>
+                    <div class="text-2xl font-bold text-blue-400">97.5%</div>
+                    <div class="text-white/60 text-sm mt-1"><i class="fas fa-clipboard-list mr-1"></i>Active</div>
+                </div>
+                <div class="glass rounded-lg p-4">
+                    <div class="text-white/70 text-sm mb-1">Security Events</div>
+                    <div class="text-2xl font-bold text-yellow-400">12</div>
+                    <div class="text-white/60 text-sm mt-1"><i class="fas fa-bell mr-1"></i>Last 24h</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Configuration Tabs -->
+        <div class="glass rounded-xl p-2 mb-6">
+            <div class="flex gap-2 overflow-x-auto">
+                <button class="config-tab-button active px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap" data-tab="authentication" onclick="switchConfigTab('authentication')">
+                    <i class="fas fa-user-lock mr-2"></i>Authentication
+                </button>
+                <button class="config-tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap" data-tab="encryption" onclick="switchConfigTab('encryption')">
+                    <i class="fas fa-lock mr-2"></i>Encryption (FIPS 140-2)
+                </button>
+                <button class="config-tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap" data-tab="audit" onclick="switchConfigTab('audit')">
+                    <i class="fas fa-clipboard-list mr-2"></i>Audit Logging
+                </button>
+                <button class="config-tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap" data-tab="access" onclick="switchConfigTab('access')">
+                    <i class="fas fa-shield-alt mr-2"></i>Access Control
+                </button>
+                <button class="config-tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap" data-tab="monitoring" onclick="switchConfigTab('monitoring')">
+                    <i class="fas fa-chart-line mr-2"></i>Monitoring
+                </button>
+            </div>
+        </div>
+
+        <!-- Authentication Configuration -->
+        <div id="authentication-config" class="config-content">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column: Settings -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Multi-Factor Authentication -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                            <i class="fas fa-mobile-alt text-blue-400 mr-2"></i>
+                            Multi-Factor Authentication (MFA)
+                            <span class="ml-auto badge bg-green-500/20 text-green-400">Required</span>
+                        </h3>
+
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 glass rounded-lg">
+                                <div class="flex-1">
+                                    <h4 class="text-white font-semibold mb-1">Enforce MFA for All Users</h4>
+                                    <p class="text-white/60 text-sm">Require two-factor authentication for all system access</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked onchange="toggleMFA(this)">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 glass rounded-lg">
+                                <div class="flex-1">
+                                    <h4 class="text-white font-semibold mb-1">Biometric Authentication</h4>
+                                    <p class="text-white/60 text-sm">Fingerprint or facial recognition for enhanced security</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 glass rounded-lg">
+                                <div class="flex-1">
+                                    <h4 class="text-white font-semibold mb-1">Hardware Security Keys</h4>
+                                    <p class="text-white/60 text-sm">FIDO2/WebAuthn compliant security keys (YubiKey, etc.)</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-info-circle text-blue-400 mt-1"></i>
+                                <div>
+                                    <p class="text-white text-sm font-semibold mb-1">CJIS Requirement</p>
+                                    <p class="text-white/70 text-sm">Multi-factor authentication is mandatory for accessing Criminal Justice Information (CJI) data per CJIS Security Policy 5.6.2.2</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Password Policy -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                            <i class="fas fa-key text-purple-400 mr-2"></i>
+                            Advanced Password Policy
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="glass rounded-lg p-4">
+                                <label class="text-white/70 text-sm mb-2 block">Minimum Length</label>
+                                <input type="number" value="12" min="8" max="64" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <p class="text-white/50 text-xs mt-1">CJIS minimum: 8 characters</p>
+                            </div>
+
+                            <div class="glass rounded-lg p-4">
+                                <label class="text-white/70 text-sm mb-2 block">Password Expiration (days)</label>
+                                <input type="number" value="90" min="30" max="365" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <p class="text-white/50 text-xs mt-1">CJIS requirement: Max 90 days</p>
+                            </div>
+
+                            <div class="glass rounded-lg p-4">
+                                <label class="text-white/70 text-sm mb-2 block">Failed Attempt Lockout</label>
+                                <input type="number" value="3" min="1" max="10" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <p class="text-white/50 text-xs mt-1">Lock account after failed attempts</p>
+                            </div>
+
+                            <div class="glass rounded-lg p-4">
+                                <label class="text-white/70 text-sm mb-2 block">Lockout Duration (minutes)</label>
+                                <input type="number" value="30" min="5" max="1440" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <p class="text-white/50 text-xs mt-1">Account lockout period</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 space-y-2">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" checked class="w-4 h-4 rounded">
+                                <span class="text-white text-sm">Require uppercase letters</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" checked class="w-4 h-4 rounded">
+                                <span class="text-white text-sm">Require lowercase letters</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" checked class="w-4 h-4 rounded">
+                                <span class="text-white text-sm">Require numbers</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" checked class="w-4 h-4 rounded">
+                                <span class="text-white text-sm">Require special characters (!@#$%^&*)</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" checked class="w-4 h-4 rounded">
+                                <span class="text-white text-sm">Prevent password reuse (last 10 passwords)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Session Management -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                            <i class="fas fa-clock text-green-400 mr-2"></i>
+                            Session Management
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="glass rounded-lg p-4">
+                                <label class="text-white/70 text-sm mb-2 block">Session Timeout (minutes)</label>
+                                <input type="number" value="15" min="5" max="60" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <p class="text-white/50 text-xs mt-1">Idle session timeout</p>
+                            </div>
+
+                            <div class="glass rounded-lg p-4">
+                                <label class="text-white/70 text-sm mb-2 block">Max Concurrent Sessions</label>
+                                <input type="number" value="1" min="1" max="5" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <p class="text-white/50 text-xs mt-1">Per user account</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 flex items-center justify-between p-4 glass rounded-lg">
+                            <div class="flex-1">
+                                <h4 class="text-white font-semibold mb-1">Automatic Logout on Browser Close</h4>
+                                <p class="text-white/60 text-sm">End session when browser window closes</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Status & Metrics -->
+                <div class="space-y-6">
+                    <!-- Current Status -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-lg font-bold text-white mb-4">Authentication Status</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-white/80 text-sm">MFA Enrollment</span>
+                                    <span class="text-green-400 font-semibold">87%</span>
+                                </div>
+                                <div class="w-full bg-white/10 rounded-full h-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 87%"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-white/80 text-sm">Password Compliance</span>
+                                    <span class="text-green-400 font-semibold">94%</span>
+                                </div>
+                                <div class="w-full bg-white/10 rounded-full h-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 94%"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-white/80 text-sm">Active Sessions</span>
+                                    <span class="text-blue-400 font-semibold">142</span>
+                                </div>
+                                <div class="w-full bg-white/10 rounded-full h-2">
+                                    <div class="bg-blue-500 h-2 rounded-full" style="width: 35%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Events -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-lg font-bold text-white mb-4">Recent Auth Events</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <div class="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="text-white text-sm">Successful MFA login</p>
+                                    <p class="text-white/50 text-xs">admin@govli.ai • 2m ago</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="w-2 h-2 bg-red-400 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="text-white text-sm">Failed login attempt</p>
+                                    <p class="text-white/50 text-xs">192.168.1.100 • 15m ago</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="w-2 h-2 bg-yellow-400 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="text-white text-sm">Password expiring soon</p>
+                                    <p class="text-white/50 text-xs">john.doe@govli.ai • 1h ago</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-lg font-bold text-white mb-4">Quick Actions</h3>
+                        <div class="space-y-2">
+                            <button onclick="enforcePasswordReset()" class="w-full bg-blue-500/20 hover:bg-blue-500/30 text-white px-4 py-3 rounded-lg transition text-sm text-left">
+                                <i class="fas fa-sync-alt mr-2"></i>Force Password Reset (All Users)
+                            </button>
+                            <button onclick="terminateSessions()" class="w-full bg-red-500/20 hover:bg-red-500/30 text-white px-4 py-3 rounded-lg transition text-sm text-left">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Terminate All Sessions
+                            </button>
+                            <button onclick="exportAuthLog()" class="w-full bg-green-500/20 hover:bg-green-500/30 text-white px-4 py-3 rounded-lg transition text-sm text-left">
+                                <i class="fas fa-download mr-2"></i>Export Auth Logs
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Encryption Configuration -->
+        <div id="encryption-config" class="config-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- FIPS 140-2 Settings -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                            <i class="fas fa-certificate text-blue-400 mr-2"></i>
+                            FIPS 140-2 Encryption
+                            <span class="ml-auto badge bg-green-500/20 text-green-400">Enabled</span>
+                        </h3>
+
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 glass rounded-lg">
+                                <div class="flex-1">
+                                    <h4 class="text-white font-semibold mb-1">FIPS Mode Enabled</h4>
+                                    <p class="text-white/60 text-sm">Use only FIPS 140-2 validated cryptographic modules</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked disabled>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="glass rounded-lg p-4">
+                                <h4 class="text-white font-semibold mb-3">Encryption Algorithms</h4>
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-white/80 text-sm">Data at Rest</span>
+                                        <span class="badge bg-blue-500/20 text-blue-400">AES-256-GCM</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-white/80 text-sm">Data in Transit</span>
+                                        <span class="badge bg-blue-500/20 text-blue-400">TLS 1.3</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-white/80 text-sm">Key Exchange</span>
+                                        <span class="badge bg-blue-500/20 text-blue-400">ECDHE</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-white/80 text-sm">Hashing</span>
+                                        <span class="badge bg-blue-500/20 text-blue-400">SHA-384</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                                    <div>
+                                        <p class="text-white text-sm font-semibold mb-1">FIPS 140-2 Validated</p>
+                                        <p class="text-white/70 text-sm">All cryptographic operations use NIST-certified modules (Certificate #3245)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Key Management -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                            <i class="fas fa-key text-purple-400 mr-2"></i>
+                            Key Management System (KMS)
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div class="glass rounded-lg p-4">
+                                <label class="text-white/70 text-sm mb-2 block">Key Rotation Period (days)</label>
+                                <input type="number" value="90" min="30" max="365" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <p class="text-white/50 text-xs mt-1">Automatic key rotation</p>
+                            </div>
+
+                            <div class="glass rounded-lg p-4">
+                                <label class="text-white/70 text-sm mb-2 block">Key Backup Copies</label>
+                                <input type="number" value="3" min="2" max="5" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <p class="text-white/50 text-xs mt-1">Secure backup locations</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 glass rounded-lg">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-white font-semibold text-sm">Master Encryption Key</span>
+                                        <span class="status-indicator bg-green-400"></span>
+                                    </div>
+                                    <p class="text-white/60 text-xs">Last rotated: 45 days ago • Next: 45 days</p>
+                                </div>
+                                <button onclick="rotateKey('master')" class="text-blue-400 hover:text-blue-300 text-sm">
+                                    <i class="fas fa-sync-alt mr-1"></i>Rotate Now
+                                </button>
+                            </div>
+
+                            <div class="flex items-center justify-between p-3 glass rounded-lg">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-white font-semibold text-sm">Database Encryption Key</span>
+                                        <span class="status-indicator bg-green-400"></span>
+                                    </div>
+                                    <p class="text-white/60 text-xs">Last rotated: 62 days ago • Next: 28 days</p>
+                                </div>
+                                <button onclick="rotateKey('database')" class="text-blue-400 hover:text-blue-300 text-sm">
+                                    <i class="fas fa-sync-alt mr-1"></i>Rotate Now
+                                </button>
+                            </div>
+
+                            <div class="flex items-center justify-between p-3 glass rounded-lg">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-white font-semibold text-sm">API Communication Key</span>
+                                        <span class="status-indicator bg-green-400"></span>
+                                    </div>
+                                    <p class="text-white/60 text-xs">Last rotated: 12 days ago • Next: 78 days</p>
+                                </div>
+                                <button onclick="rotateKey('api')" class="text-blue-400 hover:text-blue-300 text-sm">
+                                    <i class="fas fa-sync-alt mr-1"></i>Rotate Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Certificate Management -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                            <i class="fas fa-certificate text-green-400 mr-2"></i>
+                            SSL/TLS Certificates
+                        </h3>
+
+                        <div class="space-y-3">
+                            <div class="glass rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-white font-semibold">govli.ai</span>
+                                    <span class="badge bg-green-500/20 text-green-400">Valid</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                        <span class="text-white/60">Issued:</span>
+                                        <span class="text-white ml-1">2024-01-15</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-white/60">Expires:</span>
+                                        <span class="text-white ml-1">2025-01-15</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-white/60">Issuer:</span>
+                                        <span class="text-white ml-1">Let's Encrypt</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-white/60">Type:</span>
+                                        <span class="text-white ml-1">RSA 4096</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="space-y-6">
+                    <!-- Encryption Status -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-lg font-bold text-white mb-4">Encryption Coverage</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-white/80 text-sm">Data at Rest</span>
+                                    <span class="text-green-400 font-semibold">100%</span>
+                                </div>
+                                <div class="w-full bg-white/10 rounded-full h-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 100%"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-white/80 text-sm">Data in Transit</span>
+                                    <span class="text-green-400 font-semibold">100%</span>
+                                </div>
+                                <div class="w-full bg-white/10 rounded-full h-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 100%"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-white/80 text-sm">Backup Encryption</span>
+                                    <span class="text-green-400 font-semibold">100%</span>
+                                </div>
+                                <div class="w-full bg-white/10 rounded-full h-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Compliance Checklist -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-lg font-bold text-white mb-4">CJIS Requirements</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                                <div>
+                                    <p class="text-white text-sm font-semibold">FIPS 140-2 Validated</p>
+                                    <p class="text-white/60 text-xs">Policy 5.10.1.2</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                                <div>
+                                    <p class="text-white text-sm font-semibold">AES-256 Encryption</p>
+                                    <p class="text-white/60 text-xs">Policy 5.10.1.2.1</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                                <div>
+                                    <p class="text-white text-sm font-semibold">Key Management</p>
+                                    <p class="text-white/60 text-xs">Policy 5.10.1.3</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                                <div>
+                                    <p class="text-white text-sm font-semibold">TLS 1.3 Transport</p>
+                                    <p class="text-white/60 text-xs">Policy 5.10.1.1</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Logging Configuration -->
+        <div id="audit-config" class="config-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Audit Settings -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                            <i class="fas fa-clipboard-list text-blue-400 mr-2"></i>
+                            Comprehensive Audit Logging
+                            <span class="ml-auto badge bg-green-500/20 text-green-400">Active</span>
+                        </h3>
+
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 glass rounded-lg">
+                                <div class="flex-1">
+                                    <h4 class="text-white font-semibold mb-1">Authentication Events</h4>
+                                    <p class="text-white/60 text-sm">Login, logout, failed attempts, MFA events</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked disabled>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 glass rounded-lg">
+                                <div class="flex-1">
+                                    <h4 class="text-white font-semibold mb-1">Data Access Logging</h4>
+                                    <p class="text-white/60 text-sm">All CJI data access with user, timestamp, action</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked disabled>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 glass rounded-lg">
+                                <div class="flex-1">
+                                    <h4 class="text-white font-semibold mb-1">Configuration Changes</h4>
+                                    <p class="text-white/60 text-sm">Security settings, user permissions, system config</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 glass rounded-lg">
+                                <div class="flex-1">
+                                    <h4 class="text-white font-semibold mb-1">API Activity</h4>
+                                    <p class="text-white/60 text-sm">All API calls with parameters and responses</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 glass rounded-lg">
+                                <div class="flex-1">
+                                    <h4 class="text-white font-semibold mb-1">Security Incidents</h4>
+                                    <p class="text-white/60 text-sm">Failed auth, anomalies, policy violations</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Retention & Storage -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                            <i class="fas fa-database text-purple-400 mr-2"></i>
+                            Log Retention & Storage
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div class="glass rounded-lg p-4">
+                                <label class="text-white/70 text-sm mb-2 block">Retention Period (years)</label>
+                                <input type="number" value="7" min="1" max="10" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <p class="text-white/50 text-xs mt-1">CJIS minimum: 7 years</p>
+                            </div>
+
+                            <div class="glass rounded-lg p-4">
+                                <label class="text-white/70 text-sm mb-2 block">Archive After (days)</label>
+                                <input type="number" value="90" min="30" max="365" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <p class="text-white/50 text-xs mt-1">Move to cold storage</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="glass rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-white font-semibold text-sm">Current Log Size</span>
+                                    <span class="text-blue-400 font-semibold">24.7 GB</span>
+                                </div>
+                                <div class="w-full bg-white/10 rounded-full h-2">
+                                    <div class="bg-blue-500 h-2 rounded-full" style="width: 45%"></div>
+                                </div>
+                                <p class="text-white/50 text-xs mt-1">45% of allocated storage</p>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 glass rounded-lg">
+                                <div class="flex-1">
+                                    <h4 class="text-white font-semibold mb-1">Encrypted Log Storage</h4>
+                                    <p class="text-white/60 text-sm">AES-256 encryption for audit logs</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked disabled>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 glass rounded-lg">
+                                <div class="flex-1">
+                                    <h4 class="text-white font-semibold mb-1">Tamper Protection</h4>
+                                    <p class="text-white/60 text-sm">Write-once-read-many (WORM) storage</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked disabled>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Audit Logs -->
+                    <div class="glass rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold text-white flex items-center">
+                                <i class="fas fa-history text-green-400 mr-2"></i>
+                                Recent Audit Events
+                            </h3>
+                            <button onclick="refreshAuditLogs()" class="text-blue-400 hover:text-blue-300 text-sm">
+                                <i class="fas fa-sync-alt mr-1"></i>Refresh
+                            </button>
+                        </div>
+
+                        <div class="space-y-2" id="auditLogsList">
+                            <!-- Audit logs will be inserted here -->
+                        </div>
+
+                        <div class="mt-4 text-center">
+                            <button onclick="viewFullAuditLog()" class="text-blue-400 hover:text-blue-300 text-sm">
+                                View Full Audit Log <i class="fas fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="space-y-6">
+                    <!-- Audit Statistics -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-lg font-bold text-white mb-4">Audit Statistics</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-white/80 text-sm">Events Today</span>
+                                    <span class="text-white font-semibold">1,847</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-white/80 text-sm">Auth Events</span>
+                                    <span class="text-blue-400 font-semibold">342</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-white/80 text-sm">Data Access</span>
+                                    <span class="text-green-400 font-semibold">1,205</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-white/80 text-sm">Config Changes</span>
+                                    <span class="text-yellow-400 font-semibold">23</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-white/80 text-sm">Security Events</span>
+                                    <span class="text-red-400 font-semibold">12</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Export Options -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-lg font-bold text-white mb-4">Export Audit Logs</h3>
+                        <div class="space-y-3">
+                            <button onclick="exportAuditLogs('csv')" class="w-full bg-blue-500/20 hover:bg-blue-500/30 text-white px-4 py-3 rounded-lg transition text-sm text-left">
+                                <i class="fas fa-file-csv mr-2"></i>Export as CSV
+                            </button>
+                            <button onclick="exportAuditLogs('json')" class="w-full bg-green-500/20 hover:bg-green-500/30 text-white px-4 py-3 rounded-lg transition text-sm text-left">
+                                <i class="fas fa-file-code mr-2"></i>Export as JSON
+                            </button>
+                            <button onclick="exportAuditLogs('pdf')" class="w-full bg-red-500/20 hover:bg-red-500/30 text-white px-4 py-3 rounded-lg transition text-sm text-left">
+                                <i class="fas fa-file-pdf mr-2"></i>Export as PDF Report
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- CJIS Requirements -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-lg font-bold text-white mb-4">CJIS Audit Requirements</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                                <div>
+                                    <p class="text-white text-sm font-semibold">User Authentication</p>
+                                    <p class="text-white/60 text-xs">Policy 5.3</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                                <div>
+                                    <p class="text-white text-sm font-semibold">Access Attempts</p>
+                                    <p class="text-white/60 text-xs">Policy 5.4.1</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                                <div>
+                                    <p class="text-white text-sm font-semibold">7-Year Retention</p>
+                                    <p class="text-white/60 text-xs">Policy 5.11</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                                <div>
+                                    <p class="text-white text-sm font-semibold">Tamper Detection</p>
+                                    <p class="text-white/60 text-xs">Policy 5.11.2</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Access Control & Monitoring Tabs (Hidden by default) -->
+        <div id="access-config" class="config-content hidden">
+            <div class="glass rounded-xl p-12 text-center">
+                <i class="fas fa-shield-alt text-6xl text-white/20 mb-4"></i>
+                <p class="text-white text-lg mb-2">Access Control Configuration</p>
+                <p class="text-white/60">Role-based access control and permissions management</p>
+            </div>
+        </div>
+
+        <div id="monitoring-config" class="config-content hidden">
+            <div class="glass rounded-xl p-12 text-center">
+                <i class="fas fa-chart-line text-6xl text-white/20 mb-4"></i>
+                <p class="text-white text-lg mb-2">Security Monitoring Dashboard</p>
+                <p class="text-white/60">Real-time security metrics and alerting</p>
+            </div>
+        </div>
+
+        <!-- Save Configuration Button -->
+        <div class="fixed bottom-6 right-6 z-50">
+            <button onclick="saveSecurityConfig()" class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4 rounded-full text-white font-semibold shadow-2xl hover:shadow-3xl transition-all transform hover:scale-105">
+                <i class="fas fa-save mr-2"></i>Save Configuration
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // MOCK DATA - Replace in production
+        // TODO: Connect to security configuration API endpoint
+        // SECURITY TODO: Implement actual CJIS compliance validation
+
+        const AUDIT_LOGS = [
+            { id: 1, timestamp: new Date('2024-10-27T14:23:00'), user: 'admin@govli.ai', action: 'Login successful', category: 'auth', severity: 'info', ip: '192.168.1.50' },
+            { id: 2, timestamp: new Date('2024-10-27T14:18:00'), user: 'john.doe@govli.ai', action: 'Accessed CJI record #4821', category: 'data', severity: 'info', ip: '192.168.1.75' },
+            { id: 3, timestamp: new Date('2024-10-27T14:12:00'), user: 'system', action: 'Password policy updated', category: 'config', severity: 'warning', ip: '127.0.0.1' },
+            { id: 4, timestamp: new Date('2024-10-27T14:05:00'), user: 'jane.smith@govli.ai', action: 'MFA enrollment completed', category: 'auth', severity: 'info', ip: '192.168.1.100' },
+            { id: 5, timestamp: new Date('2024-10-27T13:58:00'), user: 'unknown', action: 'Failed login attempt', category: 'security', severity: 'critical', ip: '203.45.67.89' },
+            { id: 6, timestamp: new Date('2024-10-27T13:45:00'), user: 'admin@govli.ai', action: 'Encryption key rotated', category: 'security', severity: 'warning', ip: '192.168.1.50' },
+            { id: 7, timestamp: new Date('2024-10-27T13:30:00'), user: 'api_service', action: 'API rate limit exceeded', category: 'security', severity: 'warning', ip: '203.45.67.89' },
+            { id: 8, timestamp: new Date('2024-10-27T13:15:00'), user: 'backup_job', action: 'Automated backup completed', category: 'system', severity: 'info', ip: '127.0.0.1' }
+        ];
+
+        function renderAuditLogs() {
+            const container = document.getElementById('auditLogsList');
+            if (!container) return;
+
+            const severityColors = {
+                critical: 'red',
+                warning: 'yellow',
+                info: 'blue'
+            };
+
+            const severityIcons = {
+                critical: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+
+            const logsHTML = AUDIT_LOGS.map(log => {
+                const color = severityColors[log.severity] || 'gray';
+                const icon = severityIcons[log.severity] || 'fa-circle';
+                const timeAgo = getTimeAgo(log.timestamp);
+
+                return `
+                    <div class="audit-log-entry glass rounded-lg p-3 border-l-${color}-400" style="border-left-width: 3px;">
+                        <div class="flex items-start gap-3">
+                            <i class="fas ${icon} text-${color}-400 mt-1"></i>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-white text-sm font-medium">${log.action}</p>
+                                <div class="flex items-center gap-3 mt-1 text-xs text-white/60">
+                                    <span><i class="fas fa-user mr-1"></i>${log.user}</span>
+                                    <span><i class="fas fa-clock mr-1"></i>${timeAgo}</span>
+                                    <span><i class="fas fa-network-wired mr-1"></i>${log.ip}</span>
+                                </div>
+                            </div>
+                            <span class="text-xs px-2 py-1 rounded-full bg-${color}-500/20 text-${color}-400">${log.category}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = logsHTML;
+        }
+
+        function switchConfigTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.config-tab-button').forEach(btn => {
+                btn.classList.remove('active', 'bg-gradient-to-r', 'from-blue-500', 'to-purple-600');
+                if (btn.dataset.tab === tabName) {
+                    btn.classList.add('active', 'bg-gradient-to-r', 'from-blue-500', 'to-purple-600');
+                }
+            });
+
+            // Hide all content
+            document.querySelectorAll('.config-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Show selected content
+            document.getElementById(tabName + '-config').classList.remove('hidden');
+        }
+
+        function toggleMFA(checkbox) {
+            const status = checkbox.checked ? 'enabled' : 'disabled';
+            showNotification(`MFA ${status} for all users`, 'success');
+        }
+
+        function saveSecurityConfig() {
+            // TODO: Save configuration to API
+            showNotification('Security configuration saved successfully', 'success');
+        }
+
+        function enforcePasswordReset() {
+            if (confirm('Force password reset for all users? This will require all users to create new passwords on next login.')) {
+                showNotification('Password reset enforced for all users', 'success');
+            }
+        }
+
+        function terminateSessions() {
+            if (confirm('Terminate all active sessions? All users will be logged out immediately.')) {
+                showNotification('All sessions terminated', 'warning');
+            }
+        }
+
+        function exportAuthLog() {
+            showNotification('Exporting authentication logs...', 'info');
+            setTimeout(() => {
+                showNotification('Authentication logs exported successfully', 'success');
+            }, 1500);
+        }
+
+        function rotateKey(keyType) {
+            if (confirm(`Rotate ${keyType} encryption key? This may cause brief service interruption.`)) {
+                showNotification(`${keyType} key rotation initiated`, 'info');
+                setTimeout(() => {
+                    showNotification(`${keyType} key rotated successfully`, 'success');
+                }, 2000);
+            }
+        }
+
+        function refreshAuditLogs() {
+            showNotification('Refreshing audit logs...', 'info');
+            setTimeout(() => {
+                renderAuditLogs();
+                showNotification('Audit logs refreshed', 'success');
+            }, 500);
+        }
+
+        function viewFullAuditLog() {
+            showNotification('Opening full audit log viewer...', 'info');
+        }
+
+        function exportAuditLogs(format) {
+            showNotification(`Exporting audit logs as ${format.toUpperCase()}...`, 'info');
+            setTimeout(() => {
+                showNotification(`Audit logs exported as ${format.toUpperCase()}`, 'success');
+            }, 1500);
+        }
+
+        function getTimeAgo(timestamp) {
+            const seconds = Math.floor((new Date() - timestamp) / 1000);
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+            return `${Math.floor(seconds / 86400)}d ago`;
+        }
+
+        function showNotification(message, type = 'success') {
+            const colors = {
+                success: 'green',
+                error: 'red',
+                info: 'blue',
+                warning: 'yellow'
+            };
+            const color = colors[type] || 'blue';
+            const icons = {
+                success: 'check-circle',
+                error: 'exclamation-circle',
+                info: 'info-circle',
+                warning: 'exclamation-triangle'
+            };
+            const icon = icons[type] || 'info-circle';
+
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 glass rounded-lg p-4 text-white bg-${color}-500/20 border border-${color}-400 z-50`;
+            notification.innerHTML = `<i class="fas fa-${icon} mr-2"></i>${message}`;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderAuditLogs();
+        });
+    </script>
+</body>
+</html>

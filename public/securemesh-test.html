@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureMesh - Cross-Department Secure Communications Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #1e40af;
+            --secondary-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --success-green: #10b981;
+            --warning-yellow: #f59e0b;
+            --danger-red: #ef4444;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Security Clearance Badges */
+        .clearance-unclassified {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            color: #10b981;
+        }
+
+        .clearance-confidential {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid #3b82f6;
+            color: #60a5fa;
+        }
+
+        .clearance-secret {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid #f59e0b;
+            color: #fbbf24;
+        }
+
+        .clearance-top-secret {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #f87171;
+        }
+
+        /* Message Bubbles */
+        .message-sent {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            border-radius: 18px 18px 4px 18px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .message-received {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 18px 18px 18px 4px;
+        }
+
+        /* AI Analysis Indicators */
+        .sentiment-positive {
+            color: #10b981;
+        }
+
+        .sentiment-neutral {
+            color: #3b82f6;
+        }
+
+        .sentiment-negative {
+            color: #ef4444;
+        }
+
+        .urgency-low {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .urgency-medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .urgency-high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        /* Blockchain Verification */
+        .blockchain-verified {
+            animation: pulse-verify 2s infinite;
+        }
+
+        @keyframes pulse-verify {
+            0%, 100% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.8); }
+        }
+
+        /* Real-time Connection Indicator */
+        .connection-active {
+            animation: blink-connection 1.5s infinite;
+        }
+
+        @keyframes blink-connection {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Typing Indicator */
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #3b82f6;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typing-bounce 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing-bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        /* Custom Scrollbar */
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3b82f6, #1e40af);
+            border-radius: 10px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #60a5fa, #3b82f6);
+        }
+
+        /* Tab Buttons */
+        .mesh-tab-button {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .mesh-tab-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .mesh-tab-button.active {
+            background: rgba(59, 130, 246, 0.3);
+            border-bottom: 3px solid #3b82f6;
+        }
+
+        /* Module Content */
+        .mesh-module-content {
+            display: none;
+        }
+
+        .mesh-module-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* AI Processing Animation */
+        .ai-processing {
+            animation: ai-pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes ai-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body class="gradient-bg text-white overflow-hidden">
+    <div class="flex h-screen">
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="glass-dark border-b border-white/10 p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-network-wired text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-white">SecureMesh</h2>
+                            <p class="text-sm text-white/70">Cross-Department Secure Communications Hub</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="glass rounded-lg px-3 py-2">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-2 h-2 bg-green-400 rounded-full connection-active"></div>
+                                <span class="text-sm text-white">CJIS Compliant</span>
+                            </div>
+                        </div>
+                        <div class="glass rounded-lg px-3 py-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-shield-alt text-green-400"></i>
+                                <span class="text-sm text-white clearance-secret px-2 py-1 rounded-full text-xs font-semibold">SECRET</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <!-- Module Navigation -->
+                <div class="glass rounded-xl p-2 mb-6">
+                    <div class="flex items-center space-x-2 overflow-x-auto scrollbar-thin">
+                        <button onclick="switchMeshModule('messenger')" class="mesh-tab-button active px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap transition-all" data-mesh-module="messenger">
+                            <i class="fas fa-comments mr-2"></i>Secure Messenger
+                        </button>
+                        <button onclick="switchMeshModule('channels')" class="mesh-tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap transition-all" data-mesh-module="channels">
+                            <i class="fas fa-hashtag mr-2"></i>Channels
+                        </button>
+                        <button onclick="switchMeshModule('directory')" class="mesh-tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap transition-all" data-mesh-module="directory">
+                            <i class="fas fa-address-book mr-2"></i>Directory
+                        </button>
+                        <button onclick="switchMeshModule('ai-analysis')" class="mesh-tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap transition-all" data-mesh-module="ai-analysis">
+                            <i class="fas fa-brain mr-2"></i>AI Analysis
+                        </button>
+                        <button onclick="switchMeshModule('audit')" class="mesh-tab-button px-4 py-3 rounded-lg text-white text-sm font-medium whitespace-nowrap transition-all" data-mesh-module="audit">
+                            <i class="fas fa-clipboard-list mr-2"></i>Audit Trail
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Module 1: Secure Messenger -->
+                <!-- Added 2024-11-06: SecureMesh Secure Messenger -->
+                <div id="mesh-module-messenger" class="mesh-module-content active">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Conversations List -->
+                        <div class="glass rounded-xl p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-bold text-white">Conversations</h3>
+                                <button onclick="startNewConversation()" class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-all">
+                                    <i class="fas fa-plus text-white"></i>
+                                </button>
+                            </div>
+
+                            <!-- Search -->
+                            <div class="mb-4">
+                                <input type="text" id="conversationSearch" placeholder="Search conversations..." class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/50 text-sm">
+                            </div>
+
+                            <!-- Conversations -->
+                            <div class="space-y-2 max-h-[600px] overflow-y-auto scrollbar-thin" id="conversationsList">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Chat Window -->
+                        <div class="lg:col-span-2 glass rounded-xl flex flex-col" style="height: 700px;">
+                            <!-- Chat Header -->
+                            <div class="border-b border-white/10 p-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                                            <span class="text-white font-bold text-sm" id="chatInitials">--</span>
+                                        </div>
+                                        <div>
+                                            <div class="text-white font-semibold" id="chatName">Select a conversation</div>
+                                            <div class="text-white/60 text-xs" id="chatStatus">Offline</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <!-- Clearance Selector Dropdown -->
+                                        <div class="relative">
+                                            <button id="clearanceDropdownBtn" class="px-3 py-1 rounded-full text-xs font-semibold clearance-secret flex items-center gap-1 cursor-pointer hover:opacity-80 transition-all">
+                                                <span id="chatClearance">SECRET</span>
+                                                <i class="fas fa-chevron-down text-xs"></i>
+                                            </button>
+                                            <div id="clearanceDropdown" class="hidden absolute right-0 mt-2 w-48 glass rounded-lg shadow-xl z-50">
+                                                <div class="p-2 space-y-1">
+                                                    <button onclick="changeClearance('unclassified')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 transition-all clearance-unclassified text-xs font-semibold">
+                                                        UNCLASSIFIED
+                                                    </button>
+                                                    <button onclick="changeClearance('confidential')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 transition-all clearance-confidential text-xs font-semibold">
+                                                        CONFIDENTIAL
+                                                    </button>
+                                                    <button onclick="changeClearance('secret')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 transition-all clearance-secret text-xs font-semibold">
+                                                        SECRET
+                                                    </button>
+                                                    <button onclick="changeClearance('top-secret')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 transition-all clearance-top-secret text-xs font-semibold">
+                                                        TOP SECRET
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Chat Options Menu Button -->
+                                        <div class="relative">
+                                            <button id="chatOptionsBtn" class="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 transition-all">
+                                                <i class="fas fa-ellipsis-v text-white"></i>
+                                            </button>
+                                            <div id="chatOptionsMenu" class="hidden absolute right-0 mt-2 w-56 glass rounded-lg shadow-xl z-50">
+                                                <div class="p-2 space-y-1">
+                                                    <button onclick="viewConversationInfo()" class="w-full text-left px-4 py-2 rounded-lg hover:bg-white/10 transition-all text-white text-sm">
+                                                        <i class="fas fa-info-circle mr-2 text-blue-400"></i>Conversation Info
+                                                    </button>
+                                                    <button onclick="exportToEmail()" class="w-full text-left px-4 py-2 rounded-lg hover:bg-white/10 transition-all text-white text-sm">
+                                                        <i class="fas fa-envelope mr-2 text-green-400"></i>Export to Email
+                                                    </button>
+                                                    <button onclick="shareExternally()" class="w-full text-left px-4 py-2 rounded-lg hover:bg-white/10 transition-all text-white text-sm">
+                                                        <i class="fas fa-share-alt mr-2 text-purple-400"></i>Share Externally
+                                                    </button>
+                                                    <button onclick="viewAuditTrail()" class="w-full text-left px-4 py-2 rounded-lg hover:bg-white/10 transition-all text-white text-sm">
+                                                        <i class="fas fa-clipboard-list mr-2 text-yellow-400"></i>View Audit Trail
+                                                    </button>
+                                                    <div class="border-t border-white/10 my-1"></div>
+                                                    <button onclick="muteConversation()" class="w-full text-left px-4 py-2 rounded-lg hover:bg-white/10 transition-all text-white text-sm">
+                                                        <i class="fas fa-bell-slash mr-2 text-gray-400"></i>Mute Notifications
+                                                    </button>
+                                                    <button onclick="archiveConversation()" class="w-full text-left px-4 py-2 rounded-lg hover:bg-white/10 transition-all text-white text-sm">
+                                                        <i class="fas fa-archive mr-2 text-gray-400"></i>Archive
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Messages Area -->
+                            <div class="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin" id="messagesArea">
+                                <!-- Messages populated by JavaScript -->
+                            </div>
+
+                            <!-- Typing Indicator -->
+                            <div id="typingIndicator" class="px-4 py-2 hidden">
+                                <div class="flex items-center space-x-2">
+                                    <div class="typing-indicator">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                    </div>
+                                    <span class="text-white/60 text-sm">Someone is typing...</span>
+                                </div>
+                            </div>
+
+                            <!-- AI Classification Display -->
+                            <div id="aiClassification" class="px-4 py-2 glass-dark mx-4 mb-2 rounded-lg hidden">
+                                <div class="flex items-center justify-between text-xs">
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fas fa-brain text-purple-400"></i>
+                                        <span class="text-white/70">AI Classification:</span>
+                                        <span class="px-2 py-1 rounded-full font-semibold clearance-confidential" id="aiClassLevel">CONFIDENTIAL</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-white/70">Sentiment:</span>
+                                        <i class="fas fa-smile sentiment-positive" id="aiSentiment"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Message Input -->
+                            <div class="border-t border-white/10 p-4">
+                                <!-- Voice Recording UI (Hidden by default) -->
+                                <div id="voiceRecordingUI" class="hidden mb-3 glass-dark rounded-lg p-4">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
+                                                <i class="fas fa-microphone text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-white font-semibold">Recording Voice Memo</div>
+                                                <div class="text-white/60 text-xs" id="recordingTimer">00:00</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button onclick="cancelRecording()" class="px-4 py-2 bg-white/10 rounded-lg text-white text-sm hover:bg-white/20 transition-all">
+                                                <i class="fas fa-times mr-1"></i>Cancel
+                                            </button>
+                                            <button onclick="stopRecording()" class="px-4 py-2 bg-blue-500 rounded-lg text-white text-sm hover:bg-blue-600 transition-all">
+                                                <i class="fas fa-stop mr-1"></i>Stop & Send
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Email Compose UI (Hidden by default) -->
+                                <div id="emailComposeUI" class="hidden mb-3 glass-dark rounded-lg p-4">
+                                    <div class="space-y-3">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <h4 class="text-white font-semibold text-sm">
+                                                <i class="fas fa-envelope mr-2 text-blue-400"></i>Send to External Agency
+                                            </h4>
+                                            <button onclick="closeEmailCompose()" class="text-white/60 hover:text-white transition-all">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                        <input type="email" id="emailRecipient" placeholder="recipient@agency.gov" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/50 text-sm">
+                                        <input type="text" id="emailSubject" placeholder="Subject: Secure Communication" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/50 text-sm">
+                                        <textarea id="emailMessage" placeholder="Type your message..." class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/50 text-sm h-24 resize-none"></textarea>
+                                        <div class="flex items-center justify-between">
+                                            <div class="text-xs text-white/60">
+                                                <i class="fas fa-lock mr-1"></i>Encrypted via secure gateway
+                                            </div>
+                                            <button onclick="sendEmailMessage()" class="px-4 py-2 bg-green-500 rounded-lg text-white text-sm hover:bg-green-600 transition-all">
+                                                <i class="fas fa-paper-plane mr-1"></i>Send Email
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex space-x-2">
+                                    <button onclick="attachFile()" class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 transition-all" title="Attach file">
+                                        <i class="fas fa-paperclip text-white"></i>
+                                    </button>
+                                    <button onclick="toggleVoiceRecording()" id="voiceMemoBtn" class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 transition-all" title="Record voice memo">
+                                        <i class="fas fa-microphone text-white"></i>
+                                    </button>
+                                    <button onclick="openEmailCompose()" class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 transition-all" title="Send to external agency">
+                                        <i class="fas fa-envelope text-white"></i>
+                                    </button>
+                                    <input type="text" id="messageInput" placeholder="Type a secure message..." class="flex-1 bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/50">
+                                    <button onclick="sendMessage()" class="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white font-semibold hover:shadow-lg transition-all">
+                                        <i class="fas fa-paper-plane mr-2"></i>Send
+                                    </button>
+                                </div>
+                                <div class="flex items-center justify-between mt-2 text-xs text-white/50">
+                                    <span>End-to-End Encrypted • Blockchain Verified</span>
+                                    <span>AI Classification: <span class="text-blue-400">Active</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Module 2: Channels -->
+                <!-- Added 2024-11-06: Department & Agency Channels -->
+                <div id="mesh-module-channels" class="mesh-module-content">
+                    <!-- Channels Overview -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Active Channels</div>
+                            <div class="text-3xl font-bold text-white mb-2">24</div>
+                            <div class="text-xs text-green-400">+3 this week</div>
+                        </div>
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Total Members</div>
+                            <div class="text-3xl font-bold text-blue-400 mb-2">847</div>
+                            <div class="text-xs text-white/50">Across departments</div>
+                        </div>
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Messages Today</div>
+                            <div class="text-3xl font-bold text-purple-400 mb-2">2,341</div>
+                            <div class="text-xs text-green-400">+12% vs yesterday</div>
+                        </div>
+                    </div>
+
+                    <!-- Channel Categories -->
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-layer-group text-blue-400"></i>
+                            Department Channels
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="channelsList">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Emergency Channels -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-exclamation-triangle text-red-400"></i>
+                            Emergency Response Channels
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="emergencyChannelsList">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Module 3: Directory -->
+                <!-- Added 2024-11-06: Cross-Department Directory -->
+                <div id="mesh-module-directory" class="mesh-module-content">
+                    <!-- Search and Filters -->
+                    <div class="glass rounded-xl p-4 mb-6">
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <div class="flex-1">
+                                <input type="text" id="directorySearch" placeholder="Search by name, department, or role..." class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50">
+                            </div>
+                            <select id="departmentFilter" class="bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white">
+                                <option value="all">All Departments</option>
+                                <option value="law-enforcement">Law Enforcement</option>
+                                <option value="fire">Fire & Rescue</option>
+                                <option value="ems">EMS</option>
+                                <option value="public-works">Public Works</option>
+                                <option value="administration">Administration</option>
+                            </select>
+                            <select id="clearanceFilter" class="bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white">
+                                <option value="all">All Clearances</option>
+                                <option value="unclassified">Unclassified</option>
+                                <option value="confidential">Confidential</option>
+                                <option value="secret">Secret</option>
+                                <option value="top-secret">Top Secret</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Directory Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="directoryGrid">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Module 4: AI Analysis Dashboard -->
+                <!-- Added 2024-11-06: AI-Powered Communication Analysis -->
+                <div id="mesh-module-ai-analysis" class="mesh-module-content">
+                    <!-- AI Analysis Overview -->
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h2 class="text-2xl font-bold text-white mb-2">AI Communication Analysis</h2>
+                                <p class="text-white/70">Real-time NLP analysis and security classification</p>
+                            </div>
+                            <div class="flex items-center gap-2 bg-purple-500/20 px-4 py-2 rounded-lg border border-purple-400/30">
+                                <i class="fas fa-brain text-purple-400 ai-processing"></i>
+                                <span class="text-purple-300 text-sm font-semibold">AI ACTIVE</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Metrics -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Messages Analyzed</div>
+                            <div class="text-3xl font-bold text-white mb-2">15,847</div>
+                            <div class="text-xs text-green-400">Today</div>
+                        </div>
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Auto-Classifications</div>
+                            <div class="text-3xl font-bold text-blue-400 mb-2">98.7%</div>
+                            <div class="text-xs text-white/50">Accuracy rate</div>
+                        </div>
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Threat Detections</div>
+                            <div class="text-3xl font-bold text-red-400 mb-2">3</div>
+                            <div class="text-xs text-yellow-400">Flagged for review</div>
+                        </div>
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Response Time</div>
+                            <div class="text-3xl font-bold text-purple-400 mb-2">247ms</div>
+                            <div class="text-xs text-green-400">Average</div>
+                        </div>
+                    </div>
+
+                    <!-- Classification Distribution -->
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-chart-pie text-blue-400"></i>
+                            Security Classification Distribution
+                        </h3>
+
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-white/70 flex items-center gap-2">
+                                        <span class="px-2 py-1 rounded-full text-xs clearance-unclassified">UNCLASSIFIED</span>
+                                    </span>
+                                    <span class="text-white font-medium">12,847 (81%)</span>
+                                </div>
+                                <div class="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-green-500 to-green-400" style="width: 81%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-white/70 flex items-center gap-2">
+                                        <span class="px-2 py-1 rounded-full text-xs clearance-confidential">CONFIDENTIAL</span>
+                                    </span>
+                                    <span class="text-white font-medium">2,341 (15%)</span>
+                                </div>
+                                <div class="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-blue-500 to-blue-400" style="width: 15%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-white/70 flex items-center gap-2">
+                                        <span class="px-2 py-1 rounded-full text-xs clearance-secret">SECRET</span>
+                                    </span>
+                                    <span class="text-white font-medium">547 (3%)</span>
+                                </div>
+                                <div class="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-yellow-500 to-yellow-400" style="width: 3%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-white/70 flex items-center gap-2">
+                                        <span class="px-2 py-1 rounded-full text-xs clearance-top-secret">TOP SECRET</span>
+                                    </span>
+                                    <span class="text-white font-medium">112 (1%)</span>
+                                </div>
+                                <div class="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-red-500 to-red-400" style="width: 1%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sentiment Analysis -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="glass rounded-xl p-6">
+                            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                <i class="fas fa-smile text-green-400"></i>
+                                Sentiment Analysis
+                            </h3>
+
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-smile sentiment-positive text-xl"></i>
+                                        <span class="text-white/80">Positive</span>
+                                    </div>
+                                    <span class="text-white font-bold">68%</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-meh sentiment-neutral text-xl"></i>
+                                        <span class="text-white/80">Neutral</span>
+                                    </div>
+                                    <span class="text-white font-bold">27%</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-frown sentiment-negative text-xl"></i>
+                                        <span class="text-white/80">Negative</span>
+                                    </div>
+                                    <span class="text-white font-bold">5%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass rounded-xl p-6">
+                            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                <i class="fas fa-exclamation-circle text-yellow-400"></i>
+                                Urgency Detection
+                            </h3>
+
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-3 py-1 rounded-full text-xs font-semibold urgency-high">HIGH</span>
+                                        <span class="text-white/80">Urgent</span>
+                                    </div>
+                                    <span class="text-white font-bold">234</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-3 py-1 rounded-full text-xs font-semibold urgency-medium">MEDIUM</span>
+                                        <span class="text-white/80">Standard</span>
+                                    </div>
+                                    <span class="text-white font-bold">8,412</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-3 py-1 rounded-full text-xs font-semibold urgency-low">LOW</span>
+                                        <span class="text-white/80">Routine</span>
+                                    </div>
+                                    <span class="text-white font-bold">7,201</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Features Demo -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-flask text-purple-400"></i>
+                            AI Features Demo
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Auto-Classification Demo -->
+                            <div class="glass-dark rounded-lg p-4">
+                                <h4 class="text-white font-semibold mb-3 flex items-center gap-2">
+                                    <i class="fas fa-tag text-blue-400"></i>
+                                    Auto-Classification
+                                </h4>
+                                <textarea id="classificationInput" rows="3" placeholder="Type a message to see AI classification in action..." class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/50 text-sm mb-3"></textarea>
+                                <button onclick="demoClassification()" class="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white font-semibold hover:shadow-lg transition-all">
+                                    <i class="fas fa-brain mr-2"></i>Analyze with AI
+                                </button>
+                                <div id="classificationResult" class="mt-3 hidden">
+                                    <!-- Results populated by JavaScript -->
+                                </div>
+                            </div>
+
+                            <!-- Sentiment Analysis Demo -->
+                            <div class="glass-dark rounded-lg p-4">
+                                <h4 class="text-white font-semibold mb-3 flex items-center gap-2">
+                                    <i class="fas fa-heart text-red-400"></i>
+                                    Sentiment Analysis
+                                </h4>
+                                <textarea id="sentimentInput" rows="3" placeholder="Enter text to analyze sentiment..." class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/50 text-sm mb-3"></textarea>
+                                <button onclick="demoSentiment()" class="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-semibold hover:shadow-lg transition-all">
+                                    <i class="fas fa-brain mr-2"></i>Analyze Sentiment
+                                </button>
+                                <div id="sentimentResult" class="mt-3 hidden">
+                                    <!-- Results populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Module 5: Blockchain Audit Trail -->
+                <!-- Added 2024-11-06: Blockchain-Verified Audit Trail -->
+                <div id="mesh-module-audit" class="mesh-module-content">
+                    <!-- Audit Overview -->
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold text-white mb-2">Blockchain Audit Trail</h2>
+                                <p class="text-white/70">Immutable communication records with cryptographic verification</p>
+                            </div>
+                            <div class="flex items-center gap-2 bg-green-500/20 px-4 py-2 rounded-lg border border-green-400/30 blockchain-verified">
+                                <i class="fas fa-check-circle text-green-400"></i>
+                                <span class="text-green-300 text-sm font-semibold">VERIFIED</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Blockchain Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Total Blocks</div>
+                            <div class="text-3xl font-bold text-white mb-2">8,947</div>
+                            <div class="text-xs text-green-400">+124 today</div>
+                        </div>
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Messages Verified</div>
+                            <div class="text-3xl font-bold text-green-400 mb-2">100%</div>
+                            <div class="text-xs text-white/50">All communications</div>
+                        </div>
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Chain Integrity</div>
+                            <div class="text-3xl font-bold text-blue-400 mb-2">Valid</div>
+                            <div class="text-xs text-green-400">No tampering detected</div>
+                        </div>
+                        <div class="glass rounded-xl p-6">
+                            <div class="text-white/70 text-xs mb-2">Last Verification</div>
+                            <div class="text-3xl font-bold text-purple-400 mb-2">2s</div>
+                            <div class="text-xs text-white/50">ago</div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Audit Logs -->
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-list text-blue-400"></i>
+                            Recent Audit Logs
+                        </h3>
+
+                        <div class="space-y-3" id="auditLogsList">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== SECUREMESH JAVASCRIPT =====
+        // Added 2024-11-06: SecureMesh Secure Communications Platform
+
+        // MOCK DATA - Replace in production
+        // TODO: Connect to WebSocket server for real-time communications
+        // TODO: Connect to AI NLP API endpoint /api/ai/classify
+        // TODO: Connect to blockchain verification service /api/blockchain/verify
+        // SECURITY TODO: Implement clearance-based access control
+
+        const MOCK_CONVERSATIONS = [
+            {
+                id: 1,
+                name: "Chief Sarah Martinez",
+                department: "Police Department",
+                clearance: "secret",
+                lastMessage: "Emergency response protocols updated",
+                timestamp: "2024-11-06T14:30:00Z",
+                unread: 2,
+                online: true
+            },
+            {
+                id: 2,
+                name: "Fire Chief Robert Johnson",
+                department: "Fire & Rescue",
+                clearance: "confidential",
+                lastMessage: "Equipment inspection scheduled",
+                timestamp: "2024-11-06T13:15:00Z",
+                unread: 0,
+                online: true
+            },
+            {
+                id: 3,
+                name: "Director Jennifer Lee",
+                department: "Emergency Management",
+                clearance: "top-secret",
+                lastMessage: "Critical infrastructure assessment",
+                timestamp: "2024-11-06T12:45:00Z",
+                unread: 5,
+                online: false
+            },
+            {
+                id: 4,
+                name: "Captain Michael Davis",
+                department: "State Police",
+                clearance: "secret",
+                lastMessage: "Task force meeting tomorrow",
+                timestamp: "2024-11-06T11:20:00Z",
+                unread: 1,
+                online: true
+            }
+        ];
+
+        const MOCK_MESSAGES = [
+            {
+                id: 1,
+                sender: "Chief Sarah Martinez",
+                content: "We need to coordinate on the emergency response drill scheduled for next week.",
+                timestamp: "2024-11-06T14:25:00Z",
+                classification: "confidential",
+                sentiment: "neutral",
+                urgency: "medium",
+                blockchainHash: "0x7f9fade1c0d57a7af66ab4ead7c2c2fb7b3df2f3a17bdf4e1a3a3b8e2b1e4c5d",
+                verified: true,
+                sent: false
+            },
+            {
+                id: 2,
+                sender: "me",
+                content: "Agreed. I've reviewed the protocols and we're ready on our end. All units will be briefed by Friday.",
+                timestamp: "2024-11-06T14:27:00Z",
+                classification: "confidential",
+                sentiment: "positive",
+                urgency: "medium",
+                blockchainHash: "0x8a1fade2d1e68b8bg77bc5fbe8d3d3gc8c4eg3g4b28ceg5f2b4b4c9f3c2f5d6e",
+                verified: true,
+                sent: true
+            },
+            {
+                id: 3,
+                sender: "Chief Sarah Martinez",
+                content: "Excellent. Let's ensure all communication channels are tested before the drill.",
+                timestamp: "2024-11-06T14:30:00Z",
+                classification: "confidential",
+                sentiment: "positive",
+                urgency: "medium",
+                blockchainHash: "0x9b2gbef3e2f79c9ch88cd6gde9e4e4hd9d5fh4h5c39dfh6g3c5c5d0g4d3g6e7f",
+                verified: true,
+                sent: false
+            }
+        ];
+
+        const MOCK_CHANNELS = [
+            {
+                id: 1,
+                name: "Law Enforcement Coordination",
+                department: "Multi-Agency",
+                members: 247,
+                clearance: "secret",
+                lastActivity: "5m ago",
+                unread: 12
+            },
+            {
+                id: 2,
+                name: "Fire & EMS Operations",
+                department: "Public Safety",
+                members: 189,
+                clearance: "confidential",
+                lastActivity: "12m ago",
+                unread: 3
+            },
+            {
+                id: 3,
+                name: "Public Works Updates",
+                department: "Infrastructure",
+                members: 156,
+                clearance: "unclassified",
+                lastActivity: "1h ago",
+                unread: 0
+            },
+            {
+                id: 4,
+                name: "IT Security Team",
+                department: "Technology",
+                members: 34,
+                clearance: "secret",
+                lastActivity: "3h ago",
+                unread: 8
+            }
+        ];
+
+        const MOCK_EMERGENCY_CHANNELS = [
+            {
+                id: 1,
+                name: "CRITICAL: Active Incident",
+                status: "active",
+                clearance: "top-secret",
+                members: 45,
+                priority: "high"
+            },
+            {
+                id: 2,
+                name: "Emergency Operations Center",
+                status: "standby",
+                clearance: "secret",
+                members: 128,
+                priority: "medium"
+            }
+        ];
+
+        const MOCK_DIRECTORY = [
+            {
+                id: 1,
+                name: "Sarah Martinez",
+                title: "Chief of Police",
+                department: "Police Department",
+                clearance: "secret",
+                phone: "(555) 123-4567",
+                email: "s.martinez@city.gov",
+                online: true
+            },
+            {
+                id: 2,
+                name: "Robert Johnson",
+                title: "Fire Chief",
+                department: "Fire & Rescue",
+                clearance: "confidential",
+                phone: "(555) 234-5678",
+                email: "r.johnson@city.gov",
+                online: true
+            },
+            {
+                id: 3,
+                name: "Jennifer Lee",
+                title: "Emergency Management Director",
+                department: "Emergency Management",
+                clearance: "top-secret",
+                phone: "(555) 345-6789",
+                email: "j.lee@city.gov",
+                online: false
+            },
+            {
+                id: 4,
+                name: "Michael Davis",
+                title: "State Police Captain",
+                department: "State Police",
+                clearance: "secret",
+                phone: "(555) 456-7890",
+                email: "m.davis@state.gov",
+                online: true
+            },
+            {
+                id: 5,
+                name: "Amanda Rodriguez",
+                title: "Public Works Director",
+                department: "Public Works",
+                clearance: "confidential",
+                phone: "(555) 567-8901",
+                email: "a.rodriguez@city.gov",
+                online: false
+            },
+            {
+                id: 6,
+                name: "David Chen",
+                title: "IT Security Manager",
+                department: "Technology Services",
+                clearance: "secret",
+                phone: "(555) 678-9012",
+                email: "d.chen@city.gov",
+                online: true
+            }
+        ];
+
+        const MOCK_AUDIT_LOGS = [
+            {
+                id: 1,
+                action: "Message Sent",
+                user: "Chief Sarah Martinez",
+                timestamp: "2024-11-06T14:30:15Z",
+                classification: "confidential",
+                blockchainHash: "0x9b2gbef3e2f79c9ch88cd6gde9e4e4hd9d5fh4h5c39dfh6g3c5c5d0g4d3g6e7f",
+                verified: true
+            },
+            {
+                id: 2,
+                action: "Channel Created",
+                user: "System Administrator",
+                timestamp: "2024-11-06T14:15:42Z",
+                classification: "unclassified",
+                blockchainHash: "0x8a1fade2d1e68b8bg77bc5fbe8d3d3gc8c4eg3g4b28ceg5f2b4b4c9f3c2f5d6e",
+                verified: true
+            },
+            {
+                id: 3,
+                action: "Clearance Verification",
+                user: "Jennifer Lee",
+                timestamp: "2024-11-06T14:00:23Z",
+                classification: "top-secret",
+                blockchainHash: "0x7f9fade1c0d57a7af66ab4ead7c2c2fb7b3df2f3a17bdf4e1a3a3b8e2b1e4c5d",
+                verified: true
+            },
+            {
+                id: 4,
+                action: "Message Read",
+                user: "Michael Davis",
+                timestamp: "2024-11-06T13:45:10Z",
+                classification: "secret",
+                blockchainHash: "0x6e8ecde0b1c46a6ae55ab3dbd6c1b1ea6a2ce1e2a06ace3d0a2a2a7d1a0d3b4c",
+                verified: true
+            }
+        ];
+
+        // AI Classification Keywords and Rules
+        // TODO: Replace with actual NLP model
+        const CLASSIFICATION_KEYWORDS = {
+            'top-secret': ['classified', 'critical infrastructure', 'national security', 'intelligence', 'covert'],
+            'secret': ['restricted', 'law enforcement sensitive', 'investigation', 'surveillance', 'tactical'],
+            'confidential': ['internal', 'department only', 'personnel', 'budget', 'planning'],
+            'unclassified': ['public', 'general', 'routine', 'administrative']
+        };
+
+        const SENTIMENT_KEYWORDS = {
+            positive: ['excellent', 'great', 'good', 'ready', 'agreed', 'thank', 'appreciate'],
+            negative: ['urgent', 'critical', 'emergency', 'problem', 'issue', 'concern', 'delay'],
+            neutral: ['update', 'meeting', 'scheduled', 'review', 'coordinate']
+        };
+
+        const URGENCY_KEYWORDS = {
+            high: ['urgent', 'immediate', 'critical', 'emergency', 'asap', 'now'],
+            medium: ['soon', 'today', 'this week', 'coordinate', 'schedule'],
+            low: ['eventually', 'when possible', 'routine', 'general', 'fyi']
+        };
+
+        // Initialize on page load
+        let secureMeshInitialized = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSecureMesh();
+        });
+
+        function initializeSecureMesh() {
+            if (secureMeshInitialized) return;
+
+            // Populate all modules
+            populateConversations();
+            populateMessages();
+            populateChannels();
+            populateDirectory();
+            populateAuditLogs();
+
+            secureMeshInitialized = true;
+            console.log('SecureMesh initialized');
+        }
+
+        function switchMeshModule(moduleName) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.mesh-tab-button').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Add active class to clicked tab
+            const clickedTab = document.querySelector(`[data-mesh-module="${moduleName}"]`);
+            if (clickedTab) {
+                clickedTab.classList.add('active');
+            }
+
+            // Hide all modules
+            document.querySelectorAll('.mesh-module-content').forEach(module => {
+                module.classList.remove('active');
+            });
+
+            // Show selected module
+            const selectedModule = document.getElementById(`mesh-module-${moduleName}`);
+            if (selectedModule) {
+                selectedModule.classList.add('active');
+            }
+
+            console.log(`Switched to SecureMesh module: ${moduleName}`);
+        }
+
+        function populateConversations() {
+            const container = document.getElementById('conversationsList');
+            if (!container) return;
+
+            container.innerHTML = MOCK_CONVERSATIONS.map(conv => `
+                <div class="glass-dark rounded-lg p-3 hover:bg-white/15 transition-all cursor-pointer" onclick="selectConversation(${conv.id})">
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                                <span class="text-white font-bold text-sm">${conv.name.split(' ').map(n => n[0]).join('')}</span>
+                            </div>
+                            ${conv.online ? '<div class="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-gray-900"></div>' : ''}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between mb-1">
+                                <div class="text-white font-semibold text-sm truncate">${conv.name}</div>
+                                ${conv.unread > 0 ? `<span class="bg-blue-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">${conv.unread}</span>` : ''}
+                            </div>
+                            <div class="text-white/60 text-xs truncate">${conv.lastMessage}</div>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="px-2 py-0.5 rounded-full text-xs clearance-${conv.clearance}">${conv.clearance.toUpperCase()}</span>
+                                <span class="text-white/40 text-xs">${formatTimestamp(conv.timestamp)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function populateMessages() {
+            const container = document.getElementById('messagesArea');
+            if (!container) return;
+
+            container.innerHTML = MOCK_MESSAGES.map(msg => `
+                <div class="flex ${msg.sent ? 'justify-end' : 'justify-start'}">
+                    <div class="${msg.sent ? 'message-sent' : 'message-received'} max-w-md p-4">
+                        ${!msg.sent ? `<div class="text-white/80 text-xs font-semibold mb-1">${msg.sender}</div>` : ''}
+                        <div class="text-white mb-2">${msg.content}</div>
+                        <div class="flex items-center justify-between gap-3 text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="text-white/60">${formatTimestamp(msg.timestamp)}</span>
+                                <span class="px-2 py-0.5 rounded-full clearance-${msg.classification}">${msg.classification.toUpperCase()}</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <i class="fas fa-smile sentiment-${msg.sentiment}" title="Sentiment: ${msg.sentiment}"></i>
+                                <span class="px-1.5 py-0.5 rounded text-xs urgency-${msg.urgency}">${msg.urgency[0].toUpperCase()}</span>
+                                ${msg.verified ? '<i class="fas fa-check-circle text-green-400" title="Blockchain verified"></i>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function populateChannels() {
+            const channelsContainer = document.getElementById('channelsList');
+            const emergencyContainer = document.getElementById('emergencyChannelsList');
+
+            if (channelsContainer) {
+                channelsContainer.innerHTML = MOCK_CHANNELS.map(channel => `
+                    <div class="glass-dark rounded-lg p-4 hover:scale-105 transition-all cursor-pointer">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-hashtag text-blue-400"></i>
+                                <span class="text-white font-semibold">${channel.name}</span>
+                            </div>
+                            ${channel.unread > 0 ? `<span class="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full">${channel.unread}</span>` : ''}
+                        </div>
+                        <div class="text-white/60 text-sm mb-3">${channel.department}</div>
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-users text-white/50"></i>
+                                <span class="text-white/70">${channel.members} members</span>
+                            </div>
+                            <span class="px-2 py-1 rounded-full clearance-${channel.clearance}">${channel.clearance.toUpperCase()}</span>
+                        </div>
+                        <div class="text-white/40 text-xs mt-2">Last activity: ${channel.lastActivity}</div>
+                    </div>
+                `).join('');
+            }
+
+            if (emergencyContainer) {
+                emergencyContainer.innerHTML = MOCK_EMERGENCY_CHANNELS.map(channel => `
+                    <div class="glass-dark rounded-lg p-4 border-2 ${channel.status === 'active' ? 'border-red-500' : 'border-yellow-500'} hover:scale-105 transition-all cursor-pointer">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-exclamation-triangle ${channel.status === 'active' ? 'text-red-400' : 'text-yellow-400'}"></i>
+                                <span class="text-white font-bold">${channel.name}</span>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold ${channel.status === 'active' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'}">${channel.status.toUpperCase()}</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-users text-white/50"></i>
+                                <span class="text-white/70">${channel.members} active</span>
+                            </div>
+                            <span class="px-2 py-1 rounded-full clearance-${channel.clearance}">${channel.clearance.toUpperCase()}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function populateDirectory() {
+            const container = document.getElementById('directoryGrid');
+            if (!container) return;
+
+            container.innerHTML = MOCK_DIRECTORY.map(person => `
+                <div class="glass rounded-xl p-6 hover:scale-105 transition-all">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="relative">
+                                <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                                    <span class="text-white font-bold">${person.name.split(' ').map(n => n[0]).join('')}</span>
+                                </div>
+                                ${person.online ? '<div class="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-gray-900"></div>' : ''}
+                            </div>
+                            <div>
+                                <div class="text-white font-bold">${person.name}</div>
+                                <div class="text-white/60 text-sm">${person.title}</div>
+                            </div>
+                        </div>
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold clearance-${person.clearance}">${person.clearance.toUpperCase()}</span>
+                    </div>
+                    <div class="space-y-2 mb-4">
+                        <div class="text-white/70 text-sm">${person.department}</div>
+                        <div class="text-white/60 text-xs flex items-center gap-2">
+                            <i class="fas fa-phone"></i>
+                            ${person.phone}
+                        </div>
+                        <div class="text-white/60 text-xs flex items-center gap-2">
+                            <i class="fas fa-envelope"></i>
+                            ${person.email}
+                        </div>
+                    </div>
+                    <button onclick="startConversationWith(${person.id})" class="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white font-semibold hover:shadow-lg transition-all">
+                        <i class="fas fa-comment mr-2"></i>Message
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function populateAuditLogs() {
+            const container = document.getElementById('auditLogsList');
+            if (!container) return;
+
+            container.innerHTML = MOCK_AUDIT_LOGS.map(log => `
+                <div class="glass-dark rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-file-alt text-blue-400"></i>
+                            </div>
+                            <div>
+                                <div class="text-white font-semibold">${log.action}</div>
+                                <div class="text-white/60 text-sm">${log.user}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-white/70 text-xs">${formatTimestamp(log.timestamp)}</div>
+                            <span class="px-2 py-1 rounded-full text-xs clearance-${log.classification}">${log.classification.toUpperCase()}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
+                        <div class="text-white/50 text-xs font-mono">${log.blockchainHash}</div>
+                        ${log.verified ? '<i class="fas fa-check-circle text-green-400 blockchain-verified" title="Blockchain verified"></i>' : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // TODO: Connect to WebSocket for real-time messaging
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            if (!input || !input.value.trim()) return;
+
+            const message = input.value.trim();
+
+            // AI Classification
+            const classification = classifyMessage(message);
+            const sentiment = analyzeSentiment(message);
+            const urgency = detectUrgency(message);
+
+            console.log('Message sent:', {
+                content: message,
+                classification,
+                sentiment,
+                urgency,
+                timestamp: new Date().toISOString()
+            });
+
+            // Show AI classification
+            showAIClassification(classification, sentiment, urgency);
+
+            // Clear input
+            input.value = '';
+
+            // TODO: Send to backend via WebSocket
+            // TODO: Generate blockchain hash
+            // SECURITY TODO: Encrypt message before sending
+        }
+
+        // AI Classification Engine
+        // TODO: Replace with actual NLP model from /api/ai/classify
+        function classifyMessage(text) {
+            const lowerText = text.toLowerCase();
+
+            for (const [level, keywords] of Object.entries(CLASSIFICATION_KEYWORDS)) {
+                if (keywords.some(keyword => lowerText.includes(keyword))) {
+                    return level;
+                }
+            }
+
+            return 'unclassified';
+        }
+
+        function analyzeSentiment(text) {
+            const lowerText = text.toLowerCase();
+            let positiveScore = 0;
+            let negativeScore = 0;
+
+            SENTIMENT_KEYWORDS.positive.forEach(word => {
+                if (lowerText.includes(word)) positiveScore++;
+            });
+
+            SENTIMENT_KEYWORDS.negative.forEach(word => {
+                if (lowerText.includes(word)) negativeScore++;
+            });
+
+            if (positiveScore > negativeScore) return 'positive';
+            if (negativeScore > positiveScore) return 'negative';
+            return 'neutral';
+        }
+
+        function detectUrgency(text) {
+            const lowerText = text.toLowerCase();
+
+            if (URGENCY_KEYWORDS.high.some(word => lowerText.includes(word))) {
+                return 'high';
+            }
+            if (URGENCY_KEYWORDS.medium.some(word => lowerText.includes(word))) {
+                return 'medium';
+            }
+            return 'low';
+        }
+
+        function showAIClassification(classification, sentiment, urgency) {
+            const container = document.getElementById('aiClassification');
+            const levelSpan = document.getElementById('aiClassLevel');
+            const sentimentIcon = document.getElementById('aiSentiment');
+
+            if (container && levelSpan && sentimentIcon) {
+                levelSpan.textContent = classification.toUpperCase();
+                levelSpan.className = `px-2 py-1 rounded-full font-semibold clearance-${classification}`;
+
+                const sentimentIcons = {
+                    positive: 'fa-smile',
+                    neutral: 'fa-meh',
+                    negative: 'fa-frown'
+                };
+                sentimentIcon.className = `fas ${sentimentIcons[sentiment]} sentiment-${sentiment}`;
+
+                container.classList.remove('hidden');
+
+                setTimeout(() => {
+                    container.classList.add('hidden');
+                }, 5000);
+            }
+        }
+
+        // Demo Functions for AI Analysis Module
+        function demoClassification() {
+            const input = document.getElementById('classificationInput');
+            const result = document.getElementById('classificationResult');
+
+            if (!input || !result || !input.value.trim()) return;
+
+            const text = input.value.trim();
+            const classification = classifyMessage(text);
+            const urgency = detectUrgency(text);
+
+            result.innerHTML = `
+                <div class="glass-dark rounded-lg p-4">
+                    <div class="text-white font-semibold mb-2">AI Analysis Result:</div>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-white/70 text-sm">Security Classification:</span>
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold clearance-${classification}">${classification.toUpperCase()}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-white/70 text-sm">Urgency Level:</span>
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold urgency-${urgency}">${urgency.toUpperCase()}</span>
+                        </div>
+                        <div class="text-white/60 text-xs mt-3">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            This message will be routed only to personnel with ${classification.toUpperCase()} clearance or higher.
+                        </div>
+                    </div>
+                </div>
+            `;
+            result.classList.remove('hidden');
+        }
+
+        function demoSentiment() {
+            const input = document.getElementById('sentimentInput');
+            const result = document.getElementById('sentimentResult');
+
+            if (!input || !result || !input.value.trim()) return;
+
+            const text = input.value.trim();
+            const sentiment = analyzeSentiment(text);
+
+            const sentimentColors = {
+                positive: 'green',
+                neutral: 'blue',
+                negative: 'red'
+            };
+
+            const sentimentIcons = {
+                positive: 'fa-smile',
+                neutral: 'fa-meh',
+                negative: 'fa-frown'
+            };
+
+            result.innerHTML = `
+                <div class="glass-dark rounded-lg p-4">
+                    <div class="text-white font-semibold mb-2">Sentiment Analysis Result:</div>
+                    <div class="flex items-center justify-center py-4">
+                        <div class="text-center">
+                            <i class="fas ${sentimentIcons[sentiment]} sentiment-${sentiment} text-5xl mb-3"></i>
+                            <div class="text-white text-xl font-bold capitalize">${sentiment}</div>
+                        </div>
+                    </div>
+                    <div class="text-white/60 text-xs mt-3">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        ${sentiment === 'negative' ? 'This message may require priority attention or follow-up.' :
+                          sentiment === 'positive' ? 'Positive communication detected.' :
+                          'Neutral tone detected - standard processing.'}
+                    </div>
+                </div>
+            `;
+            result.classList.remove('hidden');
+        }
+
+        // Utility Functions
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            return date.toLocaleDateString();
+        }
+
+        function selectConversation(id) {
+            const conv = MOCK_CONVERSATIONS.find(c => c.id === id);
+            if (!conv) return;
+
+            document.getElementById('chatName').textContent = conv.name;
+            document.getElementById('chatInitials').textContent = conv.name.split(' ').map(n => n[0]).join('');
+            document.getElementById('chatStatus').textContent = conv.online ? 'Online' : 'Offline';
+            document.getElementById('chatClearance').textContent = conv.clearance.toUpperCase();
+            document.getElementById('chatClearance').className = `px-3 py-1 rounded-full text-xs font-semibold clearance-${conv.clearance}`;
+
+            populateMessages();
+        }
+
+        // TODO: Implement real conversation starter
+        function startNewConversation() {
+            alert('New conversation modal would open here. TODO: Implement modal with contact selection.');
+        }
+
+        function startConversationWith(personId) {
+            alert(`Starting conversation with person ID: ${personId}. TODO: Open messenger with selected contact.`);
+        }
+
+        // ========== NEW FEATURES - Added 2024-11-06 ==========
+
+        // Clearance Selector Functions
+        let currentClearanceLevel = 'secret';
+
+        function changeClearance(level) {
+            currentClearanceLevel = level;
+            const clearanceBtn = document.getElementById('clearanceDropdownBtn');
+            const clearanceText = document.getElementById('chatClearance');
+            const clearanceDropdown = document.getElementById('clearanceDropdown');
+
+            // Update display
+            clearanceText.textContent = level.toUpperCase().replace('-', ' ');
+
+            // Update button styling
+            clearanceBtn.className = `px-3 py-1 rounded-full text-xs font-semibold clearance-${level} flex items-center gap-1 cursor-pointer hover:opacity-80 transition-all`;
+
+            // Close dropdown
+            clearanceDropdown.classList.add('hidden');
+
+            // Show notification
+            showNotification(`Security clearance changed to ${level.toUpperCase().replace('-', ' ')}`, 'success');
+        }
+
+        // Toggle clearance dropdown
+        document.addEventListener('DOMContentLoaded', () => {
+            const clearanceBtn = document.getElementById('clearanceDropdownBtn');
+            const clearanceDropdown = document.getElementById('clearanceDropdown');
+            const chatOptionsBtn = document.getElementById('chatOptionsBtn');
+            const chatOptionsMenu = document.getElementById('chatOptionsMenu');
+
+            if (clearanceBtn && clearanceDropdown) {
+                clearanceBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    clearanceDropdown.classList.toggle('hidden');
+                    // Close other menus
+                    if (chatOptionsMenu) chatOptionsMenu.classList.add('hidden');
+                });
+            }
+
+            if (chatOptionsBtn && chatOptionsMenu) {
+                chatOptionsBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    chatOptionsMenu.classList.toggle('hidden');
+                    // Close other menus
+                    if (clearanceDropdown) clearanceDropdown.classList.add('hidden');
+                });
+            }
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', () => {
+                if (clearanceDropdown) clearanceDropdown.classList.add('hidden');
+                if (chatOptionsMenu) chatOptionsMenu.classList.add('hidden');
+            });
+        });
+
+        // Chat Options Menu Functions
+        function viewConversationInfo() {
+            document.getElementById('chatOptionsMenu').classList.add('hidden');
+            showNotification('Conversation info would be displayed here. TODO: Implement conversation details modal.', 'info');
+        }
+
+        function exportToEmail() {
+            document.getElementById('chatOptionsMenu').classList.add('hidden');
+            openEmailCompose();
+        }
+
+        function shareExternally() {
+            document.getElementById('chatOptionsMenu').classList.add('hidden');
+            showNotification('External sharing requires security clearance approval. TODO: Implement approval workflow.', 'warning');
+        }
+
+        function viewAuditTrail() {
+            document.getElementById('chatOptionsMenu').classList.add('hidden');
+            switchMeshModule('audit');
+            showNotification('Viewing audit trail for this conversation', 'info');
+        }
+
+        function muteConversation() {
+            document.getElementById('chatOptionsMenu').classList.add('hidden');
+            showNotification('Conversation muted. You will not receive notifications.', 'success');
+        }
+
+        function archiveConversation() {
+            document.getElementById('chatOptionsMenu').classList.add('hidden');
+            showNotification('Conversation archived successfully', 'success');
+        }
+
+        // Voice Recording Functions
+        // MOCK DATA - Replace with real MediaRecorder API in production
+        let isRecording = false;
+        let recordingStartTime = null;
+        let recordingTimer = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
+
+        function toggleVoiceRecording() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        // TODO: Connect to MediaRecorder API for real audio recording
+        async function startRecording() {
+            try {
+                // Check if browser supports MediaRecorder
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    showNotification('Voice recording not supported in this browser', 'error');
+                    return;
+                }
+
+                // Request microphone access (this is mocked for now)
+                // In production, this would actually access the microphone:
+                // const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                // mediaRecorder = new MediaRecorder(stream);
+
+                // For now, just show the UI
+                isRecording = true;
+                recordingStartTime = Date.now();
+
+                // Show recording UI
+                document.getElementById('voiceRecordingUI').classList.remove('hidden');
+                document.getElementById('voiceMemoBtn').classList.add('bg-red-500');
+
+                // Start timer
+                updateRecordingTimer();
+                recordingTimer = setInterval(updateRecordingTimer, 1000);
+
+                showNotification('Recording voice memo...', 'info');
+
+                // TODO: Production code:
+                // mediaRecorder.ondataavailable = (event) => {
+                //     audioChunks.push(event.data);
+                // };
+                // mediaRecorder.start();
+
+            } catch (error) {
+                showNotification('Error accessing microphone: ' + error.message, 'error');
+                console.error('Recording error:', error);
+            }
+        }
+
+        function updateRecordingTimer() {
+            const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            document.getElementById('recordingTimer').textContent = `${minutes}:${seconds}`;
+        }
+
+        function stopRecording() {
+            if (!isRecording) return;
+
+            isRecording = false;
+            clearInterval(recordingTimer);
+
+            // Hide recording UI
+            document.getElementById('voiceRecordingUI').classList.add('hidden');
+            document.getElementById('voiceMemoBtn').classList.remove('bg-red-500');
+
+            // TODO: Production code:
+            // mediaRecorder.stop();
+            // mediaRecorder.onstop = () => {
+            //     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            //     const audioUrl = URL.createObjectURL(audioBlob);
+            //     sendVoiceMessage(audioBlob, audioUrl);
+            //     audioChunks = [];
+            // };
+
+            // For now, simulate sending voice memo
+            const duration = Math.floor((Date.now() - recordingStartTime) / 1000);
+            sendVoiceMessage(duration);
+
+            showNotification('Voice memo sent successfully', 'success');
+        }
+
+        function cancelRecording() {
+            if (!isRecording) return;
+
+            isRecording = false;
+            clearInterval(recordingTimer);
+
+            // Hide recording UI
+            document.getElementById('voiceRecordingUI').classList.add('hidden');
+            document.getElementById('voiceMemoBtn').classList.remove('bg-red-500');
+
+            // TODO: Production code:
+            // if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            //     mediaRecorder.stop();
+            // }
+            // audioChunks = [];
+
+            showNotification('Recording cancelled', 'info');
+        }
+
+        // MOCK DATA - Simulate sending voice message
+        function sendVoiceMessage(duration) {
+            const messagesArea = document.getElementById('messagesArea');
+            if (!messagesArea) return;
+
+            const timestamp = new Date().toISOString();
+            const voiceMessage = document.createElement('div');
+            voiceMessage.className = 'flex justify-end';
+            voiceMessage.innerHTML = `
+                <div class="message-sent max-w-md p-4">
+                    <div class="flex items-center gap-3">
+                        <button class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-all">
+                            <i class="fas fa-play text-white"></i>
+                        </button>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i class="fas fa-microphone text-white/70 text-sm"></i>
+                                <span class="text-white text-sm font-medium">Voice Memo</span>
+                            </div>
+                            <div class="h-8 flex items-center gap-1">
+                                ${Array(20).fill(0).map((_, i) =>
+                                    `<div class="w-1 bg-white/50 rounded-full" style="height: ${Math.random() * 100}%"></div>`
+                                ).join('')}
+                            </div>
+                            <div class="text-white/60 text-xs mt-1">${duration}s</div>
+                        </div>
+                    </div>
+                    <div class="text-white/50 text-xs mt-2">${formatTimestamp(timestamp)}</div>
+                </div>
+            `;
+
+            messagesArea.appendChild(voiceMessage);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        // Email Compose Functions
+        function openEmailCompose() {
+            document.getElementById('emailComposeUI').classList.remove('hidden');
+            document.getElementById('chatOptionsMenu')?.classList.add('hidden');
+        }
+
+        function closeEmailCompose() {
+            document.getElementById('emailComposeUI').classList.add('hidden');
+            // Clear form
+            document.getElementById('emailRecipient').value = '';
+            document.getElementById('emailSubject').value = '';
+            document.getElementById('emailMessage').value = '';
+        }
+
+        // TODO: Connect to secure email gateway API
+        function sendEmailMessage() {
+            const recipient = document.getElementById('emailRecipient').value.trim();
+            const subject = document.getElementById('emailSubject').value.trim();
+            const message = document.getElementById('emailMessage').value.trim();
+
+            if (!recipient || !message) {
+                showNotification('Please fill in recipient and message fields', 'error');
+                return;
+            }
+
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(recipient)) {
+                showNotification('Please enter a valid email address', 'error');
+                return;
+            }
+
+            // MOCK DATA - In production, send to secure email gateway
+            // TODO: Connect to API endpoint /api/securemesh/send-external-email
+            // Production would do:
+            // fetch('/api/securemesh/send-external-email', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify({
+            //         recipient,
+            //         subject,
+            //         message,
+            //         clearance: currentClearanceLevel,
+            //         encrypted: true,
+            //         blockchain_verified: true
+            //     })
+            // });
+
+            closeEmailCompose();
+
+            // Add to messages as sent email
+            const messagesArea = document.getElementById('messagesArea');
+            if (messagesArea) {
+                const timestamp = new Date().toISOString();
+                const emailMsg = document.createElement('div');
+                emailMsg.className = 'flex justify-end';
+                emailMsg.innerHTML = `
+                    <div class="message-sent max-w-md p-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fas fa-envelope text-white"></i>
+                            <span class="text-white font-semibold text-sm">Email to External Agency</span>
+                        </div>
+                        <div class="text-white/80 text-sm mb-2">
+                            <strong>To:</strong> ${recipient}
+                        </div>
+                        <div class="text-white/80 text-sm mb-2">
+                            <strong>Subject:</strong> ${subject || 'Secure Communication'}
+                        </div>
+                        <div class="text-white text-sm whitespace-pre-wrap">${message}</div>
+                        <div class="flex items-center justify-between mt-3 pt-2 border-t border-white/20">
+                            <div class="flex items-center gap-1 text-xs text-white/60">
+                                <i class="fas fa-lock"></i>
+                                <span>Encrypted</span>
+                            </div>
+                            <span class="text-white/50 text-xs">${formatTimestamp(timestamp)}</span>
+                        </div>
+                    </div>
+                `;
+                messagesArea.appendChild(emailMsg);
+                messagesArea.scrollTop = messagesArea.scrollHeight;
+            }
+
+            showNotification(`Secure email sent to ${recipient}`, 'success');
+        }
+
+        // File Attachment Function
+        function attachFile() {
+            // TODO: Implement file picker and upload
+            showNotification('File attachment feature coming soon. TODO: Implement secure file upload.', 'info');
+        }
+
+        // Notification Helper
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            const bgColors = {
+                info: 'bg-blue-500',
+                success: 'bg-green-500',
+                warning: 'bg-yellow-500',
+                error: 'bg-red-500'
+            };
+            const icons = {
+                info: 'fa-info-circle',
+                success: 'fa-check-circle',
+                warning: 'fa-exclamation-triangle',
+                error: 'fa-times-circle'
+            };
+
+            notification.className = `fixed top-4 right-4 ${bgColors[type]} text-white px-6 py-3 rounded-lg shadow-xl z-50 flex items-center gap-3 animate-fade-in`;
+            notification.innerHTML = `
+                <i class="fas ${icons[type]}"></i>
+                <span>${message}</span>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Remove after 4 seconds
+            setTimeout(() => {
+                notification.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                setTimeout(() => notification.remove(), 500);
+            }, 4000);
+        }
+
+        console.log('SecureMesh test file loaded successfully');
+    </script>
+</body>
+</html>

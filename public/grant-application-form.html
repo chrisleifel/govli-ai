@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grant Application - Govli AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --secondary: #14b8a6;
+      --background: #0f172a;
+      --surface: #1e293b;
+      --text: #f1f5f9;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .glass {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(6, 182, 212, 0.2);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    .glass-hover:hover {
+      background: rgba(30, 41, 59, 0.8);
+      border-color: rgba(6, 182, 212, 0.4);
+      transform: translateY(-2px);
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(6, 182, 212, 0.5);
+    }
+
+    .input-field {
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      color: var(--text);
+      transition: all 0.3s ease;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+    }
+
+    .budget-row {
+      background: rgba(15, 23, 42, 0.3);
+      border: 1px solid rgba(6, 182, 212, 0.2);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-step {
+      position: relative;
+      flex: 1;
+      text-align: center;
+    }
+
+    .progress-step::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: rgba(6, 182, 212, 0.3);
+      z-index: -1;
+    }
+
+    .progress-step:first-child::before {
+      left: 50%;
+    }
+
+    .progress-step:last-child::before {
+      right: 50%;
+    }
+
+    .progress-step.active .step-circle {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .progress-step.completed .step-circle {
+      background: #10b981;
+      border-color: #10b981;
+    }
+
+    .step-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(30, 41, 59, 0.7);
+      border: 2px solid rgba(6, 182, 212, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.5rem;
+      font-weight: 600;
+    }
+
+    .section-card {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(6, 182, 212, 0.2);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .file-upload-area {
+      border: 2px dashed rgba(6, 182, 212, 0.4);
+      border-radius: 0.5rem;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .file-upload-area:hover {
+      border-color: var(--primary);
+      background: rgba(6, 182, 212, 0.1);
+    }
+
+    .file-item {
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .status-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-draft { background: rgba(107, 114, 128, 0.2); color: #9ca3af; }
+    .status-in_review { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+    .status-submitted { background: rgba(6, 182, 212, 0.2); color: #14b8a6; }
+    .status-awarded { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .status-declined { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="glass fixed top-0 left-0 right-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center space-x-3">
+          <i class="fas fa-money-check-alt text-3xl text-purple-400"></i>
+          <span class="text-xl font-bold">Govli AI</span>
+          <span class="text-purple-400">|</span>
+          <span class="text-sm text-gray-400">Grant Application</span>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button onclick="window.location.href='grants-search.html'" class="text-gray-300 hover:text-white">
+            <i class="fas fa-search mr-2"></i>Search Grants
+          </button>
+          <button onclick="showMyApplications()" class="text-gray-300 hover:text-white">
+            <i class="fas fa-list mr-2"></i>My Applications
+          </button>
+          <button onclick="logout()" class="text-gray-300 hover:text-white">
+            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="pt-24 pb-12 px-4">
+    <div class="max-w-5xl mx-auto">
+
+      <!-- Grant Information Header -->
+      <div id="grantInfo" class="glass rounded-2xl p-6 mb-6">
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <h1 id="grantTitle" class="text-2xl font-bold mb-2">Loading grant...</h1>
+            <div class="flex items-center space-x-4 text-sm text-gray-400">
+              <span id="grantAgency"><i class="fas fa-building mr-2"></i>-</span>
+              <span id="grantCategory"><i class="fas fa-tag mr-2"></i>-</span>
+              <span id="grantAmount"><i class="fas fa-dollar-sign mr-2"></i>-</span>
+              <span id="grantDeadline"><i class="fas fa-calendar mr-2"></i>-</span>
+            </div>
+          </div>
+          <div>
+            <span id="applicationStatus" class="status-badge status-draft">Draft</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress Steps -->
+      <div class="glass rounded-2xl p-6 mb-6">
+        <div class="flex items-center justify-between">
+          <div class="progress-step active" data-step="1">
+            <div class="step-circle">1</div>
+            <div class="text-xs">Project Info</div>
+          </div>
+          <div class="progress-step" data-step="2">
+            <div class="step-circle">2</div>
+            <div class="text-xs">Budget</div>
+          </div>
+          <div class="progress-step" data-step="3">
+            <div class="step-circle">3</div>
+            <div class="text-xs">Documents</div>
+          </div>
+          <div class="progress-step" data-step="4">
+            <div class="step-circle">4</div>
+            <div class="text-xs">Review & Submit</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Application Form -->
+      <form id="applicationForm" class="glass rounded-2xl p-8">
+
+        <!-- Step 1: Project Information -->
+        <div id="step1" class="form-step">
+          <h2 class="text-2xl font-bold mb-6 flex items-center">
+            <i class="fas fa-project-diagram text-purple-400 mr-3"></i>
+            Project Information
+          </h2>
+
+          <div class="section-card">
+            <h3 class="text-lg font-semibold mb-4">Basic Information</h3>
+
+            <div class="mb-4">
+              <label class="block text-sm font-medium mb-2">Project Title *</label>
+              <input type="text" id="projectTitle" class="input-field w-full px-4 py-2 rounded-lg"
+                     placeholder="Enter a descriptive project title" required>
+            </div>
+
+            <div class="mb-4">
+              <label class="block text-sm font-medium mb-2">Project Description *</label>
+              <textarea id="projectDescription" rows="6" class="input-field w-full px-4 py-2 rounded-lg"
+                        placeholder="Provide a comprehensive description of your proposed project" required></textarea>
+              <div class="text-xs text-gray-400 mt-1">
+                <span id="descCharCount">0</span> characters
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="block text-sm font-medium mb-2">Justification *</label>
+              <textarea id="justification" rows="4" class="input-field w-full px-4 py-2 rounded-lg"
+                        placeholder="Explain why this project needs funding and its urgency" required></textarea>
+            </div>
+
+            <div class="mb-4">
+              <label class="block text-sm font-medium mb-2">Expected Outcomes *</label>
+              <textarea id="expectedOutcomes" rows="4" class="input-field w-full px-4 py-2 rounded-lg"
+                        placeholder="Describe the expected results and benefits" required></textarea>
+            </div>
+
+            <div class="mb-4">
+              <label class="block text-sm font-medium mb-2">Impact Statement *</label>
+              <textarea id="impactStatement" rows="4" class="input-field w-full px-4 py-2 rounded-lg"
+                        placeholder="How will this project impact the community?" required></textarea>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <h3 class="text-lg font-semibold mb-4">Project Objectives</h3>
+            <div id="objectivesList" class="space-y-2 mb-4">
+              <!-- Objectives will be added here -->
+            </div>
+            <button type="button" onclick="addObjective()" class="text-purple-400 hover:text-purple-300 text-sm">
+              <i class="fas fa-plus-circle mr-2"></i>Add Objective
+            </button>
+          </div>
+
+          <div class="section-card">
+            <h3 class="text-lg font-semibold mb-4">Timeline</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-2">Project Start Date *</label>
+                <input type="date" id="projectStartDate" class="input-field w-full px-4 py-2 rounded-lg" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Project End Date *</label>
+                <input type="date" id="projectEndDate" class="input-field w-full px-4 py-2 rounded-lg" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <h3 class="text-lg font-semibold mb-4">Organizational Information</h3>
+
+            <div class="mb-4">
+              <label class="block text-sm font-medium mb-2">Department Name *</label>
+              <input type="text" id="departmentName" class="input-field w-full px-4 py-2 rounded-lg"
+                     placeholder="e.g., Public Works Department" required>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-2">Project Manager *</label>
+                <input type="text" id="projectManager" class="input-field w-full px-4 py-2 rounded-lg"
+                       placeholder="Full name" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Email *</label>
+                <input type="email" id="projectManagerEmail" class="input-field w-full px-4 py-2 rounded-lg"
+                       placeholder="email@example.com" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Phone *</label>
+                <input type="tel" id="projectManagerPhone" class="input-field w-full px-4 py-2 rounded-lg"
+                       placeholder="(555) 123-4567" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-between mt-6">
+            <button type="button" onclick="window.location.href='grants-search.html'"
+                    class="px-6 py-2 rounded-lg border border-gray-600 hover:border-purple-400 transition">
+              <i class="fas fa-arrow-left mr-2"></i>Cancel
+            </button>
+            <button type="button" onclick="nextStep(2)"
+                    class="btn-primary px-8 py-2 rounded-lg text-white font-semibold">
+              Next: Budget <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 2: Budget -->
+        <div id="step2" class="form-step hidden">
+          <h2 class="text-2xl font-bold mb-6 flex items-center">
+            <i class="fas fa-calculator text-purple-400 mr-3"></i>
+            Budget Information
+          </h2>
+
+          <div class="section-card">
+            <h3 class="text-lg font-semibold mb-4">Funding Request</h3>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium mb-2">Requested Amount *</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-2 text-gray-400">$</span>
+                  <input type="number" id="requestedAmount" class="input-field w-full pl-8 pr-4 py-2 rounded-lg"
+                         placeholder="0.00" step="0.01" required onchange="updateBudgetSummary()">
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Matching Funds</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-2 text-gray-400">$</span>
+                  <input type="number" id="matchingFunds" class="input-field w-full pl-8 pr-4 py-2 rounded-lg"
+                         placeholder="0.00" step="0.01" onchange="updateBudgetSummary()">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <h3 class="text-lg font-semibold mb-4">Budget Line Items</h3>
+            <div id="budgetLineItems" class="space-y-2 mb-4">
+              <!-- Budget items will be added here -->
+            </div>
+            <button type="button" onclick="addBudgetItem()" class="text-purple-400 hover:text-purple-300 text-sm">
+              <i class="fas fa-plus-circle mr-2"></i>Add Line Item
+            </button>
+
+            <div class="mt-6 p-4 bg-purple-900/20 rounded-lg border border-purple-400/30">
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-semibold">Total Budget:</span>
+                <span id="totalBudget" class="text-2xl font-bold text-purple-400">$0.00</span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span>Requested + Matching:</span>
+                <span id="totalFunding" class="font-semibold">$0.00</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <h3 class="text-lg font-semibold mb-4">Budget Narrative</h3>
+            <textarea id="budgetNarrative" rows="6" class="input-field w-full px-4 py-2 rounded-lg"
+                      placeholder="Provide a detailed explanation of your budget and how funds will be used"></textarea>
+          </div>
+
+          <div class="flex justify-between mt-6">
+            <button type="button" onclick="prevStep(1)"
+                    class="px-6 py-2 rounded-lg border border-gray-600 hover:border-purple-400 transition">
+              <i class="fas fa-arrow-left mr-2"></i>Previous
+            </button>
+            <div class="space-x-3">
+              <button type="button" onclick="saveDraft()"
+                      class="px-6 py-2 rounded-lg border border-purple-400 hover:bg-purple-400/10 transition">
+                <i class="fas fa-save mr-2"></i>Save Draft
+              </button>
+              <button type="button" onclick="nextStep(3)"
+                      class="btn-primary px-8 py-2 rounded-lg text-white font-semibold">
+                Next: Documents <i class="fas fa-arrow-right ml-2"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Documents -->
+        <div id="step3" class="form-step hidden">
+          <h2 class="text-2xl font-bold mb-6 flex items-center">
+            <i class="fas fa-file-upload text-purple-400 mr-3"></i>
+            Supporting Documents
+          </h2>
+
+          <div class="section-card">
+            <h3 class="text-lg font-semibold mb-4">Required Documents</h3>
+            <div id="requiredDocsList" class="mb-4 space-y-2">
+              <!-- Required documents checklist will be populated here -->
+            </div>
+          </div>
+
+          <div class="section-card">
+            <h3 class="text-lg font-semibold mb-4">Upload Documents</h3>
+
+            <div class="file-upload-area" onclick="document.getElementById('fileInput').click()">
+              <i class="fas fa-cloud-upload-alt text-5xl text-purple-400 mb-3"></i>
+              <p class="text-lg mb-2">Click to upload or drag and drop</p>
+              <p class="text-sm text-gray-400">PDF, DOC, DOCX, XLS, XLSX (Max 10MB each)</p>
+              <input type="file" id="fileInput" class="hidden" multiple
+                     accept=".pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(event)">
+            </div>
+
+            <div id="uploadedFiles" class="mt-4">
+              <!-- Uploaded files will appear here -->
+            </div>
+          </div>
+
+          <div class="flex justify-between mt-6">
+            <button type="button" onclick="prevStep(2)"
+                    class="px-6 py-2 rounded-lg border border-gray-600 hover:border-purple-400 transition">
+              <i class="fas fa-arrow-left mr-2"></i>Previous
+            </button>
+            <div class="space-x-3">
+              <button type="button" onclick="saveDraft()"
+                      class="px-6 py-2 rounded-lg border border-purple-400 hover:bg-purple-400/10 transition">
+                <i class="fas fa-save mr-2"></i>Save Draft
+              </button>
+              <button type="button" onclick="nextStep(4)"
+                      class="btn-primary px-8 py-2 rounded-lg text-white font-semibold">
+                Next: Review <i class="fas fa-arrow-right ml-2"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Review & Submit -->
+        <div id="step4" class="form-step hidden">
+          <h2 class="text-2xl font-bold mb-6 flex items-center">
+            <i class="fas fa-check-circle text-purple-400 mr-3"></i>
+            Review & Submit
+          </h2>
+
+          <div class="section-card">
+            <h3 class="text-lg font-semibold mb-4">Application Summary</h3>
+            <div id="applicationSummary" class="space-y-4">
+              <!-- Summary will be populated here -->
+            </div>
+          </div>
+
+          <div class="section-card bg-yellow-900/20 border-yellow-400/30">
+            <div class="flex items-start">
+              <i class="fas fa-exclamation-triangle text-yellow-400 text-2xl mr-4 mt-1"></i>
+              <div>
+                <h3 class="text-lg font-semibold mb-2">Before You Submit</h3>
+                <ul class="text-sm space-y-1 text-gray-300">
+                  <li><i class="fas fa-check text-green-400 mr-2"></i>Review all information for accuracy</li>
+                  <li><i class="fas fa-check text-green-400 mr-2"></i>Ensure all required documents are uploaded</li>
+                  <li><i class="fas fa-check text-green-400 mr-2"></i>Verify budget calculations</li>
+                  <li><i class="fas fa-check text-green-400 mr-2"></i>Once submitted, you cannot edit the application</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-between mt-6">
+            <button type="button" onclick="prevStep(3)"
+                    class="px-6 py-2 rounded-lg border border-gray-600 hover:border-purple-400 transition">
+              <i class="fas fa-arrow-left mr-2"></i>Previous
+            </button>
+            <div class="space-x-3">
+              <button type="button" onclick="saveDraft()"
+                      class="px-6 py-2 rounded-lg border border-purple-400 hover:bg-purple-400/10 transition">
+                <i class="fas fa-save mr-2"></i>Save Draft
+              </button>
+              <button type="button" onclick="submitApplication()"
+                      class="btn-primary px-8 py-2 rounded-lg text-white font-semibold">
+                <i class="fas fa-paper-plane mr-2"></i>Submit Application
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+  <!-- My Applications Modal -->
+  <div id="applicationsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="glass rounded-2xl p-8 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">My Applications</h2>
+        <button onclick="closeModal('applicationsModal')" class="text-gray-400 hover:text-white">
+          <i class="fas fa-times text-2xl"></i>
+        </button>
+      </div>
+
+      <div id="applicationsList" class="space-y-4">
+        <!-- Applications will be loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="grants.js"></script>
+  <script>
+    const API_BASE = 'http://localhost:3000/api';
+    let currentStep = 1;
+    let grantId = null;
+    let applicationId = null;
+    let currentGrant = null;
+    let uploadedFiles = [];
+    let objectives = [];
+    let budgetItems = [];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Get grant ID from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      grantId = urlParams.get('grantId');
+      applicationId = urlParams.get('applicationId');
+
+      if (!grantId) {
+        alert('No grant selected. Redirecting to grant search...');
+        window.location.href = 'grants-search.html';
+        return;
+      }
+
+      await loadGrantDetails();
+
+      if (applicationId) {
+        await loadExistingApplication();
+      }
+
+      // Add character counter
+      document.getElementById('projectDescription').addEventListener('input', (e) => {
+        document.getElementById('descCharCount').textContent = e.target.value.length;
+      });
+    });
+
+    // Load grant details
+    async function loadGrantDetails() {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE}/grants/${grantId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          currentGrant = data.grant;
+          displayGrantInfo(currentGrant);
+        }
+      } catch (error) {
+        console.error('Error loading grant:', error);
+        alert('Failed to load grant details');
+      }
+    }
+
+    // Display grant information
+    function displayGrantInfo(grant) {
+      document.getElementById('grantTitle').textContent = grant.title;
+      document.getElementById('grantAgency').innerHTML = `<i class="fas fa-building mr-2"></i>${grant.agencyName}`;
+      document.getElementById('grantCategory').innerHTML = `<i class="fas fa-tag mr-2"></i>${grant.category}`;
+
+      const awardRange = grant.awardFloor && grant.awardCeiling
+        ? `$${parseFloat(grant.awardFloor).toLocaleString()} - $${parseFloat(grant.awardCeiling).toLocaleString()}`
+        : grant.estimatedTotalFunding
+        ? `Up to $${parseFloat(grant.estimatedTotalFunding).toLocaleString()}`
+        : 'Not specified';
+      document.getElementById('grantAmount').innerHTML = `<i class="fas fa-dollar-sign mr-2"></i>${awardRange}`;
+
+      if (grant.closeDate) {
+        const deadline = new Date(grant.closeDate);
+        const daysUntil = Math.ceil((deadline - new Date()) / (1000 * 60 * 60 * 24));
+        document.getElementById('grantDeadline').innerHTML =
+          `<i class="fas fa-calendar mr-2"></i>${deadline.toLocaleDateString()} (${daysUntil} days)`;
+      }
+    }
+
+    // Load existing application
+    async function loadExistingApplication() {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE}/grants/applications/${applicationId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          const app = data.application;
+
+          // Populate form fields
+          document.getElementById('projectTitle').value = app.projectTitle || '';
+          document.getElementById('projectDescription').value = app.projectDescription || '';
+          document.getElementById('justification').value = app.justification || '';
+          document.getElementById('expectedOutcomes').value = app.expectedOutcomes || '';
+          document.getElementById('impactStatement').value = app.impactStatement || '';
+          document.getElementById('projectStartDate').value = app.projectStartDate ? app.projectStartDate.split('T')[0] : '';
+          document.getElementById('projectEndDate').value = app.projectEndDate ? app.projectEndDate.split('T')[0] : '';
+          document.getElementById('departmentName').value = app.departmentName || '';
+          document.getElementById('projectManager').value = app.projectManager || '';
+          document.getElementById('projectManagerEmail').value = app.projectManagerEmail || '';
+          document.getElementById('projectManagerPhone').value = app.projectManagerPhone || '';
+          document.getElementById('requestedAmount').value = app.requestedAmount || '';
+          document.getElementById('matchingFunds').value = app.matchingFunds || '';
+          document.getElementById('budgetNarrative').value = app.budgetNarrative || '';
+
+          // Load objectives
+          objectives = app.projectObjectives || [];
+          objectives.forEach(() => addObjective());
+          objectives.forEach((obj, idx) => {
+            const input = document.querySelector(`#objective-${idx}`);
+            if (input) input.value = obj;
+          });
+
+          // Load budget items
+          if (app.budgetSummary && app.budgetSummary.items) {
+            budgetItems = app.budgetSummary.items;
+            budgetItems.forEach(() => addBudgetItem());
+            budgetItems.forEach((item, idx) => {
+              document.querySelector(`#budget-category-${idx}`).value = item.category || '';
+              document.querySelector(`#budget-description-${idx}`).value = item.description || '';
+              document.querySelector(`#budget-amount-${idx}`).value = item.amount || '';
+            });
+          }
+
+          updateBudgetSummary();
+          updateStatusBadge(app.status);
+        }
+      } catch (error) {
+        console.error('Error loading application:', error);
+      }
+    }
+
+    // Update status badge
+    function updateStatusBadge(status) {
+      const badge = document.getElementById('applicationStatus');
+      badge.className = `status-badge status-${status}`;
+      badge.textContent = status.replace('_', ' ');
+    }
+
+    // Navigation
+    function nextStep(step) {
+      if (validateCurrentStep()) {
+        currentStep = step;
+        updateStepDisplay();
+      }
+    }
+
+    function prevStep(step) {
+      currentStep = step;
+      updateStepDisplay();
+    }
+
+    function updateStepDisplay() {
+      // Hide all steps
+      document.querySelectorAll('.form-step').forEach(step => step.classList.add('hidden'));
+
+      // Show current step
+      document.getElementById(`step${currentStep}`).classList.remove('hidden');
+
+      // Update progress indicators
+      document.querySelectorAll('.progress-step').forEach((step, idx) => {
+        step.classList.remove('active', 'completed');
+        if (idx + 1 < currentStep) {
+          step.classList.add('completed');
+        } else if (idx + 1 === currentStep) {
+          step.classList.add('active');
+        }
+      });
+
+      // Generate summary in step 4
+      if (currentStep === 4) {
+        generateSummary();
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Validation
+    function validateCurrentStep() {
+      const step = document.getElementById(`step${currentStep}`);
+      const requiredFields = step.querySelectorAll('[required]');
+
+      for (let field of requiredFields) {
+        if (!field.value.trim()) {
+          alert(`Please fill in all required fields: ${field.previousElementSibling?.textContent || 'Field'}`);
+          field.focus();
+          return false;
+        }
+      }
+
+      if (currentStep === 1) {
+        if (objectives.length === 0) {
+          alert('Please add at least one project objective');
+          return false;
+        }
+      }
+
+      if (currentStep === 2) {
+        const requested = parseFloat(document.getElementById('requestedAmount').value);
+        if (!requested || requested <= 0) {
+          alert('Please enter a valid requested amount');
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    // Objectives management
+    function addObjective() {
+      const idx = objectives.length;
+      const container = document.getElementById('objectivesList');
+
+      const div = document.createElement('div');
+      div.className = 'flex items-center space-x-2';
+      div.innerHTML = `
+        <input type="text" id="objective-${idx}"
+               class="input-field flex-1 px-4 py-2 rounded-lg"
+               placeholder="Objective ${idx + 1}"
+               onchange="updateObjective(${idx}, this.value)">
+        <button type="button" onclick="removeObjective(${idx})"
+                class="text-red-400 hover:text-red-300">
+          <i class="fas fa-times-circle"></i>
+        </button>
+      `;
+
+      container.appendChild(div);
+      objectives.push('');
+    }
+
+    function updateObjective(idx, value) {
+      objectives[idx] = value;
+    }
+
+    function removeObjective(idx) {
+      objectives.splice(idx, 1);
+      document.getElementById('objectivesList').innerHTML = '';
+      objectives.forEach((obj, i) => {
+        addObjective();
+        document.getElementById(`objective-${i}`).value = obj;
+      });
+    }
+
+    // Budget management
+    function addBudgetItem() {
+      const idx = budgetItems.length;
+      const container = document.getElementById('budgetLineItems');
+
+      const div = document.createElement('div');
+      div.className = 'budget-row';
+      div.innerHTML = `
+        <div class="grid grid-cols-12 gap-3 items-center">
+          <div class="col-span-3">
+            <input type="text" id="budget-category-${idx}"
+                   class="input-field w-full px-3 py-2 rounded text-sm"
+                   placeholder="Category"
+                   onchange="updateBudgetItem(${idx})">
+          </div>
+          <div class="col-span-5">
+            <input type="text" id="budget-description-${idx}"
+                   class="input-field w-full px-3 py-2 rounded text-sm"
+                   placeholder="Description"
+                   onchange="updateBudgetItem(${idx})">
+          </div>
+          <div class="col-span-3">
+            <div class="relative">
+              <span class="absolute left-2 top-2 text-gray-400 text-sm">$</span>
+              <input type="number" id="budget-amount-${idx}"
+                     class="input-field w-full pl-6 pr-3 py-2 rounded text-sm"
+                     placeholder="0.00" step="0.01"
+                     onchange="updateBudgetItem(${idx})">
+            </div>
+          </div>
+          <div class="col-span-1 text-center">
+            <button type="button" onclick="removeBudgetItem(${idx})"
+                    class="text-red-400 hover:text-red-300">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      `;
+
+      container.appendChild(div);
+      budgetItems.push({ category: '', description: '', amount: 0 });
+    }
+
+    function updateBudgetItem(idx) {
+      budgetItems[idx] = {
+        category: document.getElementById(`budget-category-${idx}`).value,
+        description: document.getElementById(`budget-description-${idx}`).value,
+        amount: parseFloat(document.getElementById(`budget-amount-${idx}`).value) || 0
+      };
+      updateBudgetSummary();
+    }
+
+    function removeBudgetItem(idx) {
+      budgetItems.splice(idx, 1);
+      document.getElementById('budgetLineItems').innerHTML = '';
+      budgetItems.forEach((item, i) => {
+        addBudgetItem();
+        document.getElementById(`budget-category-${i}`).value = item.category;
+        document.getElementById(`budget-description-${i}`).value = item.description;
+        document.getElementById(`budget-amount-${i}`).value = item.amount;
+      });
+      updateBudgetSummary();
+    }
+
+    function updateBudgetSummary() {
+      const requested = parseFloat(document.getElementById('requestedAmount').value) || 0;
+      const matching = parseFloat(document.getElementById('matchingFunds').value) || 0;
+      const lineItemsTotal = budgetItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+
+      document.getElementById('totalBudget').textContent = `$${lineItemsTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+      document.getElementById('totalFunding').textContent = `$${(requested + matching).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+    }
+
+    // File upload
+    function handleFileUpload(event) {
+      const files = Array.from(event.target.files);
+
+      files.forEach(file => {
+        if (file.size > 10 * 1024 * 1024) {
+          alert(`File ${file.name} is too large. Maximum size is 10MB.`);
+          return;
+        }
+
+        uploadedFiles.push({
+          id: Date.now() + Math.random(),
+          name: file.name,
+          size: file.size,
+          file: file
+        });
+      });
+
+      displayUploadedFiles();
+    }
+
+    function displayUploadedFiles() {
+      const container = document.getElementById('uploadedFiles');
+      container.innerHTML = uploadedFiles.map((file, idx) => `
+        <div class="file-item">
+          <div class="flex items-center flex-1">
+            <i class="fas fa-file-pdf text-red-400 text-xl mr-3"></i>
+            <div>
+              <div class="font-medium">${file.name}</div>
+              <div class="text-xs text-gray-400">${(file.size / 1024).toFixed(1)} KB</div>
+            </div>
+          </div>
+          <button type="button" onclick="removeFile(${idx})" class="text-red-400 hover:text-red-300">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function removeFile(idx) {
+      uploadedFiles.splice(idx, 1);
+      displayUploadedFiles();
+    }
+
+    // Generate summary
+    function generateSummary() {
+      const summary = document.getElementById('applicationSummary');
+      const requested = parseFloat(document.getElementById('requestedAmount').value) || 0;
+      const matching = parseFloat(document.getElementById('matchingFunds').value) || 0;
+
+      summary.innerHTML = `
+        <div class="grid grid-cols-2 gap-6">
+          <div>
+            <h4 class="font-semibold text-purple-400 mb-2">Project Information</h4>
+            <p class="text-sm mb-1"><strong>Title:</strong> ${document.getElementById('projectTitle').value}</p>
+            <p class="text-sm mb-1"><strong>Department:</strong> ${document.getElementById('departmentName').value}</p>
+            <p class="text-sm mb-1"><strong>Project Manager:</strong> ${document.getElementById('projectManager').value}</p>
+            <p class="text-sm mb-1"><strong>Objectives:</strong> ${objectives.filter(o => o).length} defined</p>
+          </div>
+          <div>
+            <h4 class="font-semibold text-purple-400 mb-2">Financial Summary</h4>
+            <p class="text-sm mb-1"><strong>Requested Amount:</strong> $${requested.toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+            <p class="text-sm mb-1"><strong>Matching Funds:</strong> $${matching.toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+            <p class="text-sm mb-1"><strong>Budget Line Items:</strong> ${budgetItems.length}</p>
+            <p class="text-sm mb-1"><strong>Documents:</strong> ${uploadedFiles.length} uploaded</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // Save draft
+    async function saveDraft() {
+      try {
+        const token = localStorage.getItem('token');
+        const applicationData = collectFormData();
+        applicationData.status = 'draft';
+
+        let response;
+        if (applicationId) {
+          // Update existing application
+          response = await fetch(`${API_BASE}/grants/applications/${applicationId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(applicationData)
+          });
+        } else {
+          // Create new application
+          response = await fetch(`${API_BASE}/grants/applications`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(applicationData)
+          });
+        }
+
+        const data = await response.json();
+        if (data.success) {
+          applicationId = data.application.id;
+          alert('Draft saved successfully!');
+          updateStatusBadge('draft');
+          // Update URL with application ID
+          const url = new URL(window.location);
+          url.searchParams.set('applicationId', applicationId);
+          window.history.pushState({}, '', url);
+        } else {
+          alert('Failed to save draft: ' + (data.message || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error saving draft:', error);
+        alert('Failed to save draft');
+      }
+    }
+
+    // Submit application
+    async function submitApplication() {
+      if (!validateCurrentStep()) return;
+
+      if (!confirm('Are you sure you want to submit this application? You will not be able to edit it after submission.')) {
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem('token');
+
+        // First, save/update the application
+        await saveDraft();
+
+        // Then submit it
+        const response = await fetch(`${API_BASE}/grants/applications/${applicationId}/submit`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          alert('Application submitted successfully!');
+          updateStatusBadge('submitted');
+
+          // Redirect to applications list
+          setTimeout(() => {
+            window.location.href = 'grants-search.html';
+          }, 2000);
+        } else {
+          alert('Failed to submit application: ' + (data.message || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error submitting application:', error);
+        alert('Failed to submit application');
+      }
+    }
+
+    // Collect form data
+    function collectFormData() {
+      return {
+        grantId: grantId,
+        projectTitle: document.getElementById('projectTitle').value,
+        projectDescription: document.getElementById('projectDescription').value,
+        projectObjectives: objectives.filter(o => o.trim()),
+        justification: document.getElementById('justification').value,
+        expectedOutcomes: document.getElementById('expectedOutcomes').value,
+        impactStatement: document.getElementById('impactStatement').value,
+        projectStartDate: document.getElementById('projectStartDate').value,
+        projectEndDate: document.getElementById('projectEndDate').value,
+        departmentName: document.getElementById('departmentName').value,
+        projectManager: document.getElementById('projectManager').value,
+        projectManagerEmail: document.getElementById('projectManagerEmail').value,
+        projectManagerPhone: document.getElementById('projectManagerPhone').value,
+        requestedAmount: parseFloat(document.getElementById('requestedAmount').value) || 0,
+        matchingFunds: parseFloat(document.getElementById('matchingFunds').value) || 0,
+        budgetSummary: {
+          items: budgetItems.filter(item => item.category || item.description || item.amount),
+          total: budgetItems.reduce((sum, item) => sum + (item.amount || 0), 0)
+        },
+        budgetNarrative: document.getElementById('budgetNarrative').value
+      };
+    }
+
+    // Show my applications
+    async function showMyApplications() {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE}/grants/applications/list?limit=100`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          displayApplicationsList(data.applications);
+          document.getElementById('applicationsModal').classList.remove('hidden');
+        }
+      } catch (error) {
+        console.error('Error loading applications:', error);
+        alert('Failed to load applications');
+      }
+    }
+
+    function displayApplicationsList(applications) {
+      const container = document.getElementById('applicationsList');
+
+      if (applications.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-400">No applications yet</p>';
+        return;
+      }
+
+      container.innerHTML = applications.map(app => `
+        <div class="glass-hover rounded-lg p-4 cursor-pointer"
+             onclick="window.location.href='grant-application-form.html?grantId=${app.grantId}&applicationId=${app.id}'">
+          <div class="flex justify-between items-start mb-2">
+            <div class="flex-1">
+              <h3 class="font-semibold">${app.projectTitle}</h3>
+              <p class="text-sm text-gray-400">${app.grant?.title || 'Grant'}</p>
+            </div>
+            <span class="status-badge status-${app.status}">${app.status.replace('_', ' ')}</span>
+          </div>
+          <div class="flex items-center justify-between text-sm text-gray-400">
+            <span><i class="fas fa-dollar-sign mr-1"></i>$${parseFloat(app.requestedAmount).toLocaleString()}</span>
+            <span><i class="fas fa-calendar mr-1"></i>${new Date(app.createdAt).toLocaleDateString()}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>

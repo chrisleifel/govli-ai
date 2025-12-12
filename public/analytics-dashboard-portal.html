@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard - Govli AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="config.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #0a1628 0%, #0c2340 25%, #0e3a5f 50%, #1e3a5f 75%, #164e7f 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(6, 182, 212, 0.25);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .metric-card {
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(6, 182, 212, 0.25);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .time-range-btn {
+            transition: all 0.2s ease;
+        }
+
+        .time-range-btn.active {
+            background: rgba(6, 182, 212, 0.3);
+            border-color: #06b6d4;
+        }
+
+        .export-btn {
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(6, 182, 212, 0.4);
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(6, 182, 212, 0.3);
+            border-top: 3px solid #06b6d4;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .staff-card {
+            transition: all 0.3s ease;
+        }
+
+        .staff-card:hover {
+            transform: translateX(4px);
+            border-color: rgba(6, 182, 212, 0.5);
+        }
+
+        .rank-badge {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            box-shadow: 0 2px 10px rgba(251, 191, 36, 0.4);
+        }
+
+        .rank-badge.gold {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        }
+
+        .rank-badge.silver {
+            background: linear-gradient(135deg, #d1d5db, #9ca3af);
+        }
+
+        .rank-badge.bronze {
+            background: linear-gradient(135deg, #d97706, #c2410c);
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <div class="min-h-screen p-6">
+        <!-- Header -->
+        <div class="max-w-7xl mx-auto mb-6">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                    <h1 class="text-4xl font-bold text-white mb-2">
+                        <i class="fas fa-chart-line text-cyan-400 mr-3"></i>
+                        Analytics Dashboard
+                    </h1>
+                    <p class="text-gray-400">Comprehensive system insights and performance metrics</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <!-- Time Range Selector -->
+                    <div class="glass rounded-lg px-2 py-2 flex gap-2">
+                        <button onclick="changeTimeRange('7d')" class="time-range-btn px-4 py-2 rounded-lg text-white border border-transparent active" data-range="7d">
+                            7 Days
+                        </button>
+                        <button onclick="changeTimeRange('30d')" class="time-range-btn px-4 py-2 rounded-lg text-white border border-transparent" data-range="30d">
+                            30 Days
+                        </button>
+                        <button onclick="changeTimeRange('90d')" class="time-range-btn px-4 py-2 rounded-lg text-white border border-transparent" data-range="90d">
+                            90 Days
+                        </button>
+                        <button onclick="changeTimeRange('1y')" class="time-range-btn px-4 py-2 rounded-lg text-white border border-transparent" data-range="1y">
+                            1 Year
+                        </button>
+                    </div>
+                    <button onclick="window.location.href='index.html'" class="glass px-4 py-2 rounded-lg text-white hover:border-cyan-500 transition-all">
+                        <i class="fas fa-home mr-2"></i>Home
+                    </button>
+                    <button onclick="logout()" class="glass px-4 py-2 rounded-lg text-white hover:border-red-500 transition-all">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="max-w-7xl mx-auto">
+            <div class="glass rounded-xl p-12 flex flex-col items-center justify-center">
+                <div class="loading-spinner mb-4"></div>
+                <p class="text-gray-400">Loading analytics data...</p>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div id="mainContent" class="max-w-7xl mx-auto hidden">
+            <!-- Key Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <!-- Total Permits -->
+                <div class="metric-card glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20">
+                            <i class="fas fa-file-alt text-2xl text-blue-400"></i>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-3xl font-bold text-white" id="totalPermits">0</p>
+                            <p class="text-sm text-gray-400">Total Permits</p>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        <span id="permitChange" class="text-green-400">+0%</span> from previous period
+                    </div>
+                </div>
+
+                <!-- Active Workflows -->
+                <div class="metric-card glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20">
+                            <i class="fas fa-project-diagram text-2xl text-purple-400"></i>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-3xl font-bold text-white" id="activeWorkflows">0</p>
+                            <p class="text-sm text-gray-400">Active Workflows</p>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        <span id="workflowSuccess" class="text-cyan-400">0%</span> success rate
+                    </div>
+                </div>
+
+                <!-- Pending Tasks -->
+                <div class="metric-card glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center justify-center w-12 h-12 rounded-full bg-orange-500/20">
+                            <i class="fas fa-tasks text-2xl text-orange-400"></i>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-3xl font-bold text-white" id="pendingTasks">0</p>
+                            <p class="text-sm text-gray-400">Pending Tasks</p>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        <span id="avgTaskTime" class="text-yellow-400">0 hrs</span> avg completion time
+                    </div>
+                </div>
+
+                <!-- Approval Rate -->
+                <div class="metric-card glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center justify-center w-12 h-12 rounded-full bg-green-500/20">
+                            <i class="fas fa-check-circle text-2xl text-green-400"></i>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-3xl font-bold text-white" id="approvalRate">0%</p>
+                            <p class="text-sm text-gray-400">Approval Rate</p>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        <span id="avgProcessingDays" class="text-blue-400">0 days</span> avg processing
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Permit Status Distribution -->
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-white">
+                            <i class="fas fa-chart-pie text-cyan-400 mr-2"></i>
+                            Permit Status Distribution
+                        </h3>
+                        <button onclick="exportData('permits')" class="export-btn text-sm px-3 py-1 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 rounded-lg border border-cyan-500/50">
+                            <i class="fas fa-download mr-1"></i>Export
+                        </button>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="permitStatusChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Permit Type Distribution -->
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-white">
+                            <i class="fas fa-chart-bar text-purple-400 mr-2"></i>
+                            Permit Type Distribution
+                        </h3>
+                        <button onclick="exportData('permits')" class="export-btn text-sm px-3 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg border border-purple-500/50">
+                            <i class="fas fa-download mr-1"></i>Export
+                        </button>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="permitTypeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Daily Permit Trend -->
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-white">
+                            <i class="fas fa-chart-line text-blue-400 mr-2"></i>
+                            Daily Permit Submissions
+                        </h3>
+                        <button onclick="exportData('permits')" class="export-btn text-sm px-3 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg border border-blue-500/50">
+                            <i class="fas fa-download mr-1"></i>Export
+                        </button>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="dailyTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Workflow Performance -->
+                <div class="glass rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-white">
+                            <i class="fas fa-tachometer-alt text-green-400 mr-2"></i>
+                            Workflow Execution Status
+                        </h3>
+                        <button onclick="exportData('workflows')" class="export-btn text-sm px-3 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg border border-green-500/50">
+                            <i class="fas fa-download mr-1"></i>Export
+                        </button>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="workflowStatusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Staff Productivity -->
+            <div class="glass rounded-xl p-6 mb-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-white">
+                        <i class="fas fa-users text-cyan-400 mr-2"></i>
+                        Staff Productivity Leaderboard
+                    </h3>
+                    <button onclick="exportData('staff-productivity')" class="export-btn text-sm px-3 py-1 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 rounded-lg border border-cyan-500/50">
+                        <i class="fas fa-download mr-1"></i>Export
+                    </button>
+                </div>
+                <div id="staffProductivity" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Staff cards will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Task Analytics -->
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-white">
+                        <i class="fas fa-clipboard-check text-orange-400 mr-2"></i>
+                        Task Completion Analytics
+                    </h3>
+                    <button onclick="exportData('tasks')" class="export-btn text-sm px-3 py-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 rounded-lg border border-orange-500/50">
+                        <i class="fas fa-download mr-1"></i>Export
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white/5 rounded-lg p-4 border border-cyan-500/20">
+                        <div class="text-sm text-gray-400 mb-1">Total Tasks</div>
+                        <div class="text-2xl font-bold text-white" id="taskTotal">0</div>
+                    </div>
+                    <div class="bg-white/5 rounded-lg p-4 border border-green-500/20">
+                        <div class="text-sm text-gray-400 mb-1">Completed</div>
+                        <div class="text-2xl font-bold text-green-400" id="taskCompleted">0</div>
+                    </div>
+                    <div class="bg-white/5 rounded-lg p-4 border border-blue-500/20">
+                        <div class="text-sm text-gray-400 mb-1">In Progress</div>
+                        <div class="text-2xl font-bold text-blue-400" id="taskInProgress">0</div>
+                    </div>
+                    <div class="bg-white/5 rounded-lg p-4 border border-yellow-500/20">
+                        <div class="text-sm text-gray-400 mb-1">Completion Rate</div>
+                        <div class="text-2xl font-bold text-yellow-400" id="taskCompletionRate">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTimeRange = '7d';
+        let charts = {};
+        let refreshInterval;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            loadAnalytics();
+            startAutoRefresh();
+        });
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (!['admin', 'staff'].includes(user.role)) {
+                alert('Access denied. Admin or Staff role required.');
+                window.location.href = 'index.html';
+            }
+        }
+
+        async function loadAnalytics() {
+            try {
+                showLoading();
+
+                const token = localStorage.getItem('token');
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+
+                // Fetch all analytics data in parallel
+                const [dashboard, permits, workflows, tasks, productivity] = await Promise.all([
+                    fetch(`${API_BASE}/api/analytics/dashboard?timeRange=${currentTimeRange}`, { headers }).then(r => r.json()),
+                    fetch(`${API_BASE}/api/analytics/permits?timeRange=${currentTimeRange}`, { headers }).then(r => r.json()),
+                    fetch(`${API_BASE}/api/analytics/workflows?timeRange=${currentTimeRange}`, { headers }).then(r => r.json()),
+                    fetch(`${API_BASE}/api/analytics/tasks?timeRange=${currentTimeRange}`, { headers }).then(r => r.json()),
+                    fetch(`${API_BASE}/api/analytics/staff-productivity?timeRange=${currentTimeRange}`, { headers }).then(r => r.json())
+                ]);
+
+                // Update UI
+                updateKeyMetrics(dashboard.metrics, permits.metrics, workflows.metrics, tasks.metrics);
+                updateCharts(permits.metrics, workflows.metrics);
+                updateStaffProductivity(productivity.productivityData);
+                updateTaskAnalytics(tasks.metrics);
+
+                hideLoading();
+            } catch (error) {
+                console.error('Load analytics error:', error);
+                hideLoading();
+                showError('Failed to load analytics data. Please try again.');
+            }
+        }
+
+        function updateKeyMetrics(dashboard, permits, workflows, tasks) {
+            // Total Permits
+            document.getElementById('totalPermits').textContent = permits.total || 0;
+
+            // Active Workflows
+            document.getElementById('activeWorkflows').textContent = workflows.totalExecutions || 0;
+            const successRate = workflows.successRate || 0;
+            document.getElementById('workflowSuccess').textContent = `${successRate.toFixed(1)}%`;
+
+            // Pending Tasks
+            const pendingCount = tasks.byStatus?.pending || 0;
+            document.getElementById('pendingTasks').textContent = pendingCount;
+            const avgTime = tasks.avgCompletionTimeHours || 0;
+            document.getElementById('avgTaskTime').textContent = `${avgTime.toFixed(1)} hrs`;
+
+            // Approval Rate
+            const approvalRate = permits.approvalRate || 0;
+            document.getElementById('approvalRate').textContent = `${approvalRate.toFixed(1)}%`;
+            const avgDays = permits.avgProcessingDays || 0;
+            document.getElementById('avgProcessingDays').textContent = `${avgDays.toFixed(1)} days`;
+        }
+
+        function updateCharts(permits, workflows) {
+            // Permit Status Distribution (Pie Chart)
+            if (charts.permitStatus) charts.permitStatus.destroy();
+            const statusCtx = document.getElementById('permitStatusChart').getContext('2d');
+            const statusData = permits.byStatus || {};
+            charts.permitStatus = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusData),
+                    datasets: [{
+                        data: Object.values(statusData),
+                        backgroundColor: [
+                            'rgba(34, 197, 94, 0.8)',   // green - approved
+                            'rgba(59, 130, 246, 0.8)',  // blue - under review
+                            'rgba(251, 191, 36, 0.8)',  // yellow - submitted
+                            'rgba(239, 68, 68, 0.8)',   // red - rejected
+                            'rgba(156, 163, 175, 0.8)'  // gray - other
+                        ],
+                        borderColor: 'rgba(6, 182, 212, 0.3)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#fff', padding: 15 }
+                        }
+                    }
+                }
+            });
+
+            // Permit Type Distribution (Bar Chart)
+            if (charts.permitType) charts.permitType.destroy();
+            const typeCtx = document.getElementById('permitTypeChart').getContext('2d');
+            const typeData = permits.byType || [];
+            charts.permitType = new Chart(typeCtx, {
+                type: 'bar',
+                data: {
+                    labels: typeData.map(t => t.type),
+                    datasets: [{
+                        label: 'Permits',
+                        data: typeData.map(t => t.count),
+                        backgroundColor: 'rgba(147, 51, 234, 0.8)',
+                        borderColor: 'rgba(147, 51, 234, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#9ca3af' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#9ca3af' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // Daily Trend (Line Chart)
+            if (charts.dailyTrend) charts.dailyTrend.destroy();
+            const trendCtx = document.getElementById('dailyTrendChart').getContext('2d');
+            const trendData = permits.dailyTrend || [];
+            charts.dailyTrend = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: trendData.map(d => d.date),
+                    datasets: [{
+                        label: 'Submissions',
+                        data: trendData.map(d => d.count),
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#9ca3af' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#9ca3af', maxRotation: 45 },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // Workflow Status (Doughnut Chart)
+            if (charts.workflowStatus) charts.workflowStatus.destroy();
+            const workflowCtx = document.getElementById('workflowStatusChart').getContext('2d');
+            const workflowStatusData = workflows.byStatus || {};
+            charts.workflowStatus = new Chart(workflowCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(workflowStatusData),
+                    datasets: [{
+                        data: Object.values(workflowStatusData),
+                        backgroundColor: [
+                            'rgba(34, 197, 94, 0.8)',   // green - completed
+                            'rgba(59, 130, 246, 0.8)',  // blue - in_progress
+                            'rgba(251, 191, 36, 0.8)',  // yellow - pending
+                            'rgba(239, 68, 68, 0.8)',   // red - failed
+                            'rgba(156, 163, 175, 0.8)'  // gray - cancelled
+                        ],
+                        borderColor: 'rgba(6, 182, 212, 0.3)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#fff', padding: 15 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateStaffProductivity(productivityData) {
+            const container = document.getElementById('staffProductivity');
+
+            if (!productivityData || productivityData.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 col-span-full text-center py-8">No staff productivity data available</p>';
+                return;
+            }
+
+            container.innerHTML = productivityData.map((staff, index) => {
+                const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+                const rankIcon = index === 0 ? 'fa-trophy' : index === 1 ? 'fa-medal' : index === 2 ? 'fa-award' : 'fa-user';
+
+                return `
+                    <div class="staff-card glass rounded-lg p-4 border border-cyan-500/20">
+                        <div class="flex items-center gap-4 mb-3">
+                            ${index < 3 ? `<div class="rank-badge ${rankClass} w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas ${rankIcon} text-white"></i>
+                            </div>` : ''}
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-white font-semibold truncate">${staff.staffName}</h4>
+                                <p class="text-gray-400 text-sm">${staff.role}</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 text-sm">Tasks Completed</span>
+                                <span class="text-cyan-400 font-bold">${staff.tasksCompleted}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 text-sm">Avg Time</span>
+                                <span class="text-green-400 font-bold">${staff.avgCompletionTimeHours.toFixed(1)}h</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 text-sm">Success Rate</span>
+                                <span class="text-yellow-400 font-bold">${staff.successRate.toFixed(1)}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateTaskAnalytics(tasks) {
+            document.getElementById('taskTotal').textContent = tasks.total || 0;
+            document.getElementById('taskCompleted').textContent = tasks.byStatus?.completed || 0;
+            document.getElementById('taskInProgress').textContent = tasks.byStatus?.in_progress || 0;
+            document.getElementById('taskCompletionRate').textContent = `${(tasks.completionRate || 0).toFixed(1)}%`;
+        }
+
+        function changeTimeRange(range) {
+            currentTimeRange = range;
+
+            // Update active button
+            document.querySelectorAll('.time-range-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.range === range) {
+                    btn.classList.add('active');
+                }
+            });
+
+            loadAnalytics();
+        }
+
+        async function exportData(dataType) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE}/api/analytics/export/${dataType}?timeRange=${currentTimeRange}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Export failed');
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${dataType}-export-${Date.now()}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Export error:', error);
+                alert('Failed to export data. Please try again.');
+            }
+        }
+
+        function startAutoRefresh() {
+            // Refresh every 60 seconds
+            refreshInterval = setInterval(() => {
+                loadAnalytics();
+            }, 60000);
+        }
+
+        function showLoading() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('mainContent').classList.add('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+        }
+
+        function showError(message) {
+            alert(message);
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (refreshInterval) clearInterval(refreshInterval);
+            Object.values(charts).forEach(chart => chart.destroy());
+        });
+    </script>
+</body>
+</html>

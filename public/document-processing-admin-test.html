@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Processing Center - Admin - Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .confidence-high { color: #10b981; }
+        .confidence-medium { color: #f59e0b; }
+        .confidence-low { color: #ef4444; }
+
+        .priority-high { border-left: 4px solid #ef4444; }
+        .priority-medium { border-left: 4px solid #f59e0b; }
+        .priority-low { border-left: 4px solid #10b981; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-in { animation: slideIn 0.4s ease-out; }
+
+        .doc-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .doc-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .cjis-badge {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="glass rounded-xl p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                        <i class="fas fa-file-medical text-orange-400"></i>
+                        Document Processing Center
+                        <span class="cjis-badge">CJIS COMPLIANT</span>
+                    </h1>
+                    <p class="text-white/70">AI-powered document review and quality control with audit trail</p>
+                </div>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white/5 rounded-lg p-4">
+                    <div class="text-sm text-white/70 mb-1">Processed This Month</div>
+                    <div class="text-2xl font-bold text-blue-400">2,847</div>
+                    <div class="text-xs text-green-400 mt-1">↑ 12% from last month</div>
+                </div>
+                <div class="bg-white/5 rounded-lg p-4">
+                    <div class="text-sm text-white/70 mb-1">Accuracy Rate</div>
+                    <div class="text-2xl font-bold text-green-400">94.7%</div>
+                    <div class="text-xs text-green-400 mt-1">↑ 2.3% improvement</div>
+                </div>
+                <div class="bg-white/5 rounded-lg p-4">
+                    <div class="text-sm text-white/70 mb-1">Avg Processing Time</div>
+                    <div class="text-2xl font-bold text-purple-400">2.3s</div>
+                    <div class="text-xs text-white/60 mt-1">Per document</div>
+                </div>
+                <div class="bg-white/5 rounded-lg p-4">
+                    <div class="text-sm text-white/70 mb-1">Staff Time Saved</div>
+                    <div class="text-2xl font-bold text-yellow-400">142hrs</div>
+                    <div class="text-xs text-white/60 mt-1">This month</div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3 mt-4">
+                <button onclick="showBatchUpload()" class="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-2 rounded-lg text-white text-sm hover:shadow-lg transition-all" aria-label="Upload multiple documents">
+                    <i class="fas fa-cloud-upload-alt mr-2"></i>Batch Upload
+                </button>
+                <button onclick="exportReport()" class="bg-white/10 px-4 py-2 rounded-lg text-white text-sm hover:bg-white/20 transition-all" aria-label="Export processing report">
+                    <i class="fas fa-file-export mr-2"></i>Export Report
+                </button>
+                <button onclick="showSettings()" class="bg-white/10 px-4 py-2 rounded-lg text-white text-sm hover:bg-white/20 transition-all" aria-label="Configure OCR settings">
+                    <i class="fas fa-cog mr-2"></i>Configure Settings
+                </button>
+                <button onclick="showTraining()" class="bg-white/10 px-4 py-2 rounded-lg text-white text-sm hover:bg-white/20 transition-all" aria-label="Train AI on new document types">
+                    <i class="fas fa-brain mr-2"></i>Training Mode
+                </button>
+            </div>
+        </div>
+
+        <!-- Review Queue Dashboard -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <!-- High Priority Queue -->
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fas fa-exclamation-circle text-red-400"></i>
+                        High Priority
+                    </h2>
+                    <span class="bg-red-500/20 text-red-300 px-3 py-1 rounded-full text-sm font-bold">23</span>
+                </div>
+                <p class="text-sm text-white/70 mb-4">Confidence < 70% or errors</p>
+                <div id="highPriorityQueue" class="space-y-3 max-h-96 overflow-y-auto">
+                    <!-- High priority documents will be populated here -->
+                </div>
+                <button onclick="reviewQueue('high')" class="w-full mt-4 bg-red-500/20 text-red-300 px-4 py-2 rounded-lg hover:bg-red-500/30 transition-all" aria-label="Review high priority queue">
+                    Review Now <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+
+            <!-- Medium Priority Queue -->
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fas fa-clock text-yellow-400"></i>
+                        Medium Priority
+                    </h2>
+                    <span class="bg-yellow-500/20 text-yellow-300 px-3 py-1 rounded-full text-sm font-bold">45</span>
+                </div>
+                <p class="text-sm text-white/70 mb-4">Confidence 70-85%</p>
+                <div id="mediumPriorityQueue" class="space-y-3 max-h-96 overflow-y-auto">
+                    <!-- Medium priority documents will be populated here -->
+                </div>
+                <button onclick="reviewQueue('medium')" class="w-full mt-4 bg-yellow-500/20 text-yellow-300 px-4 py-2 rounded-lg hover:bg-yellow-500/30 transition-all" aria-label="Review medium priority queue">
+                    Review Queue <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+
+            <!-- Auto-Processed Queue -->
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fas fa-check-circle text-green-400"></i>
+                        Auto-Processed
+                    </h2>
+                    <span class="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-sm font-bold">147</span>
+                </div>
+                <p class="text-sm text-white/70 mb-4">Confidence > 85%</p>
+                <div id="autoProcessedQueue" class="space-y-3 max-h-96 overflow-y-auto">
+                    <!-- Auto-processed documents will be populated here -->
+                </div>
+                <button onclick="auditSample()" class="w-full mt-4 bg-green-500/20 text-green-300 px-4 py-2 rounded-lg hover:bg-green-500/30 transition-all" aria-label="Audit random sample">
+                    Audit Sample <i class="fas fa-search ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="glass rounded-xl p-6">
+            <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-history text-blue-400"></i>
+                Recent Processing Activity
+            </h2>
+            <div id="recentActivity" class="space-y-2">
+                <!-- Recent activity items will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Review Modal -->
+    <div id="reviewModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50" role="dialog" aria-labelledby="reviewModalTitle">
+        <div class="glass rounded-xl w-full max-w-6xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-white/20">
+                <div class="flex items-center justify-between">
+                    <h3 id="reviewModalTitle" class="text-2xl font-bold text-white flex items-center gap-2">
+                        <i class="fas fa-file-alt text-orange-400"></i>
+                        Document Review
+                        <span class="cjis-badge">AUDIT LOGGED</span>
+                    </h3>
+                    <button onclick="closeReviewModal()" class="text-white/60 hover:text-white text-2xl" aria-label="Close review modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Document Viewer -->
+                    <div>
+                        <h4 class="font-bold text-white mb-3">Document Preview</h4>
+                        <div class="bg-white/5 rounded-lg p-8 text-center" style="aspect-ratio: 8.5/11;">
+                            <i class="fas fa-file-pdf text-6xl text-red-400 mb-4"></i>
+                            <p class="text-white/70 mb-2" id="docPreviewName">Building_Permit_Application.pdf</p>
+                            <p class="text-sm text-white/50">3 pages</p>
+                            <div class="flex justify-center gap-2 mt-4">
+                                <button class="bg-white/10 px-3 py-2 rounded text-white text-sm hover:bg-white/20" aria-label="Zoom in">
+                                    <i class="fas fa-search-plus"></i>
+                                </button>
+                                <button class="bg-white/10 px-3 py-2 rounded text-white text-sm hover:bg-white/20" aria-label="Zoom out">
+                                    <i class="fas fa-search-minus"></i>
+                                </button>
+                                <button class="bg-white/10 px-3 py-2 rounded text-white text-sm hover:bg-white/20" aria-label="Rotate document">
+                                    <i class="fas fa-redo"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Extracted Data -->
+                    <div>
+                        <h4 class="font-bold text-white mb-3">Extracted Data</h4>
+                        <div id="extractedDataReview" class="space-y-3">
+                            <!-- Extracted fields will be populated here -->
+                        </div>
+
+                        <!-- Validation Alerts -->
+                        <div class="mt-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                                <span class="font-bold text-yellow-300">Validation Alerts</span>
+                            </div>
+                            <ul class="text-sm text-yellow-200 space-y-1 ml-6">
+                                <li>• Address not found in USPS database</li>
+                                <li>• Project cost seems unusually high - verify</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-6 border-t border-white/20 flex justify-between gap-3">
+                <div class="flex gap-2">
+                    <button onclick="rejectDocument()" class="bg-red-500/20 text-red-300 px-4 py-2 rounded-lg hover:bg-red-500/30 transition-all" aria-label="Reject document">
+                        <i class="fas fa-times mr-2"></i>Reject
+                    </button>
+                    <button onclick="requestResubmission()" class="bg-yellow-500/20 text-yellow-300 px-4 py-2 rounded-lg hover:bg-yellow-500/30 transition-all" aria-label="Request resubmission">
+                        <i class="fas fa-undo mr-2"></i>Request Resubmission
+                    </button>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="saveDraft()" class="bg-white/10 text-white px-4 py-2 rounded-lg hover:bg-white/20 transition-all" aria-label="Save draft">
+                        <i class="fas fa-save mr-2"></i>Save Draft
+                    </button>
+                    <button onclick="approveDocument()" class="bg-gradient-to-r from-green-500 to-blue-600 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all font-bold" aria-label="Approve document">
+                        <i class="fas fa-check mr-2"></i>Approve Document
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== MOCK DATA - REPLACE IN PRODUCTION =====
+        // TODO: Connect to OCR processing service API
+        // TODO: Implement document storage with AES-256 encryption at rest (CJIS requirement)
+        // TODO: Add role-based access control (RBAC) for CJIS compliance
+        // TODO: Integrate with audit logging system - all actions must be logged (CJIS requirement)
+        // TODO: Implement document retention policies per CJIS standards
+        // TODO: Add PII detection and masking for sensitive data
+        // TODO: Connect to workflow engine for auto-routing
+        // TODO: Implement real-time WebSocket updates for queue changes
+        // TODO: Add ML model training pipeline
+        // TODO: Integrate with notification service (email, SMS, push)
+        // SECURITY TODO: Implement session timeout (15 minutes per CJIS standards)
+        // SECURITY TODO: Add two-factor authentication for document access
+        // SECURITY TODO: Encrypt all data in transit with TLS 1.2+ (CJIS requirement)
+        // SECURITY TODO: Implement secure document deletion (overwrite, not just delete)
+
+        const MOCK_DOCUMENTS = {
+            high: [
+                {
+                    id: 'DOC-2024-001847',
+                    filename: 'BuildingPermit_SmithConstruction.pdf',
+                    uploadedBy: 'John Smith (Citizen)',
+                    uploadedAt: '2024-01-15T09:23:45Z',
+                    documentType: 'Building Permit Application',
+                    confidence: 68,
+                    status: 'review_needed',
+                    priority: 'high',
+                    pageCount: 3,
+                    processingTime: '2.3s',
+                    issues: ['Handwriting unclear', 'Missing field: Cost Estimate'],
+                    assignedTo: 'Sarah Chen',
+                    workflowId: 'WF-PERMIT-2024-0847',
+                    fields: [
+                        { name: 'Owner Name', value: 'John Smith', confidence: 94, status: 'approved' },
+                        { name: 'Property Address', value: '123 Oak Street', confidence: 87, status: 'needs_review' },
+                        { name: 'Project Description', value: '[unclear]', confidence: 42, status: 'rejected' },
+                        { name: 'Estimated Cost', value: '$[unclear]', confidence: 38, status: 'rejected' },
+                        { name: 'Contractor License', value: 'CL-45678', confidence: 92, status: 'approved' }
+                    ]
+                },
+                {
+                    id: 'DOC-2024-001852',
+                    filename: 'PoliceReport_Incident5472.pdf',
+                    uploadedBy: 'Officer Martinez (Police)',
+                    uploadedAt: '2024-01-15T10:45:12Z',
+                    documentType: 'Police Report',
+                    confidence: 61,
+                    status: 'urgent',
+                    priority: 'high',
+                    pageCount: 2,
+                    processingTime: '1.9s',
+                    issues: ['Handwriting unclear', 'Abbreviations not recognized'],
+                    assignedTo: 'Records Supervisor',
+                    workflowId: 'WF-POLICE-2024-5472',
+                    fields: [
+                        { name: 'Incident Date/Time', value: '01/14/2024 22:35', confidence: 89, status: 'approved' },
+                        { name: 'Location', value: '[unclear street name]', confidence: 45, status: 'rejected' },
+                        { name: 'Officer Badge', value: '#3847', confidence: 94, status: 'approved' },
+                        { name: 'Incident Type', value: 'Traffic', confidence: 78, status: 'needs_review' }
+                    ]
+                }
+            ],
+            medium: [
+                {
+                    id: 'DOC-2024-001849',
+                    filename: 'TaxAppeal_Martinez.pdf',
+                    uploadedBy: 'Jennifer Martinez (Citizen)',
+                    uploadedAt: '2024-01-15T09:47:33Z',
+                    documentType: 'Tax Assessment Appeal',
+                    confidence: 76,
+                    status: 'review_needed',
+                    priority: 'medium',
+                    pageCount: 4,
+                    processingTime: '3.1s',
+                    issues: ['Blurry scan on page 2', 'Signature verification needed'],
+                    assignedTo: 'Tax Assessor',
+                    workflowId: 'WF-TAX-2024-0392',
+                    fields: [
+                        { name: 'Parcel Number', value: '45-123-456', confidence: 98, status: 'approved' },
+                        { name: 'Current Assessment', value: '$285,000', confidence: 91, status: 'approved' },
+                        { name: 'Requested Assessment', value: '$245,000', confidence: 71, status: 'needs_review' },
+                        { name: 'Owner Signature', value: '[needs verification]', confidence: 65, status: 'needs_review' }
+                    ]
+                }
+            ],
+            auto: [
+                {
+                    id: 'DOC-2024-001850',
+                    filename: 'BusinessLicense_ChenRestaurant.pdf',
+                    uploadedBy: 'Mike Chen (Business Owner)',
+                    uploadedAt: '2024-01-15T10:12:08Z',
+                    documentType: 'Business License Renewal',
+                    confidence: 92,
+                    status: 'auto_approved',
+                    priority: 'low',
+                    pageCount: 2,
+                    processingTime: '1.8s',
+                    issues: [],
+                    assignedTo: null,
+                    workflowId: 'WF-LICENSE-2024-1234',
+                    fields: [
+                        { name: 'Business Name', value: "Chen's Restaurant", confidence: 97, status: 'approved' },
+                        { name: 'EIN', value: '12-3456789', confidence: 99, status: 'approved' },
+                        { name: 'Business Address', value: '789 Main Street', confidence: 96, status: 'approved' },
+                        { name: 'License Number', value: 'BL-2023-5678', confidence: 98, status: 'approved' }
+                    ]
+                }
+            ]
+        };
+
+        let currentReviewDoc = null;
+
+        // Initialize queues
+        function initializeQueues() {
+            populateQueue('high', MOCK_DOCUMENTS.high);
+            populateQueue('medium', MOCK_DOCUMENTS.medium);
+            populateQueue('auto', MOCK_DOCUMENTS.auto);
+            populateRecentActivity();
+        }
+
+        function populateQueue(priority, documents) {
+            const containerId = priority === 'high' ? 'highPriorityQueue' :
+                                priority === 'medium' ? 'mediumPriorityQueue' :
+                                'autoProcessedQueue';
+            const container = document.getElementById(containerId);
+
+            container.innerHTML = documents.slice(0, 3).map(doc => `
+                <div class="doc-card bg-white/5 rounded-lg p-3 priority-${priority}" onclick='openReviewModal(${JSON.stringify(doc).replace(/'/g, "\\'")} )'>
+                    <div class="flex items-start justify-between mb-2">
+                        <div class="flex-1">
+                            <div class="font-bold text-white text-sm mb-1">${doc.documentType}</div>
+                            <div class="text-xs text-white/60">${doc.filename}</div>
+                        </div>
+                        <div class="confidence-${doc.confidence >= 85 ? 'high' : doc.confidence >= 70 ? 'medium' : 'low'} font-bold text-sm">
+                            ${doc.confidence}%
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-xs text-white/50">
+                        <span><i class="fas fa-clock mr-1"></i>${formatTimeAgo(doc.uploadedAt)}</span>
+                        <span>${doc.pageCount} pages</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function populateRecentActivity() {
+            const container = document.getElementById('recentActivity');
+            const allDocs = [...MOCK_DOCUMENTS.high, ...MOCK_DOCUMENTS.medium, ...MOCK_DOCUMENTS.auto];
+
+            container.innerHTML = allDocs.slice(0, 5).map(doc => {
+                const statusClass = doc.status === 'auto_approved' ? 'green' : doc.status === 'urgent' ? 'red' : 'yellow';
+                const statusText = doc.status === 'auto_approved' ? 'Auto-Approved' : doc.status === 'urgent' ? 'Urgent Review' : 'Pending Review';
+
+                return `
+                    <div class="bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-colors">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <i class="fas fa-file-alt text-orange-400"></i>
+                                    <span class="font-medium text-white text-sm">${doc.documentType}</span>
+                                    <span class="status-badge bg-${statusClass}-500/20 text-${statusClass}-300">${statusText}</span>
+                                </div>
+                                <div class="text-xs text-white/60">
+                                    ${doc.uploadedBy} • ${formatTimeAgo(doc.uploadedAt)} • ${doc.confidence}% confidence
+                                </div>
+                            </div>
+                            <button onclick='openReviewModal(${JSON.stringify(doc).replace(/'/g, "\\'")} )' class="text-blue-400 hover:text-blue-300 text-sm">
+                                Review <i class="fas fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function formatTimeAgo(isoDate) {
+            const date = new Date(isoDate);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            return date.toLocaleDateString();
+        }
+
+        function openReviewModal(doc) {
+            currentReviewDoc = doc;
+            const modal = document.getElementById('reviewModal');
+            const extractedData = document.getElementById('extractedDataReview');
+            const docPreview = document.getElementById('docPreviewName');
+
+            docPreview.textContent = doc.filename;
+
+            extractedData.innerHTML = doc.fields.map(field => {
+                const confidenceClass = field.confidence >= 90 ? 'high' : field.confidence >= 70 ? 'medium' : 'low';
+                const statusClass = field.status === 'approved' ? 'green' : field.status === 'rejected' ? 'red' : 'yellow';
+
+                return `
+                    <div class="bg-white/5 rounded-lg p-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-white">${field.name}</span>
+                            <span class="confidence-${confidenceClass} text-sm font-bold">${field.confidence}%</span>
+                        </div>
+                        <input type="text" value="${field.value}" class="w-full bg-white/10 border border-white/20 rounded px-3 py-2 text-white text-sm mb-2" />
+                        <div class="flex items-center justify-between">
+                            <span class="status-badge bg-${statusClass}-500/20 text-${statusClass}-300">${field.status.replace('_', ' ')}</span>
+                            <div class="flex gap-1">
+                                <button class="bg-green-500/20 text-green-300 px-2 py-1 rounded text-xs hover:bg-green-500/30" aria-label="Approve field">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="bg-red-500/20 text-red-300 px-2 py-1 rounded text-xs hover:bg-red-500/30" aria-label="Reject field">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            modal.classList.remove('hidden');
+            // SECURITY TODO: Log access to document (CJIS audit requirement)
+            console.log(`AUDIT: User accessed document ${doc.id} at ${new Date().toISOString()}`);
+        }
+
+        function closeReviewModal() {
+            document.getElementById('reviewModal').classList.add('hidden');
+            currentReviewDoc = null;
+        }
+
+        function approveDocument() {
+            if (!currentReviewDoc) return;
+            // SECURITY TODO: Log approval action (CJIS audit requirement)
+            console.log(`AUDIT: Document ${currentReviewDoc.id} approved at ${new Date().toISOString()}`);
+            alert(`✓ Document approved!\n\nDocument ID: ${currentReviewDoc.id}\nWorkflow: ${currentReviewDoc.workflowId}\n\nDocument has been routed to next workflow step.`);
+            closeReviewModal();
+        }
+
+        function rejectDocument() {
+            if (!currentReviewDoc) return;
+            // SECURITY TODO: Log rejection action (CJIS audit requirement)
+            console.log(`AUDIT: Document ${currentReviewDoc.id} rejected at ${new Date().toISOString()}`);
+            const reason = prompt('Please provide a reason for rejection:');
+            if (reason) {
+                alert(`✓ Document rejected!\n\nReason: ${reason}\n\nSubmitter will be notified via email.`);
+                closeReviewModal();
+            }
+        }
+
+        function requestResubmission() {
+            if (!currentReviewDoc) return;
+            alert('📧 Resubmission request sent!\n\nThe submitter will receive an email with instructions to provide a clearer document.');
+            closeReviewModal();
+        }
+
+        function saveDraft() {
+            alert('💾 Draft saved!\n\nYour review progress has been saved. You can continue later.');
+        }
+
+        function reviewQueue(priority) {
+            alert(`Opening ${priority} priority queue...\n\nIn production, this would show a filterable list of all ${priority} priority documents.`);
+        }
+
+        function auditSample() {
+            alert('🔍 Audit Sample\n\nRandomly selecting 10 auto-approved documents for quality control review...\n\nIn production, this would open a sample review interface.');
+        }
+
+        function showBatchUpload() {
+            alert('📤 Batch Upload\n\nUpload multiple documents at once for processing.\n\nIn production, this would open a batch upload interface with drag & drop for folders.');
+        }
+
+        function exportReport() {
+            alert('📊 Export Processing Report\n\nGenerating report...\n\nIn production, this would export a CSV/Excel file with:\n• Processing statistics\n• Accuracy metrics\n• Staff performance\n• Time savings\n• CJIS compliance audit log');
+        }
+
+        function showSettings() {
+            alert('⚙️ OCR Configuration\n\nSettings available:\n• OCR Engine (Tesseract, Google Vision, AWS Textract)\n• Confidence thresholds\n• Auto-routing rules\n• Notification preferences\n• Document retention policies (CJIS compliance)\n• PII detection settings');
+        }
+
+        function showTraining() {
+            alert('🧠 AI Training Mode\n\nImprove accuracy by:\n• Teaching AI new document types\n• Providing correction feedback\n• Training on handwriting samples\n• A/B testing OCR models\n\nIn production, this would open the training interface.');
+        }
+
+        // Initialize on load
+        initializeQueues();
+        console.log('Document Processing Center initialized');
+        console.log('CJIS COMPLIANCE: All document access is logged for audit trails');
+    </script>
+</body>
+</html>

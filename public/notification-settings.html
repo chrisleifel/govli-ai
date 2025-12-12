@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Settings - Govli AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --deep-ocean: #0a1628;
+            --ocean-dark: #0c4a6e;
+            --ocean-primary: #0369a1;
+            --azure-blue: #0284c7;
+            --sky-blue: #0ea5e9;
+            --cyan-bright: #06b6d4;
+            --teal-accent: #14b8a6;
+        }
+
+        body {
+            background: linear-gradient(135deg,
+                #0a1628 0%,
+                #0c2340 25%,
+                #0e3a5f 50%,
+                #1e3a5f 75%,
+                #164e7f 100%);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--cyan-bright), var(--teal-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--azure-blue), var(--ocean-primary));
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(6, 182, 212, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .section-title {
+            color: var(--cyan-bright);
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-row:last-child {
+            border-bottom: none;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: linear-gradient(135deg, var(--azure-blue), var(--ocean-primary));
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 26px;
+        }
+
+        .input-field, .select-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            color: white;
+            width: 100%;
+        }
+
+        .input-field:focus, .select-field:focus {
+            outline: none;
+            border-color: var(--cyan-bright);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .checkbox-custom {
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .checkbox-custom.checked {
+            background: linear-gradient(135deg, var(--azure-blue), var(--ocean-primary));
+            border-color: var(--cyan-bright);
+        }
+
+        .success-message {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            color: rgb(16, 185, 129);
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Navigation Bar -->
+    <nav class="glass-card mx-4 mt-4 mb-6">
+        <div class="flex items-center justify-between p-4">
+            <div class="flex items-center gap-4">
+                <button onclick="window.location.href='notifications-center.html'" class="text-cyan-400 hover:text-cyan-300">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <h1 class="text-2xl font-bold gradient-text">Notification Settings</h1>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto px-4 pb-8">
+        <!-- Success Message -->
+        <div id="successMessage" class="success-message" style="display: none;">
+            <i class="fas fa-check-circle mr-2"></i>
+            <span>Settings saved successfully!</span>
+        </div>
+
+        <!-- Global Channel Settings -->
+        <div class="glass-card p-6 mb-6">
+            <h2 class="section-title">
+                <i class="fas fa-broadcast-tower"></i>
+                Notification Channels
+            </h2>
+            <p class="text-gray-400 text-sm mb-4">Choose how you want to receive notifications</p>
+
+            <div class="settings-row">
+                <div>
+                    <h3 class="font-semibold text-white mb-1">In-App Notifications</h3>
+                    <p class="text-sm text-gray-400">Notifications within the platform</p>
+                </div>
+                <div class="toggle-switch active" id="channel_in_app" onclick="toggleSwitch(this)"></div>
+            </div>
+
+            <div class="settings-row">
+                <div>
+                    <h3 class="font-semibold text-white mb-1">Email Notifications</h3>
+                    <p class="text-sm text-gray-400">Receive notifications via email</p>
+                </div>
+                <div class="toggle-switch active" id="channel_email" onclick="toggleSwitch(this)"></div>
+            </div>
+
+            <div class="settings-row">
+                <div>
+                    <h3 class="font-semibold text-white mb-1">SMS Notifications</h3>
+                    <p class="text-sm text-gray-400">Get text message alerts (charges may apply)</p>
+                </div>
+                <div class="toggle-switch" id="channel_sms" onclick="toggleSwitch(this)"></div>
+            </div>
+
+            <div class="settings-row">
+                <div>
+                    <h3 class="font-semibold text-white mb-1">Browser Push Notifications</h3>
+                    <p class="text-sm text-gray-400">Desktop notifications even when not on the site</p>
+                </div>
+                <div class="toggle-switch" id="channel_push" onclick="toggleSwitch(this)"></div>
+            </div>
+        </div>
+
+        <!-- Notification Type Settings -->
+        <div class="glass-card p-6 mb-6">
+            <h2 class="section-title">
+                <i class="fas fa-sliders-h"></i>
+                Notification Types
+            </h2>
+            <p class="text-gray-400 text-sm mb-4">Customize notifications by type</p>
+
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-gray-600">
+                            <th class="text-left py-3 px-2 text-gray-300">Notification Type</th>
+                            <th class="text-center py-3 px-2 text-gray-300">
+                                <i class="fas fa-desktop"></i> In-App
+                            </th>
+                            <th class="text-center py-3 px-2 text-gray-300">
+                                <i class="fas fa-envelope"></i> Email
+                            </th>
+                            <th class="text-center py-3 px-2 text-gray-300">
+                                <i class="fas fa-sms"></i> SMS
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="typeSettingsTable">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Advanced Settings -->
+        <div class="glass-card p-6 mb-6">
+            <h2 class="section-title">
+                <i class="fas fa-cog"></i>
+                Advanced Settings
+            </h2>
+
+            <div class="space-y-4">
+                <!-- Quiet Hours -->
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <h3 class="font-semibold text-white mb-1">Quiet Hours</h3>
+                            <p class="text-sm text-gray-400">Pause notifications during specific hours</p>
+                        </div>
+                        <div class="toggle-switch" id="quietHoursEnabled" onclick="toggleSwitch(this); toggleQuietHours()"></div>
+                    </div>
+                    <div id="quietHoursSettings" style="display: none;">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm text-gray-300 mb-2">Start Time</label>
+                                <input type="time" id="quietHoursStart" class="input-field" value="22:00">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-300 mb-2">End Time</label>
+                                <input type="time" id="quietHoursEnd" class="input-field" value="08:00">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email Digest -->
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <h3 class="font-semibold text-white mb-1">Email Digest</h3>
+                            <p class="text-sm text-gray-400">Receive a summary instead of individual emails</p>
+                        </div>
+                        <div class="toggle-switch" id="digestEnabled" onclick="toggleSwitch(this); toggleDigest()"></div>
+                    </div>
+                    <div id="digestSettings" style="display: none;">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm text-gray-300 mb-2">Frequency</label>
+                                <select id="digestFrequency" class="select-field">
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-300 mb-2">Send At</label>
+                                <input type="time" id="digestTime" class="input-field" value="09:00">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sound -->
+                <div class="settings-row">
+                    <div>
+                        <h3 class="font-semibold text-white mb-1">Notification Sound</h3>
+                        <p class="text-sm text-gray-400">Play sound for new notifications</p>
+                    </div>
+                    <div class="toggle-switch active" id="soundEnabled" onclick="toggleSwitch(this)"></div>
+                </div>
+
+                <!-- Desktop Notifications -->
+                <div class="settings-row">
+                    <div>
+                        <h3 class="font-semibold text-white mb-1">Desktop Notifications</h3>
+                        <p class="text-sm text-gray-400">Show browser notifications</p>
+                    </div>
+                    <button onclick="requestBrowserPermission()" class="btn-secondary text-sm">
+                        Enable
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="glass-card p-6">
+            <div class="flex gap-4">
+                <button onclick="saveSettings()" class="btn-primary flex-1">
+                    <i class="fas fa-save mr-2"></i>Save Settings
+                </button>
+                <button onclick="resetSettings()" class="btn-secondary flex-1">
+                    <i class="fas fa-undo mr-2"></i>Reset to Defaults
+                </button>
+                <button onclick="sendTestNotification()" class="btn-secondary">
+                    <i class="fas fa-paper-plane mr-2"></i>Send Test
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="notifications.js"></script>
+    <script>
+        const notificationTypes = [
+            { type: 'permit_status', label: 'Permit Status Updates' },
+            { type: 'inspection_scheduled', label: 'Inspection Scheduling' },
+            { type: 'inspection_completed', label: 'Inspection Completion' },
+            { type: 'payment_received', label: 'Payment Confirmations' },
+            { type: 'payment_refunded', label: 'Payment Refunds' },
+            { type: 'grant_opportunity', label: 'Grant Opportunities' },
+            { type: 'grant_application', label: 'Grant Applications' },
+            { type: 'document_uploaded', label: 'Document Uploads' },
+            { type: 'task_assigned', label: 'Task Assignments' },
+            { type: 'announcement', label: 'System Announcements' },
+            { type: 'reminder', label: 'Reminders' }
+        ];
+
+        let preferences = {
+            channels: {
+                in_app: true,
+                email: true,
+                sms: false,
+                push: false
+            },
+            types: {},
+            quietHours: {
+                enabled: false,
+                start: '22:00',
+                end: '08:00'
+            },
+            digest: {
+                enabled: false,
+                frequency: 'daily',
+                time: '09:00'
+            },
+            sound: true
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            renderTypeSettings();
+        });
+
+        // Load settings from storage (mock for now)
+        function loadSettings() {
+            const saved = localStorage.getItem('notificationPreferences');
+            if (saved) {
+                preferences = JSON.parse(saved);
+                applySettings();
+            } else {
+                // Set default preferences
+                notificationTypes.forEach(type => {
+                    preferences.types[type.type] = {
+                        in_app: true,
+                        email: true,
+                        sms: false
+                    };
+                });
+            }
+        }
+
+        // Apply loaded settings to UI
+        function applySettings() {
+            // Channel toggles
+            document.getElementById('channel_in_app').classList.toggle('active', preferences.channels.in_app);
+            document.getElementById('channel_email').classList.toggle('active', preferences.channels.email);
+            document.getElementById('channel_sms').classList.toggle('active', preferences.channels.sms);
+            document.getElementById('channel_push').classList.toggle('active', preferences.channels.push);
+
+            // Quiet hours
+            document.getElementById('quietHoursEnabled').classList.toggle('active', preferences.quietHours.enabled);
+            document.getElementById('quietHoursStart').value = preferences.quietHours.start;
+            document.getElementById('quietHoursEnd').value = preferences.quietHours.end;
+            if (preferences.quietHours.enabled) {
+                document.getElementById('quietHoursSettings').style.display = 'block';
+            }
+
+            // Digest
+            document.getElementById('digestEnabled').classList.toggle('active', preferences.digest.enabled);
+            document.getElementById('digestFrequency').value = preferences.digest.frequency;
+            document.getElementById('digestTime').value = preferences.digest.time;
+            if (preferences.digest.enabled) {
+                document.getElementById('digestSettings').style.display = 'block';
+            }
+
+            // Sound
+            document.getElementById('soundEnabled').classList.toggle('active', preferences.sound);
+        }
+
+        // Render type-specific settings
+        function renderTypeSettings() {
+            const tbody = document.getElementById('typeSettingsTable');
+            tbody.innerHTML = notificationTypes.map(type => `
+                <tr class="border-b border-gray-600/50">
+                    <td class="py-3 px-2 text-white">${type.label}</td>
+                    <td class="py-3 px-2 text-center">
+                        <div class="checkbox-custom ${preferences.types[type.type]?.in_app !== false ? 'checked' : ''}"
+                             onclick="toggleTypeChannel('${type.type}', 'in_app', this)">
+                            <i class="fas fa-check text-white text-xs" style="display: ${preferences.types[type.type]?.in_app !== false ? 'block' : 'none'}; margin: 2px;"></i>
+                        </div>
+                    </td>
+                    <td class="py-3 px-2 text-center">
+                        <div class="checkbox-custom ${preferences.types[type.type]?.email !== false ? 'checked' : ''}"
+                             onclick="toggleTypeChannel('${type.type}', 'email', this)">
+                            <i class="fas fa-check text-white text-xs" style="display: ${preferences.types[type.type]?.email !== false ? 'block' : 'none'}; margin: 2px;"></i>
+                        </div>
+                    </td>
+                    <td class="py-3 px-2 text-center">
+                        <div class="checkbox-custom ${preferences.types[type.type]?.sms === true ? 'checked' : ''}"
+                             onclick="toggleTypeChannel('${type.type}', 'sms', this)">
+                            <i class="fas fa-check text-white text-xs" style="display: ${preferences.types[type.type]?.sms === true ? 'block' : 'none'}; margin: 2px;"></i>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Toggle switch
+        function toggleSwitch(element) {
+            element.classList.toggle('active');
+        }
+
+        // Toggle type-channel checkbox
+        function toggleTypeChannel(type, channel, element) {
+            if (!preferences.types[type]) {
+                preferences.types[type] = {};
+            }
+            const isChecked = element.classList.contains('checked');
+            preferences.types[type][channel] = !isChecked;
+            element.classList.toggle('checked');
+            element.querySelector('i').style.display = !isChecked ? 'block' : 'none';
+        }
+
+        // Toggle quiet hours settings visibility
+        function toggleQuietHours() {
+            const settings = document.getElementById('quietHoursSettings');
+            const enabled = document.getElementById('quietHoursEnabled').classList.contains('active');
+            settings.style.display = enabled ? 'block' : 'none';
+        }
+
+        // Toggle digest settings visibility
+        function toggleDigest() {
+            const settings = document.getElementById('digestSettings');
+            const enabled = document.getElementById('digestEnabled').classList.contains('active');
+            settings.style.display = enabled ? 'block' : 'none';
+        }
+
+        // Save settings
+        function saveSettings() {
+            // Gather all settings
+            preferences.channels = {
+                in_app: document.getElementById('channel_in_app').classList.contains('active'),
+                email: document.getElementById('channel_email').classList.contains('active'),
+                sms: document.getElementById('channel_sms').classList.contains('active'),
+                push: document.getElementById('channel_push').classList.contains('active')
+            };
+
+            preferences.quietHours = {
+                enabled: document.getElementById('quietHoursEnabled').classList.contains('active'),
+                start: document.getElementById('quietHoursStart').value,
+                end: document.getElementById('quietHoursEnd').value
+            };
+
+            preferences.digest = {
+                enabled: document.getElementById('digestEnabled').classList.contains('active'),
+                frequency: document.getElementById('digestFrequency').value,
+                time: document.getElementById('digestTime').value
+            };
+
+            preferences.sound = document.getElementById('soundEnabled').classList.contains('active');
+
+            // Save to localStorage (in production, save to backend)
+            localStorage.setItem('notificationPreferences', JSON.stringify(preferences));
+
+            // Show success message
+            const successMsg = document.getElementById('successMessage');
+            successMsg.style.display = 'block';
+            setTimeout(() => {
+                successMsg.style.display = 'none';
+            }, 3000);
+
+            // In production, also save to backend via API
+            // await fetch('/api/users/preferences', { method: 'PATCH', body: JSON.stringify(preferences) });
+        }
+
+        // Reset to defaults
+        function resetSettings() {
+            if (!confirm('Reset all notification settings to defaults?')) return;
+
+            preferences = {
+                channels: {
+                    in_app: true,
+                    email: true,
+                    sms: false,
+                    push: false
+                },
+                types: {},
+                quietHours: {
+                    enabled: false,
+                    start: '22:00',
+                    end: '08:00'
+                },
+                digest: {
+                    enabled: false,
+                    frequency: 'daily',
+                    time: '09:00'
+                },
+                sound: true
+            };
+
+            notificationTypes.forEach(type => {
+                preferences.types[type.type] = {
+                    in_app: true,
+                    email: true,
+                    sms: false
+                };
+            });
+
+            applySettings();
+            renderTypeSettings();
+        }
+
+        // Request browser notification permission
+        async function requestBrowserPermission() {
+            const permission = await NotificationAPI.requestNotificationPermission();
+            if (permission === 'granted') {
+                alert('Browser notifications enabled!');
+                document.getElementById('channel_push').classList.add('active');
+            } else {
+                alert('Permission denied. Please enable notifications in your browser settings.');
+            }
+        }
+
+        // Send test notification
+        async function sendTestNotification() {
+            try {
+                // Create a test notification locally
+                const testNotif = {
+                    title: 'Test Notification',
+                    message: 'This is a test notification from Govli AI. If you can see this, your notifications are working!',
+                    priority: 'medium'
+                };
+
+                // Show browser notification if permission granted
+                NotificationAPI.showBrowserNotification(testNotif);
+
+                // Play sound if enabled
+                if (preferences.sound) {
+                    NotificationAPI.playSound();
+                }
+
+                alert('Test notification sent! Check your browser for the notification.');
+            } catch (error) {
+                console.error('Error sending test notification:', error);
+                alert('Error sending test notification');
+            }
+        }
+    </script>
+</body>
+</html>

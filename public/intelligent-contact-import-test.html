@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent Contact Import & Enrichment System - Govli AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #8b5cf6 100%);
+            min-height: 100vh;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .upload-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            min-height: 200px;
+        }
+
+        .upload-zone.drag-over {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+            transform: scale(1.02);
+        }
+
+        .confidence-meter {
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            transition: width 0.5s ease, background 0.3s ease;
+        }
+
+        .contact-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .processing-spinner {
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .pulse-dot {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .relationship-node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+            text-align: center;
+            padding: 4px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .relationship-node:hover {
+            transform: scale(1.2);
+            z-index: 10;
+        }
+
+        .relationship-line {
+            position: absolute;
+            height: 2px;
+            background: rgba(59, 130, 246, 0.5);
+            transform-origin: left center;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .priority-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-vip {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            color: white;
+        }
+
+        .badge-hot {
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            color: white;
+        }
+
+        .badge-key {
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            color: white;
+        }
+
+        .enrichment-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .doc-thumbnail {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .doc-thumbnail:hover {
+            border-color: #3b82f6;
+            transform: scale(1.05);
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+        }
+
+        .status-queued { background: #6b7280; }
+        .status-processing { background: #3b82f6; }
+        .status-complete { background: #10b981; }
+        .status-review { background: #f59e0b; }
+        .status-failed { background: #ef4444; }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                <i class="fas fa-id-card text-blue-400"></i>
+                Intelligent Contact Import & Enrichment
+                <span class="text-sm bg-purple-500/20 text-purple-400 px-3 py-1 rounded-full border border-purple-500/30">AI-Powered</span>
+            </h1>
+            <p class="text-white/70">Import contacts from business cards, documents, and files with AI-powered extraction, deduplication, and relationship mapping</p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="glass rounded-lg p-4">
+                <div class="text-sm text-white/70 mb-1">Total Imported</div>
+                <div class="text-2xl font-bold text-blue-400">2,847</div>
+                <div class="text-xs text-white/50 mt-1">This month</div>
+            </div>
+            <div class="glass rounded-lg p-4">
+                <div class="text-sm text-white/70 mb-1">Success Rate</div>
+                <div class="text-2xl font-bold text-green-400">96.3%</div>
+                <div class="text-xs text-white/50 mt-1">+4.2% improvement</div>
+            </div>
+            <div class="glass rounded-lg p-4">
+                <div class="text-sm text-white/70 mb-1">Duplicates Prevented</div>
+                <div class="text-2xl font-bold text-purple-400">418</div>
+                <div class="text-xs text-white/50 mt-1">Auto-merged</div>
+            </div>
+            <div class="glass rounded-lg p-4">
+                <div class="text-sm text-white/70 mb-1">Time Saved</div>
+                <div class="text-2xl font-bold text-yellow-400">87hrs</div>
+                <div class="text-xs text-white/50 mt-1">vs manual entry</div>
+            </div>
+        </div>
+
+        <!-- Main Import Interface -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Left Column: Upload Zone -->
+            <div class="space-y-6">
+                <!-- Multi-Source Upload -->
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-cloud-upload-alt text-blue-400"></i>
+                        Smart Document Upload
+                    </h3>
+
+                    <!-- Upload Zone -->
+                    <div id="uploadZone" class="upload-zone rounded-xl p-8 text-center mb-4" role="button" tabindex="0" aria-label="Upload documents">
+                        <div class="mb-4">
+                            <i class="fas fa-file-upload text-5xl text-blue-400 mb-4"></i>
+                        </div>
+                        <p class="text-white font-semibold mb-2">Drag files here or click to browse</p>
+                        <p class="text-sm text-white/60 mb-4">Support for business cards, contact sheets, email signatures, spreadsheets</p>
+                        <input type="file" id="fileInput" multiple accept="image/*,.pdf,.csv,.xlsx,.vcf" class="hidden">
+                        <button onclick="document.getElementById('fileInput').click()" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
+                            <i class="fas fa-folder-open mr-2"></i>Browse Files
+                        </button>
+                    </div>
+
+                    <!-- Quick Import Options -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="openCameraCapture()" class="bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-lg text-sm font-medium transition-all border border-white/20" aria-label="Scan business card with camera">
+                            <i class="fas fa-camera mr-2"></i>Scan Business Card
+                        </button>
+                        <button onclick="importFromEmail()" class="bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-lg text-sm font-medium transition-all border border-white/20" aria-label="Import from email signatures">
+                            <i class="fas fa-envelope mr-2"></i>From Email
+                        </button>
+                        <button onclick="importFromLinkedIn()" class="bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-lg text-sm font-medium transition-all border border-white/20" aria-label="Import from LinkedIn">
+                            <i class="fab fa-linkedin mr-2"></i>LinkedIn Import
+                        </button>
+                        <button onclick="bulkImport()" class="bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-lg text-sm font-medium transition-all border border-white/20" aria-label="Bulk import multiple files">
+                            <i class="fas fa-layer-group mr-2"></i>Bulk Import
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Processing Settings -->
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-sliders-h text-purple-400"></i>
+                        Processing Settings
+                    </h3>
+
+                    <!-- Accuracy Slider -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-white mb-2">
+                            Priority: <span id="priorityLabel" class="text-blue-400">Balanced</span>
+                        </label>
+                        <input type="range" id="prioritySlider" min="0" max="100" value="50" class="w-full" onchange="updatePriority(this.value)">
+                        <div class="flex justify-between text-xs text-white/60 mt-1">
+                            <span>Speed</span>
+                            <span>Accuracy</span>
+                        </div>
+                    </div>
+
+                    <!-- Duplicate Detection -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-white mb-2">
+                            Duplicate Sensitivity: <span id="dupeLabel" class="text-purple-400">85%</span>
+                        </label>
+                        <input type="range" id="dupeSlider" min="50" max="100" value="85" class="w-full" onchange="updateDupeSensitivity(this.value)">
+                        <div class="flex justify-between text-xs text-white/60 mt-1">
+                            <span>Less Strict</span>
+                            <span>More Strict</span>
+                        </div>
+                    </div>
+
+                    <!-- Auto Options -->
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="autoEnrich" checked class="w-4 h-4">
+                            <span class="text-sm text-white">Auto-enrich with social profiles & company data</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="autoMerge" checked class="w-4 h-4">
+                            <span class="text-sm text-white">Auto-merge duplicates (>95% confidence)</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="detectRelationships" checked class="w-4 h-4">
+                            <span class="text-sm text-white">Detect relationships & org structure</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Recent Imports -->
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-history text-green-400"></i>
+                        Recent Imports
+                    </h3>
+                    <div class="space-y-3" id="recentImports">
+                        <div class="bg-white/5 rounded-lg p-3 flex items-center justify-between">
+                            <div>
+                                <div class="text-sm font-medium text-white">GovCon 2024 - 47 cards</div>
+                                <div class="text-xs text-white/60">2 hours ago • 96% success</div>
+                            </div>
+                            <i class="fas fa-check-circle text-green-400"></i>
+                        </div>
+                        <div class="bg-white/5 rounded-lg p-3 flex items-center justify-between">
+                            <div>
+                                <div class="text-sm font-medium text-white">Vendor Meeting - 12 cards</div>
+                                <div class="text-xs text-white/60">1 day ago • 100% success</div>
+                            </div>
+                            <i class="fas fa-check-circle text-green-400"></i>
+                        </div>
+                        <div class="bg-white/5 rounded-lg p-3 flex items-center justify-between">
+                            <div>
+                                <div class="text-sm font-medium text-white">Email Signatures - 28 contacts</div>
+                                <div class="text-xs text-white/60">3 days ago • 93% success</div>
+                            </div>
+                            <i class="fas fa-check-circle text-green-400"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Processing & Preview -->
+            <div class="space-y-6">
+                <!-- Processing Dashboard -->
+                <div id="processingDashboard" class="glass rounded-xl p-6" style="display: none;">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <div class="processing-spinner"></div>
+                        Processing Documents
+                    </h3>
+
+                    <!-- Progress Bar -->
+                    <div class="mb-6">
+                        <div class="flex justify-between text-sm text-white/70 mb-2">
+                            <span id="progressText">Processing 5 of 12 documents...</span>
+                            <span id="progressPercent">42%</span>
+                        </div>
+                        <div class="h-3 bg-white/10 rounded-full overflow-hidden">
+                            <div id="progressBar" class="h-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-500" style="width: 42%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Live Activity Feed -->
+                    <div class="space-y-2 max-h-60 overflow-y-auto" id="activityFeed">
+                        <!-- Activities populated by JavaScript -->
+                    </div>
+
+                    <!-- Batch Actions -->
+                    <div class="mt-4 pt-4 border-t border-white/20">
+                        <div class="flex gap-2">
+                            <button onclick="approveAllHigh()" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
+                                <i class="fas fa-check mr-2"></i>Approve High Confidence
+                            </button>
+                            <button onclick="reviewAll()" class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
+                                <i class="fas fa-eye mr-2"></i>Review All
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Preview -->
+                <div id="contactPreview" class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-user-circle text-blue-400"></i>
+                        Extracted Contact Preview
+                    </h3>
+
+                    <div id="previewContent" class="text-center text-white/50 py-8">
+                        <i class="fas fa-inbox text-4xl mb-3"></i>
+                        <p>Upload documents to see extracted contact information</p>
+                    </div>
+                </div>
+
+                <!-- Document Gallery -->
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-images text-purple-400"></i>
+                        Document Gallery
+                    </h3>
+                    <div id="docGallery" class="grid grid-cols-4 gap-3">
+                        <div class="text-center text-white/50 col-span-4 py-4">
+                            <i class="fas fa-folder-open text-3xl mb-2"></i>
+                            <p class="text-sm">No documents uploaded</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo Contacts Section -->
+        <div class="mt-8 glass rounded-xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-address-book text-blue-400"></i>
+                    Sample Imported Contacts
+                </h3>
+                <button onclick="showRelationshipMap()" class="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
+                    <i class="fas fa-project-diagram mr-2"></i>View Relationship Map
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="flex flex-wrap gap-3 mb-6">
+                <button onclick="filterContacts('all')" class="bg-blue-500/20 text-blue-400 px-4 py-2 rounded-lg text-sm font-medium border border-blue-500/30">All (20)</button>
+                <button onclick="filterContacts('vip')" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium border border-white/20 transition-all">VIP (5)</button>
+                <button onclick="filterContacts('vendor')" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium border border-white/20 transition-all">Vendors (6)</button>
+                <button onclick="filterContacts('official')" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium border border-white/20 transition-all">Officials (3)</button>
+                <button onclick="filterContacts('duplicate')" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium border border-white/20 transition-all">Needs Review (2)</button>
+            </div>
+
+            <!-- Contact Grid -->
+            <div id="contactGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Contacts will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Deduplication Modal -->
+    <div id="dedupeModal" class="modal" role="dialog" aria-labelledby="dedupeModalTitle">
+        <div class="glass rounded-xl p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h2 id="dedupeModalTitle" class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                <i class="fas fa-code-merge text-yellow-400"></i>
+                Potential Duplicate Detected
+            </h2>
+            <div id="dedupeContent">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Relationship Map Modal -->
+    <div id="relationshipModal" class="modal" role="dialog" aria-labelledby="relationshipModalTitle">
+        <div class="glass rounded-xl p-6 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h2 id="relationshipModalTitle" class="text-2xl font-bold text-white flex items-center gap-3">
+                    <i class="fas fa-project-diagram text-purple-400"></i>
+                    Contact Relationship Network
+                </h2>
+                <button onclick="closeRelationshipMap()" class="text-white/70 hover:text-white transition-colors">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div id="relationshipCanvas" class="bg-black/20 rounded-xl" style="height: 500px; position: relative;">
+                <!-- Network visualization -->
+            </div>
+            <div class="mt-4 flex gap-3 text-sm">
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 rounded-full bg-blue-500"></div>
+                    <span class="text-white/70">Same Company</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 rounded-full bg-purple-500"></div>
+                    <span class="text-white/70">Same Project</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 rounded-full bg-green-500"></div>
+                    <span class="text-white/70">Same Location</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // SECURITY TODO: Implement secure file upload with virus scanning
+        // SECURITY TODO: Add file size and type validation
+        // TODO: Connect to OCR service (Google Vision, AWS Textract, Azure Computer Vision)
+        // TODO: Implement LinkedIn API integration for profile enrichment
+        // TODO: Add USPS address validation API
+        // TODO: Connect to company database (Clearbit, ZoomInfo, D&B)
+        // TODO: Implement fuzzy matching algorithm for duplicate detection
+        // TODO: Add social media profile lookup services
+        // TODO: Integrate with email parsing service
+        // TODO: Connect to CRM database for merge operations
+        // TODO: Implement machine learning model for contact scoring
+        // TODO: Add relationship graph database (Neo4j)
+        // TODO: Implement PII detection and encryption at rest
+        // SECURITY TODO: Add audit logging for all contact access
+
+        // MOCK DATA - Replace in production
+        const MOCK_CONTACTS = [
+            // Government Officials
+            {
+                id: 'C001',
+                name: 'Jennifer Thompson',
+                title: 'Mayor',
+                company: 'City of Springfield',
+                email: 'mayor@springfield.gov',
+                phone: '(217) 555-0100',
+                address: '123 Main Street, Springfield, IL 62701',
+                type: 'official',
+                confidence: 96,
+                priority: 'vip',
+                enrichment: {
+                    linkedin: 'https://linkedin.com/in/jenniferthompson',
+                    photo: 'https://i.pravatar.cc/150?img=1',
+                    companySize: '500 employees',
+                    industry: 'Government'
+                },
+                relationships: ['C002', 'C003'],
+                score: 98
+            },
+            {
+                id: 'C002',
+                name: 'Michael Rodriguez',
+                title: 'Chief of Police',
+                company: 'Springfield Police Department',
+                email: 'm.rodriguez@springfieldpd.gov',
+                phone: '(217) 555-0200',
+                address: '456 Oak Avenue, Springfield, IL 62702',
+                type: 'official',
+                confidence: 98,
+                priority: 'vip',
+                badge: 'Badge #001',
+                enrichment: {
+                    linkedin: 'https://linkedin.com/in/mrodriguez',
+                    photo: 'https://i.pravatar.cc/150?img=12',
+                    yearsExperience: '25 years'
+                },
+                relationships: ['C001', 'C003'],
+                score: 95
+            },
+            {
+                id: 'C003',
+                name: 'Sarah Kim',
+                title: 'Fire Marshal',
+                company: 'Springfield Fire Department',
+                email: 's.kim@springfieldfd.gov',
+                phone: '(217) 555-0300',
+                address: '789 Elm Street, Springfield, IL 62703',
+                type: 'official',
+                confidence: 94,
+                priority: 'key',
+                license: 'FM-45678',
+                enrichment: {
+                    linkedin: 'https://linkedin.com/in/sarahkim',
+                    photo: 'https://i.pravatar.cc/150?img=5',
+                    certifications: ['Fire Marshal', 'EMT']
+                },
+                relationships: ['C001', 'C002'],
+                score: 92
+            },
+            // Vendors
+            {
+                id: 'C004',
+                name: 'David Chen',
+                title: 'Owner',
+                company: "Chen's Construction LLC",
+                email: 'david@chensconstruction.com',
+                phone: '(217) 555-0400',
+                address: '2345 Industrial Park Dr, Springfield, IL 62704',
+                type: 'vendor',
+                confidence: 97,
+                priority: 'key',
+                license: 'CON-123456',
+                enrichment: {
+                    linkedin: 'https://linkedin.com/in/davidchen',
+                    photo: 'https://i.pravatar.cc/150?img=13',
+                    companySize: '50 employees',
+                    revenue: '$5M',
+                    founded: 1998
+                },
+                relationships: ['C005', 'C006'],
+                score: 88
+            },
+            {
+                id: 'C005',
+                name: 'Lisa Martinez',
+                title: 'Sales Director',
+                company: 'TechSupply Government Solutions',
+                email: 'l.martinez@techsupply.com',
+                phone: '(312) 555-0500',
+                address: '3456 Business Blvd Suite 200, Chicago, IL 60601',
+                type: 'vendor',
+                confidence: 99,
+                priority: 'hot',
+                enrichment: {
+                    linkedin: 'https://linkedin.com/in/lisamartinez',
+                    photo: 'https://i.pravatar.cc/150?img=9',
+                    companySize: '500 employees',
+                    connections: '500+',
+                    revenue: '$50M'
+                },
+                relationships: ['C004', 'C006'],
+                score: 90
+            }
+        ];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupDragAndDrop();
+            loadSampleContacts();
+        });
+
+        function setupDragAndDrop() {
+            const zone = document.getElementById('uploadZone');
+
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('drag-over');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('drag-over');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+                const files = e.dataTransfer.files;
+                handleFiles(files);
+            });
+
+            document.getElementById('fileInput').addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+        }
+
+        function handleFiles(files) {
+            console.log('TODO: Process uploaded files', files);
+            document.getElementById('processingDashboard').style.display = 'block';
+            simulateProcessing(files.length);
+        }
+
+        function simulateProcessing(count) {
+            const activities = [
+                { icon: 'check', color: 'green', text: 'Imported: John Smith (TechCorp Inc.) - 98% confidence' },
+                { icon: 'exclamation-triangle', color: 'yellow', text: 'Review needed: Sarah Chen - Email format unclear' },
+                { icon: 'sync', color: 'blue', text: 'Merged: Mike Johnson with existing contact' },
+                { icon: 'check', color: 'green', text: 'Imported: Emily Davis (City Hall) - 96% confidence' },
+                { icon: 'times', color: 'red', text: 'Failed: Blurry image, please re-scan' }
+            ];
+
+            const feed = document.getElementById('activityFeed');
+            feed.innerHTML = '';
+
+            activities.forEach((activity, index) => {
+                setTimeout(() => {
+                    const item = document.createElement('div');
+                    item.className = 'flex items-start gap-3 p-3 bg-white/5 rounded-lg';
+                    item.innerHTML = `
+                        <i class="fas fa-${activity.icon} text-${activity.color}-400 mt-0.5"></i>
+                        <span class="text-sm text-white/80">${activity.text}</span>
+                    `;
+                    feed.appendChild(item);
+
+                    const progress = ((index + 1) / activities.length) * 100;
+                    document.getElementById('progressBar').style.width = progress + '%';
+                    document.getElementById('progressPercent').textContent = Math.round(progress) + '%';
+                    document.getElementById('progressText').textContent = `Processing ${index + 1} of ${activities.length} documents...`;
+                }, index * 800);
+            });
+        }
+
+        function loadSampleContacts() {
+            const grid = document.getElementById('contactGrid');
+            grid.innerHTML = MOCK_CONTACTS.map(contact => createContactCard(contact)).join('');
+        }
+
+        function createContactCard(contact) {
+            const confidenceColor = contact.confidence >= 90 ? 'green' : contact.confidence >= 70 ? 'yellow' : 'red';
+            const priorityBadge = contact.priority === 'vip' ? '<span class="priority-badge badge-vip">⭐ VIP</span>' :
+                                 contact.priority === 'hot' ? '<span class="priority-badge badge-hot">🔥 Hot Lead</span>' :
+                                 contact.priority === 'key' ? '<span class="priority-badge badge-key">💼 Key</span>' : '';
+
+            return `
+                <div class="contact-card glass rounded-xl p-4" onclick="viewContactDetails('${contact.id}')">
+                    <div class="flex items-start gap-3 mb-3">
+                        <img src="${contact.enrichment?.photo || 'https://i.pravatar.cc/150'}" alt="${contact.name}" class="w-12 h-12 rounded-full border-2 border-white/20">
+                        <div class="flex-1 min-w-0">
+                            <div class="font-bold text-white truncate">${contact.name}</div>
+                            <div class="text-sm text-white/70 truncate">${contact.title}</div>
+                            <div class="text-xs text-white/50 truncate">${contact.company}</div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1 mb-3">
+                        <div class="flex items-center gap-2 text-xs text-white/70">
+                            <i class="fas fa-envelope w-4"></i>
+                            <span class="truncate">${contact.email}</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-white/70">
+                            <i class="fas fa-phone w-4"></i>
+                            <span>${contact.phone}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-xs text-white/60">Confidence: ${contact.confidence}%</div>
+                        <div class="confidence-meter w-20">
+                            <div class="confidence-fill bg-${confidenceColor}-400" style="width: ${contact.confidence}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 flex-wrap">
+                        ${priorityBadge}
+                        ${contact.enrichment?.linkedin ? '<span class="enrichment-tag">✓ LinkedIn</span>' : ''}
+                        ${contact.relationships?.length > 0 ? `<span class="enrichment-tag">${contact.relationships.length} connections</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function updatePriority(value) {
+            const label = value < 33 ? 'Speed' : value < 67 ? 'Balanced' : 'Accuracy';
+            document.getElementById('priorityLabel').textContent = label;
+        }
+
+        function updateDupeSensitivity(value) {
+            document.getElementById('dupeLabel').textContent = value + '%';
+        }
+
+        function openCameraCapture() {
+            alert('📷 Camera Capture\n\nOpen device camera to scan business cards instantly.\n\n• Auto-detect card edges\n• Real-time OCR processing\n• Batch scan mode for events\n• Works offline\n\nTODO: Implement camera interface with edge detection');
+        }
+
+        function importFromEmail() {
+            alert('📧 Email Signature Import\n\nExtract contacts from email signatures.\n\n• Parse email headers and footers\n• Detect contact information patterns\n• Handle multiple email formats\n• Batch process inbox\n\nTODO: Integrate with email services (Gmail, Outlook API)');
+        }
+
+        function importFromLinkedIn() {
+            alert('💼 LinkedIn Import\n\nImport professional contacts from LinkedIn.\n\n• OAuth authentication\n• Import connections with permission\n• Sync profile photos and bios\n• Keep contact data updated\n\nTODO: Implement LinkedIn API integration');
+        }
+
+        function bulkImport() {
+            alert('📂 Bulk Import\n\nProcess multiple files at once.\n\n• Upload up to 50 documents\n• Automatic document type detection\n• Priority-based processing queue\n• Progress tracking per file\n\nTODO: Implement multi-file upload handler');
+        }
+
+        function approveAllHigh() {
+            alert('✅ Approved all high-confidence contacts (>90%)\n\n• 8 contacts approved\n• 0 duplicates merged\n• Added to CRM database\n\nTODO: Connect to CRM API for bulk approval');
+        }
+
+        function reviewAll() {
+            alert('👁️ Review Queue\n\nOpening review interface for all pending contacts...\n\n• 3 contacts need manual review\n• 2 potential duplicates to resolve\n• 1 incomplete information\n\nTODO: Implement review queue interface');
+        }
+
+        function filterContacts(filter) {
+            console.log('Filter contacts by:', filter);
+            // TODO: Implement filtering logic
+            alert(`Filtering contacts by: ${filter}`);
+        }
+
+        function viewContactDetails(id) {
+            const contact = MOCK_CONTACTS.find(c => c.id === id);
+            if (!contact) return;
+
+            alert(`📇 Contact Details\n\nName: ${contact.name}\nTitle: ${contact.title}\nCompany: ${contact.company}\n\nEmail: ${contact.email}\nPhone: ${contact.phone}\n\nConfidence: ${contact.confidence}%\nScore: ${contact.score}\nConnections: ${contact.relationships?.length || 0}\n\nEnrichment:\n${contact.enrichment?.linkedin ? '✓ LinkedIn profile' : '✗ No LinkedIn'}\n${contact.enrichment?.companySize ? '✓ Company data' : '✗ No company data'}\n\nTODO: Create full contact details modal`);
+        }
+
+        function showRelationshipMap() {
+            const modal = document.getElementById('relationshipModal');
+            modal.classList.add('active');
+            renderRelationshipNetwork();
+        }
+
+        function closeRelationshipMap() {
+            document.getElementById('relationshipModal').classList.remove('active');
+        }
+
+        function renderRelationshipNetwork() {
+            const canvas = document.getElementById('relationshipCanvas');
+            canvas.innerHTML = '';
+
+            // Simple network visualization
+            MOCK_CONTACTS.slice(0, 8).forEach((contact, index) => {
+                const angle = (index / 8) * Math.PI * 2;
+                const radius = 180;
+                const x = 300 + Math.cos(angle) * radius;
+                const y = 250 + Math.sin(angle) * radius;
+
+                const node = document.createElement('div');
+                node.className = 'relationship-node';
+                node.style.left = x - 30 + 'px';
+                node.style.top = y - 30 + 'px';
+                node.textContent = contact.name.split(' ')[0];
+                node.title = contact.name;
+                node.onclick = () => viewContactDetails(contact.id);
+                canvas.appendChild(node);
+
+                // Draw lines to related contacts
+                if (contact.relationships) {
+                    contact.relationships.forEach(relId => {
+                        const relIndex = MOCK_CONTACTS.findIndex(c => c.id === relId);
+                        if (relIndex !== -1 && relIndex < 8) {
+                            const relAngle = (relIndex / 8) * Math.PI * 2;
+                            const relX = 300 + Math.cos(relAngle) * radius;
+                            const relY = 250 + Math.sin(relAngle) * radius;
+
+                            const line = document.createElement('div');
+                            line.className = 'relationship-line';
+                            const length = Math.sqrt(Math.pow(relX - x, 2) + Math.pow(relY - y, 2));
+                            const angle = Math.atan2(relY - y, relX - x);
+                            line.style.width = length + 'px';
+                            line.style.left = x + 'px';
+                            line.style.top = y + 'px';
+                            line.style.transform = `rotate(${angle}rad)`;
+                            canvas.appendChild(line);
+                        }
+                    });
+                }
+            });
+        }
+
+        // Close modals on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

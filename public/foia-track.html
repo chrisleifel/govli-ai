@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track FOIA Request - Govli AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'ocean-dark': '#0a1628',
+            'ocean-blue': '#1e3a8a',
+            'ocean-light': '#3b82f6'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #0a1628 0%, #1e3a8a 100%);
+      min-height: 100vh;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .glass-hover:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .timeline-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+    }
+    .timeline-line {
+      width: 2px;
+      background: linear-gradient(to bottom, #3b82f6, transparent);
+    }
+  </style>
+</head>
+<body class="text-white">
+  <!-- Header -->
+  <header class="glass border-b border-white/10">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <h1 class="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+            Govli AI
+          </h1>
+          <span class="text-gray-400">|</span>
+          <span class="text-gray-300">Track FOIA Request</span>
+        </div>
+        <div class="flex items-center space-x-4">
+          <a href="foia-request.html" class="glass glass-hover px-4 py-2 rounded-lg text-sm">
+            New Request
+          </a>
+          <a href="index.html" class="text-gray-400 hover:text-white text-sm">
+            Back to Home
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container mx-auto px-6 py-12 max-w-6xl">
+    <!-- Search Section -->
+    <div class="glass rounded-lg p-8 mb-8">
+      <h2 class="text-3xl font-bold mb-6">Track Your FOIA Request</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Search by Tracking Number -->
+        <div>
+          <label class="block text-sm font-medium mb-2">Tracking Number</label>
+          <div class="flex space-x-2">
+            <input type="text" id="trackingNumber"
+              class="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-cyan-400 transition"
+              placeholder="FOIA-2025-12345">
+            <button onclick="trackByNumber()"
+              class="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg font-semibold hover:from-cyan-600 hover:to-blue-600 transition">
+              Track
+            </button>
+          </div>
+        </div>
+
+        <!-- Search by Email -->
+        <div>
+          <label class="block text-sm font-medium mb-2">Email Address</label>
+          <div class="flex space-x-2">
+            <input type="email" id="emailAddress"
+              class="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-cyan-400 transition"
+              placeholder="your@email.com">
+            <button onclick="trackByEmail()"
+              class="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg font-semibold hover:from-cyan-600 hover:to-blue-600 transition">
+              Search
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="hidden text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-cyan-400 border-t-transparent"></div>
+      <p class="mt-4 text-gray-400">Loading request details...</p>
+    </div>
+
+    <!-- No Results -->
+    <div id="noResults" class="hidden glass rounded-lg p-12 text-center">
+      <svg class="w-16 h-16 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <h3 class="text-xl font-semibold mb-2">No Request Found</h3>
+      <p class="text-gray-400 mb-6">We couldn't find a FOIA request matching your search criteria.</p>
+      <a href="foia-request.html" class="inline-block px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg font-semibold">
+        Submit New Request
+      </a>
+    </div>
+
+    <!-- Request Details -->
+    <div id="requestDetails" class="hidden space-y-6">
+      <!-- Status Overview -->
+      <div class="glass rounded-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-2xl font-bold" id="requestSubject">-</h3>
+            <p class="text-gray-400 mt-1">Tracking: <span id="displayTrackingNumber" class="font-mono text-cyan-400">-</span></p>
+          </div>
+          <div class="text-right">
+            <span id="statusBadge" class="px-4 py-2 rounded-full text-sm font-semibold">-</span>
+            <p class="text-sm text-gray-400 mt-2">Submitted: <span id="dateSubmitted">-</span></p>
+            <a id="detailLink" href="#" class="inline-block mt-3 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm font-medium transition">
+              View Full Details & Print
+            </a>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mt-6">
+          <div class="flex items-center justify-between text-sm mb-2">
+            <span class="text-gray-400">Progress</span>
+            <span class="font-semibold" id="progressPercent">0%</span>
+          </div>
+          <div class="w-full bg-white/10 rounded-full h-2">
+            <div id="progressBar" class="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- Days Remaining -->
+        <div class="mt-4 flex items-center justify-between text-sm">
+          <span class="text-gray-400">Response Due:</span>
+          <span id="dueDate" class="font-semibold">-</span>
+        </div>
+        <div class="flex items-center justify-between text-sm mt-2">
+          <span class="text-gray-400">Days Remaining:</span>
+          <span id="daysRemaining" class="font-semibold text-cyan-400">-</span>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="glass rounded-lg p-6">
+        <h3 class="text-xl font-semibold mb-6">Request Timeline</h3>
+        <div id="timeline" class="space-y-6">
+          <!-- Timeline items will be inserted here -->
+        </div>
+      </div>
+
+      <!-- Request Information -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Requester Info -->
+        <div class="glass rounded-lg p-6">
+          <h3 class="text-lg font-semibold mb-4">Requester Information</h3>
+          <dl class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <dt class="text-gray-400">Name:</dt>
+              <dd id="requesterName" class="font-medium">-</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-gray-400">Email:</dt>
+              <dd id="requesterEmail" class="font-medium">-</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-gray-400">Type:</dt>
+              <dd id="requesterType" class="font-medium capitalize">-</dd>
+            </div>
+          </dl>
+        </div>
+
+        <!-- Request Info -->
+        <div class="glass rounded-lg p-6">
+          <h3 class="text-lg font-semibold mb-4">Request Details</h3>
+          <dl class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <dt class="text-gray-400">Type:</dt>
+              <dd id="requestType" class="font-medium capitalize">-</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-gray-400">Priority:</dt>
+              <dd id="priority" class="font-medium capitalize">-</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-gray-400">Assigned To:</dt>
+              <dd id="assignedStaff" class="font-medium">-</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="glass rounded-lg p-6">
+        <h3 class="text-lg font-semibold mb-4">Description</h3>
+        <p id="requestDescription" class="text-gray-300 leading-relaxed">-</p>
+      </div>
+
+      <!-- Documents -->
+      <div class="glass rounded-lg p-6">
+        <h3 class="text-lg font-semibold mb-4">Documents</h3>
+        <div id="documentsList" class="space-y-3">
+          <p class="text-gray-400 text-sm">No documents available yet.</p>
+        </div>
+      </div>
+
+      <!-- Communications -->
+      <div class="glass rounded-lg p-6">
+        <h3 class="text-lg font-semibold mb-4">Communications</h3>
+        <div id="communicationsList" class="space-y-4">
+          <p class="text-gray-400 text-sm">No communications yet.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = 'http://localhost:3000';
+
+    // Status configurations
+    const statusConfig = {
+      'received': { color: 'bg-blue-500', percent: 10, label: 'Received' },
+      'processing': { color: 'bg-yellow-500', percent: 30, label: 'Processing' },
+      'records_gathering': { color: 'bg-orange-500', percent: 50, label: 'Gathering Records' },
+      'review': { color: 'bg-purple-500', percent: 60, label: 'Under Review' },
+      'redaction': { color: 'bg-pink-500', percent: 75, label: 'Redaction' },
+      'approval': { color: 'bg-indigo-500', percent: 85, label: 'Approval' },
+      'completed': { color: 'bg-green-500', percent: 100, label: 'Completed' },
+      'denied': { color: 'bg-red-500', percent: 100, label: 'Denied' },
+      'closed': { color: 'bg-gray-500', percent: 100, label: 'Closed' }
+    };
+
+    async function trackByNumber() {
+      const trackingNumber = document.getElementById('trackingNumber').value.trim();
+      if (!trackingNumber) {
+        alert('Please enter a tracking number');
+        return;
+      }
+      await loadRequest(trackingNumber);
+    }
+
+    async function trackByEmail() {
+      const email = document.getElementById('emailAddress').value.trim();
+      if (!email) {
+        alert('Please enter an email address');
+        return;
+      }
+      await loadRequestsByEmail(email);
+    }
+
+    async function loadRequest(trackingNumber) {
+      showLoading();
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/foia/requests/track/${trackingNumber}`);
+
+        if (!response.ok) {
+          showNoResults();
+          return;
+        }
+
+        const request = await response.json();
+        displayRequest(request);
+      } catch (error) {
+        console.error('Error:', error);
+        showNoResults();
+      }
+    }
+
+    async function loadRequestsByEmail(email) {
+      showLoading();
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/foia/requests?email=${encodeURIComponent(email)}`);
+
+        if (!response.ok) {
+          showNoResults();
+          return;
+        }
+
+        const data = await response.json();
+
+        if (!data.requests || data.requests.length === 0) {
+          showNoResults();
+          return;
+        }
+
+        // Show the most recent request
+        displayRequest(data.requests[0]);
+      } catch (error) {
+        console.error('Error:', error);
+        showNoResults();
+      }
+    }
+
+    function showLoading() {
+      document.getElementById('loadingState').classList.remove('hidden');
+      document.getElementById('noResults').classList.add('hidden');
+      document.getElementById('requestDetails').classList.add('hidden');
+    }
+
+    function showNoResults() {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('noResults').classList.remove('hidden');
+      document.getElementById('requestDetails').classList.add('hidden');
+    }
+
+    function displayRequest(request) {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('noResults').classList.add('hidden');
+      document.getElementById('requestDetails').classList.remove('hidden');
+
+      // Basic Info
+      document.getElementById('requestSubject').textContent = request.subject || 'FOIA Request';
+      document.getElementById('displayTrackingNumber').textContent = request.trackingNumber || '-';
+      document.getElementById('dateSubmitted').textContent = new Date(request.dateSubmitted).toLocaleDateString();
+
+      // Set detail link
+      document.getElementById('detailLink').href = `foia-request-detail.html?tracking=${request.trackingNumber}`;
+      document.getElementById('dueDate').textContent = new Date(request.dateDue).toLocaleDateString();
+
+      // Calculate days remaining
+      const daysRemaining = Math.ceil((new Date(request.dateDue) - new Date()) / (1000 * 60 * 60 * 24));
+      document.getElementById('daysRemaining').textContent = daysRemaining > 0 ? `${daysRemaining} days` : 'Overdue';
+
+      // Status
+      const status = statusConfig[request.status] || statusConfig['received'];
+      document.getElementById('statusBadge').textContent = status.label;
+      document.getElementById('statusBadge').className = `px-4 py-2 rounded-full text-sm font-semibold ${status.color}`;
+
+      // Progress
+      document.getElementById('progressPercent').textContent = `${status.percent}%`;
+      document.getElementById('progressBar').style.width = `${status.percent}%`;
+
+      // Requester Info
+      document.getElementById('requesterName').textContent = request.requesterName || '-';
+      document.getElementById('requesterEmail').textContent = request.requesterEmail || '-';
+      document.getElementById('requesterType').textContent = request.requesterType || '-';
+
+      // Request Info
+      document.getElementById('requestType').textContent = (request.requestType || '-').replace(/_/g, ' ');
+      document.getElementById('priority').textContent = request.priority || '-';
+      document.getElementById('assignedStaff').textContent = request.assignedStaff?.name || 'Unassigned';
+      document.getElementById('requestDescription').textContent = request.description || '-';
+
+      // Timeline
+      renderTimeline(request);
+
+      // Documents
+      renderDocuments(request.documents || []);
+
+      // Communications
+      renderCommunications(request.communications || []);
+    }
+
+    function renderTimeline(request) {
+      const timeline = document.getElementById('timeline');
+      const events = [
+        { date: request.dateSubmitted, title: 'Request Submitted', status: 'completed', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+        { date: request.dateAcknowledged, title: 'Request Acknowledged', status: request.dateAcknowledged ? 'completed' : 'pending', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+        { date: request.dateDue, title: 'Response Due', status: 'pending', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+        { date: request.dateCompleted, title: 'Request Completed', status: request.dateCompleted ? 'completed' : 'pending', icon: 'M5 13l4 4L19 7' }
+      ];
+
+      timeline.innerHTML = events.map((event, index) => `
+        <div class="flex items-start space-x-4">
+          <div class="flex flex-col items-center">
+            <div class="timeline-dot ${event.status === 'completed' ? 'bg-green-400' : 'bg-gray-600'}"></div>
+            ${index < events.length - 1 ? '<div class="timeline-line h-16"></div>' : ''}
+          </div>
+          <div class="flex-1 pb-8">
+            <div class="flex items-center space-x-2 mb-1">
+              <svg class="w-5 h-5 ${event.status === 'completed' ? 'text-green-400' : 'text-gray-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${event.icon}"></path>
+              </svg>
+              <h4 class="font-semibold">${event.title}</h4>
+            </div>
+            <p class="text-sm text-gray-400">${event.date ? new Date(event.date).toLocaleString() : 'Pending'}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderDocuments(documents) {
+      const documentsList = document.getElementById('documentsList');
+
+      if (documents.length === 0) {
+        documentsList.innerHTML = '<p class="text-gray-400 text-sm">No documents available yet.</p>';
+        return;
+      }
+
+      documentsList.innerHTML = documents.map(doc => `
+        <div class="glass rounded-lg p-4 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <svg class="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <div>
+              <p class="font-medium">${doc.filename || 'Document'}</p>
+              <p class="text-sm text-gray-400">${doc.fileType || 'Unknown type'} • ${(doc.fileSize / 1024).toFixed(2)} KB</p>
+            </div>
+          </div>
+          <button class="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm font-medium transition">
+            Download
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function renderCommunications(communications) {
+      const communicationsList = document.getElementById('communicationsList');
+
+      if (communications.length === 0) {
+        communicationsList.innerHTML = '<p class="text-gray-400 text-sm">No communications yet.</p>';
+        return;
+      }
+
+      communicationsList.innerHTML = communications.map(comm => `
+        <div class="glass rounded-lg p-4">
+          <div class="flex items-start justify-between mb-2">
+            <div class="flex items-center space-x-2">
+              <span class="px-2 py-1 rounded text-xs font-semibold ${comm.direction === 'outgoing' ? 'bg-blue-500' : 'bg-green-500'}">
+                ${comm.direction === 'outgoing' ? 'From Staff' : 'To Staff'}
+              </span>
+              <span class="text-sm text-gray-400">${comm.communicationType || 'Email'}</span>
+            </div>
+            <span class="text-sm text-gray-400">${new Date(comm.sentAt).toLocaleString()}</span>
+          </div>
+          <h4 class="font-semibold mb-2">${comm.subject || 'Communication'}</h4>
+          <p class="text-sm text-gray-300">${comm.message || ''}</p>
+        </div>
+      `).join('');
+    }
+
+    // Check URL parameters for tracking number
+    const urlParams = new URLSearchParams(window.location.search);
+    const trackingParam = urlParams.get('tracking');
+    if (trackingParam) {
+      document.getElementById('trackingNumber').value = trackingParam;
+      trackByNumber();
+    }
+  </script>
+</body>
+</html>

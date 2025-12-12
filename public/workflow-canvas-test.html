@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collaborative Workflow Canvas - Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0]?.includes?.('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            overflow: hidden;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+        }
+
+        /* Canvas Workspace */
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 120px);
+            overflow: hidden;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            cursor: grab;
+        }
+
+        .canvas-container.panning {
+            cursor: grabbing;
+        }
+
+        .canvas-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Workflow Nodes */
+        .workflow-node {
+            position: absolute;
+            min-width: 180px;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            cursor: move;
+            transition: all 0.2s ease;
+        }
+
+        .workflow-node:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .workflow-node.selected {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+        }
+
+        .node-approval {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .node-notification {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .node-calculation {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .node-condition {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .node-action {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        /* Connection Lines */
+        .connection-line {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .connection-line line {
+            stroke: #3b82f6;
+            stroke-width: 2;
+            stroke-dasharray: 0;
+            animation: flowAnimation 2s linear infinite;
+        }
+
+        @keyframes flowAnimation {
+            0% {
+                stroke-dashoffset: 0;
+            }
+            100% {
+                stroke-dashoffset: 20;
+            }
+        }
+
+        /* Minimap */
+        .minimap {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 200px;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .minimap-viewport {
+            position: absolute;
+            border: 2px solid #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        /* Collaboration Cursors */
+        .collab-cursor {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1000;
+            transition: all 0.1s ease;
+        }
+
+        .cursor-pointer {
+            width: 0;
+            height: 0;
+            border-left: 8px solid;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+        }
+
+        .cursor-label {
+            position: absolute;
+            top: 16px;
+            left: 8px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            color: white;
+        }
+
+        /* Step Library */
+        .step-library {
+            position: absolute;
+            left: 20px;
+            top: 80px;
+            width: 220px;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .step-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .step-item:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateX(4px);
+        }
+
+        .step-item:active {
+            cursor: grabbing;
+        }
+
+        /* Comment Thread */
+        .comment-thread {
+            position: absolute;
+            width: 300px;
+            max-height: 400px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            z-index: 100;
+        }
+
+        /* Version History */
+        .version-item {
+            padding: 12px;
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .version-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-left-color: #3b82f6;
+        }
+
+        .version-item.current {
+            background: rgba(59, 130, 246, 0.1);
+            border-left-color: #3b82f6;
+        }
+
+        /* Template Card */
+        .template-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .template-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Preview Mode */
+        .execution-step {
+            animation: executionPulse 1s ease-in-out;
+        }
+
+        @keyframes executionPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 20px rgba(59, 130, 246, 0);
+            }
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .toolbar-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .toolbar-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .toolbar-btn.active {
+            background: rgba(59, 130, 246, 0.3);
+            border-color: #3b82f6;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        /* User Avatar */
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            border: 2px solid white;
+        }
+
+        /* Zoom Controls */
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .zoom-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <button class="toolbar-btn active" onclick="setMode('select')">
+            ✋ Select
+        </button>
+        <button class="toolbar-btn" onclick="setMode('pan')">
+            🖐️ Pan
+        </button>
+        <button class="toolbar-btn" onclick="showStepLibrary()">
+            📚 Steps
+        </button>
+        <button class="toolbar-btn" onclick="showVersionHistory()">
+            🕐 History
+        </button>
+        <button class="toolbar-btn" onclick="showTemplateMarketplace()">
+            🏪 Templates
+        </button>
+        <button class="toolbar-btn" onclick="togglePreviewMode()">
+            ▶️ Preview
+        </button>
+        <div class="flex-1"></div>
+        <button class="toolbar-btn" onclick="exportWorkflow('json')">
+            💾 Export JSON
+        </button>
+        <button class="toolbar-btn" onclick="exportWorkflow('pdf')">
+            📄 Export PDF
+        </button>
+        <div class="flex items-center gap-2 ml-4">
+            <span class="text-white/70 text-sm">Collaborators:</span>
+            <div class="user-avatar" style="background: #3b82f6;" title="You">JD</div>
+            <div class="user-avatar" style="background: #10b981;" title="Sarah Chen - Online">SC</div>
+            <div class="user-avatar" style="background: #8b5cf6;" title="Mike Torres - Online">MT</div>
+        </div>
+    </div>
+
+    <!-- Main Canvas Container -->
+    <div class="canvas-container" id="canvasContainer">
+        <div class="canvas-grid" id="canvasGrid"></div>
+
+        <!-- Step Library Panel -->
+        <div class="step-library glass" id="stepLibrary">
+            <div class="p-3 border-b border-white/10">
+                <h3 class="font-bold text-white">Step Library</h3>
+                <p class="text-xs text-white/60 mt-1">Drag to canvas</p>
+            </div>
+            <div class="p-2">
+                <div class="step-item node-approval" draggable="true" data-type="approval" ondragstart="handleDragStart(event)">
+                    <div class="font-bold text-white text-sm" style="pointer-events: none;">✓ Approval</div>
+                    <div class="text-xs text-white/80" style="pointer-events: none;">Manager review</div>
+                </div>
+                <div class="step-item node-notification" draggable="true" data-type="notification" ondragstart="handleDragStart(event)">
+                    <div class="font-bold text-white text-sm" style="pointer-events: none;">📧 Notification</div>
+                    <div class="text-xs text-white/80" style="pointer-events: none;">Send email/SMS</div>
+                </div>
+                <div class="step-item node-calculation" draggable="true" data-type="calculation" ondragstart="handleDragStart(event)">
+                    <div class="font-bold text-white text-sm" style="pointer-events: none;">🔢 Calculation</div>
+                    <div class="text-xs text-white/80" style="pointer-events: none;">Process data</div>
+                </div>
+                <div class="step-item node-condition" draggable="true" data-type="condition" ondragstart="handleDragStart(event)">
+                    <div class="font-bold text-white text-sm" style="pointer-events: none;">🔀 Condition</div>
+                    <div class="text-xs text-white/80" style="pointer-events: none;">If/then logic</div>
+                </div>
+                <div class="step-item node-action" draggable="true" data-type="action" ondragstart="handleDragStart(event)">
+                    <div class="font-bold text-white text-sm" style="pointer-events: none;">⚡ Action</div>
+                    <div class="text-xs text-white/80" style="pointer-events: none;">Trigger event</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collaboration Cursors -->
+        <div id="collaborationCursors"></div>
+
+        <!-- Minimap -->
+        <div class="minimap">
+            <canvas id="minimapCanvas" width="200" height="150"></canvas>
+            <div class="minimap-viewport" id="minimapViewport"></div>
+        </div>
+
+        <!-- Zoom Controls -->
+        <div class="zoom-controls">
+            <button class="zoom-btn" onclick="zoomIn()">+</button>
+            <span class="zoom-btn" style="width: auto; padding: 0 12px;">
+                <span id="zoomLevel">100%</span>
+            </span>
+            <button class="zoom-btn" onclick="zoomOut()">-</button>
+            <button class="zoom-btn" onclick="resetZoom()">⟲</button>
+        </div>
+    </div>
+
+    <!-- Version History Modal -->
+    <div class="modal-overlay" id="versionModal">
+        <div class="modal-content p-6 w-full max-w-4xl">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-white">📜 Version History</h2>
+                <button onclick="closeModal('versionModal')" class="text-white/60 hover:text-white text-2xl">&times;</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Version List -->
+                <div>
+                    <h3 class="font-bold text-white mb-3">Versions</h3>
+                    <div class="space-y-2">
+                        <div class="version-item current glass">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-bold text-white">v2.3 - Current</span>
+                                <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Latest</span>
+                            </div>
+                            <div class="text-sm text-white/70">Updated approval flow</div>
+                            <div class="text-xs text-white/50 mt-1">2 hours ago - Sarah Chen</div>
+                        </div>
+                        <div class="version-item glass">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-bold text-white">v2.2</span>
+                            </div>
+                            <div class="text-sm text-white/70">Added notification step</div>
+                            <div class="text-xs text-white/50 mt-1">1 day ago - Mike Torres</div>
+                        </div>
+                        <div class="version-item glass">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-bold text-white">v2.1</span>
+                            </div>
+                            <div class="text-sm text-white/70">Fixed condition logic</div>
+                            <div class="text-xs text-white/50 mt-1">3 days ago - You</div>
+                        </div>
+                        <div class="version-item glass">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-bold text-white">v2.0</span>
+                                <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">Major</span>
+                            </div>
+                            <div class="text-sm text-white/70">Complete redesign</div>
+                            <div class="text-xs text-white/50 mt-1">1 week ago - Team</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Diff -->
+                <div>
+                    <h3 class="font-bold text-white mb-3">Changes (v2.2 → v2.3)</h3>
+                    <div class="glass p-4 space-y-3">
+                        <div class="p-3 rounded bg-green-500/10 border border-green-500/30">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-green-400 font-bold">+ Added</span>
+                            </div>
+                            <div class="text-sm text-white/80">Approval step for HR review</div>
+                        </div>
+                        <div class="p-3 rounded bg-blue-500/10 border border-blue-500/30">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-blue-400 font-bold">~ Modified</span>
+                            </div>
+                            <div class="text-sm text-white/80">Updated condition threshold from 500 to 1000</div>
+                        </div>
+                        <div class="p-3 rounded bg-red-500/10 border border-red-500/30">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-red-400 font-bold">- Removed</span>
+                            </div>
+                            <div class="text-sm text-white/80">Redundant notification step</div>
+                        </div>
+                    </div>
+                    <button class="w-full mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-colors">
+                        Restore This Version
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Marketplace Modal -->
+    <div class="modal-overlay" id="templateModal">
+        <div class="modal-content p-6 w-full max-w-6xl">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-white">🏪 Template Marketplace</h2>
+                <button onclick="closeModal('templateModal')" class="text-white/60 hover:text-white text-2xl">&times;</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Template 1 -->
+                <div class="template-card glass p-4">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="text-2xl">📝</div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-yellow-400">★</span>
+                            <span class="text-white/80 text-sm">4.8</span>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-white mb-2">Permit Approval</h3>
+                    <p class="text-sm text-white/70 mb-3">Standard building permit review workflow</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-white/50">245 uses</span>
+                        <button onclick="useTemplate('permit')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors">
+                            Use
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Template 2 -->
+                <div class="template-card glass p-4">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="text-2xl">💰</div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-yellow-400">★</span>
+                            <span class="text-white/80 text-sm">4.9</span>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-white mb-2">Invoice Processing</h3>
+                    <p class="text-sm text-white/70 mb-3">Automated invoice approval chain</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-white/50">892 uses</span>
+                        <button onclick="useTemplate('invoice')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors">
+                            Use
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Template 3 -->
+                <div class="template-card glass p-4">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="text-2xl">👥</div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-yellow-400">★</span>
+                            <span class="text-white/80 text-sm">4.7</span>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-white mb-2">Onboarding</h3>
+                    <p class="text-sm text-white/70 mb-3">New employee setup workflow</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-white/50">567 uses</span>
+                        <button onclick="useTemplate('onboarding')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors">
+                            Use
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Template 4 -->
+                <div class="template-card glass p-4">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="text-2xl">🚨</div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-yellow-400">★</span>
+                            <span class="text-white/80 text-sm">5.0</span>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-white mb-2">Incident Response</h3>
+                    <p class="text-sm text-white/70 mb-3">Emergency escalation protocol</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-white/50">178 uses</span>
+                        <button onclick="useTemplate('incident')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors">
+                            Use
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Template 5 -->
+                <div class="template-card glass p-4">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="text-2xl">📊</div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-yellow-400">★</span>
+                            <span class="text-white/80 text-sm">4.6</span>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-white mb-2">Report Generation</h3>
+                    <p class="text-sm text-white/70 mb-3">Automated monthly reports</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-white/50">423 uses</span>
+                        <button onclick="useTemplate('report')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors">
+                            Use
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Template 6 -->
+                <div class="template-card glass p-4">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="text-2xl">🔄</div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-yellow-400">★</span>
+                            <span class="text-white/80 text-sm">4.5</span>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-white mb-2">Data Sync</h3>
+                    <p class="text-sm text-white/70 mb-3">Cross-system synchronization</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-white/50">334 uses</span>
+                        <button onclick="useTemplate('sync')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors">
+                            Use
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // MOCK DATA - Replace in production
+        // TODO: Connect to workflow API endpoint /api/workflows
+        // TODO: Implement real-time collaboration via WebSocket
+        // SECURITY TODO: Validate all user inputs
+        // TODO: Add authentication check
+        // TODO: Integrate with version control system
+
+        let canvasState = {
+            zoom: 1,
+            panX: 0,
+            panY: 0,
+            mode: 'select',
+            selectedNode: null,
+            nodes: [],
+            connections: [],
+            isPanning: false,
+            startPan: { x: 0, y: 0 }
+        };
+
+        // Sample workflow nodes
+        const sampleNodes = [
+            { id: 1, type: 'approval', x: 300, y: 200, title: 'Manager Approval', data: { approver: 'Department Head' } },
+            { id: 2, type: 'notification', x: 550, y: 200, title: 'Send Email', data: { recipient: 'Applicant' } },
+            { id: 3, type: 'condition', x: 300, y: 350, title: 'Check Amount', data: { threshold: 1000 } },
+            { id: 4, type: 'calculation', x: 550, y: 350, title: 'Calculate Fee', data: { formula: 'amount * 0.05' } }
+        ];
+
+        // Initialize canvas
+        function initializeCanvas() {
+            loadSampleWorkflow();
+            simulateCollaborators();
+            updateMinimap();
+            setupCanvasEvents();
+        }
+
+        function loadSampleWorkflow() {
+            const canvas = document.getElementById('canvasContainer');
+            sampleNodes.forEach(node => {
+                createWorkflowNode(node);
+            });
+
+            // Create sample connections after a small delay to ensure nodes are rendered
+            setTimeout(() => {
+                createConnection(1, 2);
+                createConnection(1, 3);
+                createConnection(3, 4);
+            }, 100);
+        }
+
+        function createWorkflowNode(nodeData) {
+            const node = document.createElement('div');
+            node.className = `workflow-node node-${nodeData.type}`;
+            node.id = `node-${nodeData.id}`;
+            node.style.left = nodeData.x + 'px';
+            node.style.top = nodeData.y + 'px';
+
+            node.innerHTML = `
+                <div class="font-bold text-white mb-1">${nodeData.title}</div>
+                <div class="text-xs text-white/80">${getNodeTypeLabel(nodeData.type)}</div>
+                <div class="mt-2 flex items-center justify-between">
+                    <button onclick="addComment(${nodeData.id})" class="text-xs text-white/60 hover:text-white">
+                        💬 Comment
+                    </button>
+                    <button onclick="deleteNode(${nodeData.id})" class="text-xs text-white/60 hover:text-red-400">
+                        🗑️
+                    </button>
+                </div>
+            `;
+
+            node.addEventListener('click', (e) => selectNode(nodeData.id, e));
+
+            // Make node draggable
+            makeNodeDraggable(node, nodeData);
+
+            document.getElementById('canvasContainer').appendChild(node);
+            canvasState.nodes.push(nodeData);
+        }
+
+        function makeNodeDraggable(node, nodeData) {
+            let isDragging = false;
+            let startX, startY, initialLeft, initialTop;
+
+            node.addEventListener('mousedown', (e) => {
+                // Only allow dragging if in select mode and not clicking buttons
+                if (canvasState.mode !== 'select' || e.target.tagName === 'BUTTON') return;
+
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                initialLeft = parseInt(node.style.left) || 0;
+                initialTop = parseInt(node.style.top) || 0;
+
+                node.style.cursor = 'grabbing';
+                e.stopPropagation();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+
+                const deltaX = (e.clientX - startX) / canvasState.zoom;
+                const deltaY = (e.clientY - startY) / canvasState.zoom;
+
+                const newLeft = initialLeft + deltaX;
+                const newTop = initialTop + deltaY;
+
+                node.style.left = newLeft + 'px';
+                node.style.top = newTop + 'px';
+
+                // Update node data
+                nodeData.x = newLeft;
+                nodeData.y = newTop;
+
+                // Update connections
+                updateNodeConnections(nodeData.id);
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    node.style.cursor = 'move';
+                }
+            });
+        }
+
+        function updateNodeConnections(nodeId) {
+            canvasState.connections.forEach(conn => {
+                if (conn.from === nodeId || conn.to === nodeId) {
+                    const fromNode = document.getElementById(`node-${conn.from}`);
+                    const toNode = document.getElementById(`node-${conn.to}`);
+                    updateConnectionLine(conn.line, fromNode, toNode);
+                }
+            });
+        }
+
+        function createConnection(fromId, toId) {
+            const fromNode = document.getElementById(`node-${fromId}`);
+            const toNode = document.getElementById(`node-${toId}`);
+
+            if (!fromNode || !toNode) return;
+
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.className = 'connection-line';
+            svg.style.position = 'absolute';
+            svg.style.pointerEvents = 'none';
+            svg.style.zIndex = '0';
+
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            updateConnectionLine(line, fromNode, toNode);
+
+            svg.appendChild(line);
+            document.getElementById('canvasContainer').appendChild(svg);
+
+            canvasState.connections.push({ from: fromId, to: toId, element: svg, line: line });
+        }
+
+        function updateConnectionLine(line, fromNode, toNode) {
+            if (!fromNode || !toNode || !line) return;
+
+            const fromRect = fromNode.getBoundingClientRect();
+            const toRect = toNode.getBoundingClientRect();
+            const container = document.getElementById('canvasContainer').getBoundingClientRect();
+
+            const x1 = fromRect.right - container.left;
+            const y1 = fromRect.top + fromRect.height / 2 - container.top;
+            const x2 = toRect.left - container.left;
+            const y2 = toRect.top + toRect.height / 2 - container.top;
+
+            line.setAttribute('x1', x1);
+            line.setAttribute('y1', y1);
+            line.setAttribute('x2', x2);
+            line.setAttribute('y2', y2);
+            line.setAttribute('stroke-dasharray', '5,5');
+
+            const svg = line.parentElement;
+            if (!svg) return;
+
+            const minX = Math.min(x1, x2);
+            const minY = Math.min(y1, y2);
+            const width = Math.abs(x2 - x1);
+            const height = Math.abs(y2 - y1);
+
+            svg.style.left = minX + 'px';
+            svg.style.top = minY + 'px';
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+        }
+
+        function getNodeTypeLabel(type) {
+            const labels = {
+                approval: 'Requires approval',
+                notification: 'Send notification',
+                calculation: 'Process data',
+                condition: 'Conditional logic',
+                action: 'Execute action'
+            };
+            return labels[type] || type;
+        }
+
+        function selectNode(id, event) {
+            event.stopPropagation();
+            document.querySelectorAll('.workflow-node').forEach(n => n.classList.remove('selected'));
+            const node = document.getElementById(`node-${id}`);
+            if (node) node.classList.add('selected');
+            canvasState.selectedNode = id;
+        }
+
+        function deleteNode(id) {
+            if (confirm('Delete this workflow step?')) {
+                const node = document.getElementById(`node-${id}`);
+                if (node) node.remove();
+                canvasState.nodes = canvasState.nodes.filter(n => n.id !== id);
+            }
+        }
+
+        function addComment(nodeId) {
+            alert(`💬 Comment on Node ${nodeId}\n\n[In production, this would open a comment thread]\n\nSample comments:\n• "Should we add a timeout here?" - Sarah\n• "Approved, looks good!" - Mike\n• "Changed threshold to 1000" - You`);
+        }
+
+        // Simulate real-time collaborators
+        function simulateCollaborators() {
+            const cursorsContainer = document.getElementById('collaborationCursors');
+            const users = [
+                { name: 'Sarah Chen', color: '#10b981', x: 400, y: 300, baseX: 400, baseY: 300 },
+                { name: 'Mike Torres', color: '#8b5cf6', x: 600, y: 250, baseX: 600, baseY: 250 }
+            ];
+
+            users.forEach((user, index) => {
+                const cursor = document.createElement('div');
+                cursor.className = 'collab-cursor';
+                cursor.innerHTML = `
+                    <div class="cursor-pointer" style="border-left-color: ${user.color};"></div>
+                    <div class="cursor-label" style="background: ${user.color};">${user.name}</div>
+                `;
+                cursor.style.left = user.x + 'px';
+                cursor.style.top = user.y + 'px';
+                cursorsContainer.appendChild(cursor);
+
+                // Animate cursors with smaller, more subtle movements
+                setInterval(() => {
+                    const newX = user.baseX + (Math.random() - 0.5) * 50;
+                    const newY = user.baseY + (Math.random() - 0.5) * 50;
+                    cursor.style.left = newX + 'px';
+                    cursor.style.top = newY + 'px';
+                }, 5000); // Slower movement (5 seconds instead of 3)
+            });
+        }
+
+        function setupCanvasEvents() {
+            const container = document.getElementById('canvasContainer');
+
+            container.addEventListener('mousedown', (e) => {
+                if (canvasState.mode === 'pan' || e.button === 1) {
+                    canvasState.isPanning = true;
+                    canvasState.startPan = { x: e.clientX - canvasState.panX, y: e.clientY - canvasState.panY };
+                    container.classList.add('panning');
+                }
+            });
+
+            container.addEventListener('mousemove', (e) => {
+                if (canvasState.isPanning) {
+                    canvasState.panX = e.clientX - canvasState.startPan.x;
+                    canvasState.panY = e.clientY - canvasState.startPan.y;
+                    updateCanvasTransform();
+                }
+            });
+
+            container.addEventListener('mouseup', () => {
+                canvasState.isPanning = false;
+                container.classList.remove('panning');
+            });
+
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                canvasState.zoom *= delta;
+                canvasState.zoom = Math.max(0.1, Math.min(3, canvasState.zoom));
+                updateCanvasTransform();
+                updateZoomDisplay();
+            });
+
+            // Setup drag and drop for step library
+            setupDragAndDrop();
+        }
+
+        function handleDragStart(e) {
+            const type = e.target.getAttribute('data-type');
+            e.dataTransfer.setData('stepType', type);
+            e.dataTransfer.effectAllowed = 'copy';
+            e.target.style.opacity = '0.5';
+        }
+
+        function setupDragAndDrop() {
+            const container = document.getElementById('canvasContainer');
+
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+            });
+
+            container.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const stepType = e.dataTransfer.getData('stepType');
+                if (stepType) {
+                    const rect = container.getBoundingClientRect();
+                    const x = e.clientX - rect.left - canvasState.panX;
+                    const y = e.clientY - rect.top - canvasState.panY;
+
+                    const newNode = {
+                        id: Date.now(),
+                        type: stepType,
+                        x: x / canvasState.zoom,
+                        y: y / canvasState.zoom,
+                        title: getNodeTitle(stepType),
+                        data: {}
+                    };
+
+                    createWorkflowNode(newNode);
+                    updateMinimap();
+                }
+
+                // Reset opacity of all step items
+                document.querySelectorAll('.step-item').forEach(item => {
+                    item.style.opacity = '1';
+                });
+            });
+
+            container.addEventListener('dragleave', (e) => {
+                document.querySelectorAll('.step-item').forEach(item => {
+                    item.style.opacity = '1';
+                });
+            });
+        }
+
+        function getNodeTitle(type) {
+            const titles = {
+                approval: 'New Approval',
+                notification: 'New Notification',
+                calculation: 'New Calculation',
+                condition: 'New Condition',
+                action: 'New Action'
+            };
+            return titles[type] || 'New Step';
+        }
+
+        function updateCanvasTransform() {
+            const grid = document.getElementById('canvasGrid');
+            grid.style.transform = `translate(${canvasState.panX}px, ${canvasState.panY}px) scale(${canvasState.zoom})`;
+        }
+
+        function updateMinimap() {
+            // Simplified minimap rendering
+            const canvas = document.getElementById('minimapCanvas');
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+            ctx.fillRect(0, 0, 200, 150);
+
+            canvasState.nodes.forEach(node => {
+                ctx.fillStyle = getNodeColor(node.type);
+                ctx.fillRect(node.x / 10, node.y / 10, 18, 15);
+            });
+        }
+
+        function getNodeColor(type) {
+            const colors = {
+                approval: '#3b82f6',
+                notification: '#10b981',
+                calculation: '#8b5cf6',
+                condition: '#f59e0b',
+                action: '#ef4444'
+            };
+            return colors[type] || '#666';
+        }
+
+        function setMode(mode) {
+            canvasState.mode = mode;
+            document.querySelectorAll('.toolbar-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function zoomIn() {
+            canvasState.zoom = Math.min(3, canvasState.zoom * 1.2);
+            updateCanvasTransform();
+            updateZoomDisplay();
+        }
+
+        function zoomOut() {
+            canvasState.zoom = Math.max(0.1, canvasState.zoom / 1.2);
+            updateCanvasTransform();
+            updateZoomDisplay();
+        }
+
+        function resetZoom() {
+            canvasState.zoom = 1;
+            canvasState.panX = 0;
+            canvasState.panY = 0;
+            updateCanvasTransform();
+            updateZoomDisplay();
+        }
+
+        function updateZoomDisplay() {
+            document.getElementById('zoomLevel').textContent = Math.round(canvasState.zoom * 100) + '%';
+        }
+
+        function showStepLibrary() {
+            const library = document.getElementById('stepLibrary');
+            library.style.display = library.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function showVersionHistory() {
+            document.getElementById('versionModal').classList.add('active');
+        }
+
+        function showTemplateMarketplace() {
+            document.getElementById('templateModal').classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function togglePreviewMode() {
+            alert('▶️ Preview Mode\n\nSimulating workflow execution...\n\n1. Manager Approval (2s)\n2. Send Email Notification (1s)\n3. Check Amount Condition (1s)\n4. Calculate Fee (1s)\n\nTotal execution time: ~5 seconds\n\n[In production, this would show live step-by-step execution]');
+        }
+
+        function exportWorkflow(format) {
+            if (format === 'json') {
+                const data = JSON.stringify({
+                    nodes: canvasState.nodes,
+                    connections: canvasState.connections.map(c => ({ from: c.from, to: c.to })),
+                    version: '2.3',
+                    metadata: { created: new Date().toISOString(), author: 'John Doe' }
+                }, null, 2);
+                alert('📥 Export to JSON\n\nWorkflow exported successfully!\n\n' + data.substring(0, 200) + '...\n\n[In production, this would download a JSON file]');
+            } else if (format === 'pdf') {
+                alert('📄 Export to PDF\n\nGenerating visual diagram...\n\n✓ Canvas captured\n✓ Nodes rendered\n✓ Connections drawn\n✓ Metadata included\n\n[In production, this would generate and download a PDF]');
+            }
+        }
+
+        function useTemplate(template) {
+            const templates = {
+                permit: 'Building Permit Approval workflow loaded with 6 steps',
+                invoice: 'Invoice Processing workflow loaded with 8 steps',
+                onboarding: 'Employee Onboarding workflow loaded with 12 steps',
+                incident: 'Incident Response workflow loaded with 5 steps',
+                report: 'Report Generation workflow loaded with 7 steps',
+                sync: 'Data Synchronization workflow loaded with 4 steps'
+            };
+            alert(`📋 Template: ${template}\n\n${templates[template]}\n\n[In production, this would load the template onto the canvas]`);
+            closeModal('templateModal');
+        }
+
+        // Initialize on load
+        initializeCanvas();
+    </script>
+</body>
+</html>
