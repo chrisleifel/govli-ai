@@ -1,8 +1,0 @@
-{
-  "name": "govli-ai-frontend",
-  "version": "1.0.0",
-  "description": "Govli AI Government Services Platform - Frontend",
-  "scripts": {
-    "build": "echo 'Static site - no build needed. Pages use Tailwind CDN.'"
-  }
-}
