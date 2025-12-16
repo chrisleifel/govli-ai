@@ -2319,19 +2319,19 @@
                             <i class="fas fa-chevron-down text-white/60 transform transition-transform duration-300 group-chevron"></i>
                         </button>
                         <div class="nav-group-items ml-3 space-y-1 mt-1" id="group-command-center" style="max-height: 500px; overflow: hidden; transition: max-height 0.3s ease;">
-                            <div class="nav-item active p-3 rounded-lg" onclick="switchTab('dashboard')" role="button" tabindex="0" aria-label="Admin Dashboard">
+                            <div class="nav-item active p-3 rounded-lg" onclick="switchTab('dashboard', event)" role="button" tabindex="0" aria-label="Admin Dashboard">
                                 <div class="flex items-center space-x-3">
                                     <i class="fas fa-tachometer-alt text-white"></i>
                                     <span class="text-white font-medium">Admin Dashboard</span>
                                 </div>
                             </div>
-                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('analytics')" role="button" tabindex="0" aria-label="Analytics">
+                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('analytics', event)" role="button" tabindex="0" aria-label="Analytics">
                                 <div class="flex items-center space-x-3">
                                     <i class="fas fa-chart-line text-white"></i>
                                     <span class="text-white font-medium">Analytics</span>
                                 </div>
                             </div>
-                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('intelligence')" role="button" tabindex="0" aria-label="Intelligence Hub">
+                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('intelligence', event)" role="button" tabindex="0" aria-label="Intelligence Hub">
                                 <div class="flex items-center space-x-3">
                                     <i class="fas fa-brain text-white"></i>
                                     <span class="text-white font-medium">Intelligence Hub</span>
@@ -2344,7 +2344,7 @@
                     </div>
 
                     <!-- GROUP 2: Citizen Portal (standalone highlighted) -->
-                    <div class="nav-item-highlighted p-3 rounded-lg glass border-2 border-cyan-500/30" onclick="switchTab('citizen')" role="button" tabindex="0" aria-label="Citizen Portal">
+                    <div class="nav-item nav-item-highlighted p-3 rounded-lg glass border-2 border-cyan-500/30" onclick="switchTab('citizen', event)" role="button" tabindex="0" aria-label="Citizen Portal">
                         <div class="flex items-center space-x-3">
                             <i class="fas fa-users text-cyan-400 text-lg"></i>
                             <span class="text-white font-semibold">Citizen Portal</span>
@@ -2367,7 +2367,7 @@
                             <i class="fas fa-chevron-down text-white/60 transform transition-transform duration-300 group-chevron" style="transform: rotate(-90deg);"></i>
                         </button>
                         <div class="nav-group-items ml-3 space-y-1 mt-1" id="group-constituent-mgmt" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
-                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('crm')" role="button" tabindex="0" aria-label="CRM">
+                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('crm', event)" role="button" tabindex="0" aria-label="CRM">
                                 <div class="flex items-center space-x-3">
                                     <i class="fas fa-address-book text-white"></i>
                                     <span class="text-white font-medium">CRM</span>
@@ -2376,7 +2376,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('constituent-inbox')" role="button" tabindex="0" aria-label="Constituent Inbox">
+                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('constituent-inbox', event)" role="button" tabindex="0" aria-label="Constituent Inbox">
                                 <div class="flex items-center space-x-3">
                                     <i class="fas fa-inbox text-white"></i>
                                     <span class="text-white font-medium">Constituent Inbox</span>
@@ -2385,7 +2385,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('grants')" role="button" tabindex="0" aria-label="Grant Management">
+                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('grants', event)" role="button" tabindex="0" aria-label="Grant Management">
                                 <div class="flex items-center space-x-3">
                                     <i class="fas fa-dollar-sign text-white"></i>
                                     <span class="text-white font-medium">Grant Management</span>
@@ -2419,13 +2419,13 @@
                             <i class="fas fa-chevron-down text-white/60 transform transition-transform duration-300 group-chevron" style="transform: rotate(-90deg);"></i>
                         </button>
                         <div class="nav-group-items ml-3 space-y-1 mt-1" id="group-automation" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
-                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('workflows')" role="button" tabindex="0" aria-label="Workflows">
+                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('workflows', event)" role="button" tabindex="0" aria-label="Workflows">
                                 <div class="flex items-center space-x-3">
                                     <i class="fas fa-sitemap text-white"></i>
                                     <span class="text-white font-medium">Workflows</span>
                                 </div>
                             </div>
-                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('autonomous-operations')" role="button" tabindex="0" aria-label="Autonomous Operations">
+                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('autonomous-operations', event)" role="button" tabindex="0" aria-label="Autonomous Operations">
                                 <div class="flex items-center space-x-3">
                                     <i class="fas fa-robot text-white"></i>
                                     <span class="text-white font-medium">Autonomous Operations</span>
@@ -2434,7 +2434,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('digital-twin')" role="button" tabindex="0" aria-label="Digital Twin">
+                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('digital-twin', event)" role="button" tabindex="0" aria-label="Digital Twin">
                                 <div class="flex items-center space-x-3">
                                     <i class="fas fa-project-diagram text-white"></i>
                                     <span class="text-white font-medium">Digital Twin</span>
@@ -2443,7 +2443,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('api-integration')" role="button" tabindex="0" aria-label="API Integration">
+                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('api-integration', event)" role="button" tabindex="0" aria-label="API Integration">
                                 <div class="flex items-center space-x-3">
                                     <i class="fas fa-plug text-white"></i>
                                     <span class="text-white font-medium">API Integration</span>
@@ -2468,7 +2468,7 @@
                             <i class="fas fa-chevron-down text-white/60 transform transition-transform duration-300 group-chevron" style="transform: rotate(-90deg);"></i>
                         </button>
                         <div class="nav-group-items ml-3 space-y-1 mt-1" id="group-field-ops" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
-                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('mobile-command')" role="button" tabindex="0" aria-label="Mobile Command">
+                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('mobile-command', event)" role="button" tabindex="0" aria-label="Mobile Command">
                                 <div class="flex items-center space-x-3">
                                     <i class="fas fa-mobile-screen-button text-white"></i>
                                     <span class="text-white font-medium">Mobile Command</span>
@@ -2493,7 +2493,7 @@
                             <i class="fas fa-chevron-down text-white/60 transform transition-transform duration-300 group-chevron" style="transform: rotate(-90deg);"></i>
                         </button>
                         <div class="nav-group-items ml-3 space-y-1 mt-1" id="group-security-compliance" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
-                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('security')" role="button" tabindex="0" aria-label="Security Analysis">
+                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('security', event)" role="button" tabindex="0" aria-label="Security Analysis">
                                 <div class="flex items-center space-x-3">
                                     <i class="fas fa-shield-alt text-white"></i>
                                     <span class="text-white font-medium">Security Analysis</span>
@@ -2502,13 +2502,13 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('compliance')" role="button" tabindex="0" aria-label="Compliance">
+                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('compliance', event)" role="button" tabindex="0" aria-label="Compliance">
                                 <div class="flex items-center space-x-3">
                                     <i class="fas fa-clipboard-check text-white"></i>
                                     <span class="text-white font-medium">Compliance</span>
                                 </div>
                             </div>
-                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('securemesh')" role="button" tabindex="0" aria-label="SecureMesh">
+                            <div class="nav-item p-3 rounded-lg" onclick="switchTab('securemesh', event)" role="button" tabindex="0" aria-label="SecureMesh">
                                 <div class="flex items-center space-x-3">
                                     <i class="fas fa-network-wired text-white"></i>
                                     <span class="text-white font-medium">SecureMesh</span>
@@ -2522,7 +2522,7 @@
 
                     <!-- GROUP 7: Settings (pinned at bottom, standalone) -->
                     <div class="mt-auto pt-4 border-t border-white/10">
-                        <div class="nav-item p-3 rounded-lg" onclick="switchTab('settings')" role="button" tabindex="0" aria-label="Settings">
+                        <div class="nav-item p-3 rounded-lg" onclick="switchTab('settings', event)" role="button" tabindex="0" aria-label="Settings">
                             <div class="flex items-center space-x-3">
                                 <i class="fas fa-cog text-white"></i>
                                 <span class="text-white font-medium">Settings</span>
@@ -13851,12 +13851,17 @@
         });
 
         // Tab switching
-        function switchTab(tabName) {
+        function switchTab(tabName, event) {
             // Update nav items
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
             });
-            event.target.closest('.nav-item').classList.add('active');
+            if (event && event.target) {
+                const navItem = event.target.closest('.nav-item');
+                if (navItem) {
+                    navItem.classList.add('active');
+                }
+            }
             
             // Hide all content
             document.querySelectorAll('.tab-content').forEach(content => {
