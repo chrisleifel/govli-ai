@@ -13918,6 +13918,9 @@
             if (tabName === 'constituent-inbox' && document.getElementById('inboxMessagesList')) {
                 initializeConstituentInbox();
             }
+            if (tabName === 'intelligence' && document.getElementById('insightsFeed')) {
+                initializeIntelligenceHub();
+            }
         }
 
         // Enhanced 2024-10-30: Switch between security modules
@@ -14693,12 +14696,14 @@
 
             const recentRequests = userRequests.slice(0, 3);
 
-            container.innerHTML = recentRequests.map(request => `
+            container.innerHTML = recentRequests.map(request => {
+                const statusColors = getInboxColorClasses(request.statusColor || 'blue');
+                return `
                 <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer" onclick="viewRequestDetails('${request.id}')">
                     <div class="flex-1">
                         <div class="flex items-center space-x-3 mb-2">
                             <span class="text-white font-medium">${request.type}</span>
-                            <span class="text-xs px-2 py-1 rounded-full bg-${request.statusColor}-500/20 text-${request.statusColor}-300">${request.status}</span>
+                            <span class="text-xs px-2 py-1 rounded-full ${statusColors.bg} ${statusColors.text}">${request.status}</span>
                         </div>
                         <p class="text-sm text-white/70">${request.description}</p>
                         <div class="flex items-center space-x-4 mt-2 text-xs text-white/60">
@@ -15560,6 +15565,18 @@
         let currentInboxFilter = 'all';
         let activeInboxChannelFilters = new Set();
 
+        // Helper function to get inbox color classes
+        function getInboxColorClasses(color) {
+            const colorMap = {
+                'blue': { bg: 'bg-blue-500/20', text: 'text-blue-400' },
+                'purple': { bg: 'bg-purple-500/20', text: 'text-purple-400' },
+                'yellow': { bg: 'bg-yellow-500/20', text: 'text-yellow-400' },
+                'green': { bg: 'bg-green-500/20', text: 'text-green-400' },
+                'red': { bg: 'bg-red-500/20', text: 'text-red-400' }
+            };
+            return colorMap[color] || colorMap['blue'];
+        }
+
         function initializeConstituentInbox() {
             renderInboxMessages();
             setupInboxSearch();
@@ -15606,12 +15623,14 @@
                 const channel = channelIcons[msg.channel];
                 const urgencyColor = urgencyColors[msg.urgency];
                 const timeAgo = getTimeAgo(msg.timestamp);
+                const channelColors = getInboxColorClasses(channel.color);
+                const urgencyClasses = getInboxColorClasses(urgencyColor);
 
                 return `
                     <div class="inbox-message-card glass rounded-xl p-4 ${msg.unread ? 'unread' : ''}" onclick="viewInboxMessage('${msg.id}')">
                         <div class="flex items-start gap-4">
-                            <div class="w-10 h-10 bg-${channel.color}-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <i class="fas ${channel.icon} text-${channel.color}-400"></i>
+                            <div class="w-10 h-10 ${channelColors.bg} rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas ${channel.icon} ${channelColors.text}"></i>
                             </div>
 
                             <div class="flex-1 min-w-0">
@@ -15628,7 +15647,7 @@
                                 </div>
 
                                 <div class="flex flex-wrap items-center gap-2 mt-3">
-                                    <span class="bg-${urgencyColor}-500/20 text-${urgencyColor}-400 px-3 py-1 rounded-full text-xs font-semibold">
+                                    <span class="${urgencyClasses.bg} ${urgencyClasses.text} px-3 py-1 rounded-full text-xs font-semibold">
                                         <i class="fas fa-flag mr-1"></i>${msg.urgency}
                                     </span>
                                     <span class="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-xs font-semibold">
@@ -15689,6 +15708,7 @@
             // Show message details with AI classification
             const sentimentColor = message.sentiment >= 0.7 ? 'green' : message.sentiment >= 0.4 ? 'yellow' : 'red';
             const sentimentLabel = message.sentiment >= 0.7 ? 'Positive' : message.sentiment >= 0.4 ? 'Neutral' : 'Negative';
+            const sentimentClasses = getInboxColorClasses(sentimentColor);
 
             const channelLabels = {
                 email: 'Email',
@@ -15702,6 +15722,7 @@
                 medium: 'yellow',
                 low: 'green'
             };
+            const urgencyClasses = getInboxColorClasses(urgencyColors[message.urgency]);
 
             const intentIcons = {
                 request: 'fa-hand-holding-heart',
@@ -15721,7 +15742,7 @@
                                 <p class="text-white/70 text-sm">Received: ${message.timestamp.toLocaleString()}</p>
                             </div>
                             <div class="text-right">
-                                <span class="bg-${urgencyColors[message.urgency]}-500/20 text-${urgencyColors[message.urgency]}-400 px-3 py-1 rounded-full text-xs font-semibold inline-block mb-2">
+                                <span class="${urgencyClasses.bg} ${urgencyClasses.text} px-3 py-1 rounded-full text-xs font-semibold inline-block mb-2">
                                     <i class="fas fa-flag mr-1"></i>${message.urgency} priority
                                 </span>
                             </div>
@@ -15733,7 +15754,7 @@
                             <span class="bg-purple-500/20 text-purple-400 px-3 py-1 rounded-full text-xs font-semibold">
                                 <i class="fas fa-building mr-1"></i>${message.department}
                             </span>
-                            <span class="bg-${sentimentColor}-500/20 text-${sentimentColor}-400 px-3 py-1 rounded-full text-xs font-semibold">
+                            <span class="${sentimentClasses.bg} ${sentimentClasses.text} px-3 py-1 rounded-full text-xs font-semibold">
                                 <i class="fas fa-smile mr-1"></i>${sentimentLabel} (${Math.round(message.sentiment * 100)}%)
                             </span>
                             <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-semibold">
@@ -15904,7 +15925,7 @@
                 'Very Active': 'green',
                 'Active': 'blue',
                 'Moderate': 'yellow',
-                'Low': 'orange',
+                'Low': 'yellow',
                 'Anonymous': 'purple'
             };
 
@@ -15913,6 +15934,10 @@
                 'Medium': 'yellow',
                 'High': 'red'
             };
+
+            const lifetimeClasses = getInboxColorClasses(lifetimeColors[data.lifetimeValue] || 'blue');
+            const engagementClasses = getInboxColorClasses(engagementColors[data.engagementLevel] || 'blue');
+            const riskClasses = getInboxColorClasses(riskColors[data.riskScore] || 'yellow');
 
             return `
                 <div class="glass rounded-lg p-4">
@@ -15923,15 +15948,15 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div class="glass rounded-lg p-3">
                             <p class="text-white/70 text-xs mb-1">Lifetime Value</p>
-                            <p class="text-${lifetimeColors[data.lifetimeValue]}-400 font-bold text-lg">${data.lifetimeValue}</p>
+                            <p class="${lifetimeClasses.text} font-bold text-lg">${data.lifetimeValue}</p>
                         </div>
                         <div class="glass rounded-lg p-3">
                             <p class="text-white/70 text-xs mb-1">Engagement Level</p>
-                            <p class="text-${engagementColors[data.engagementLevel]}-400 font-bold text-lg">${data.engagementLevel}</p>
+                            <p class="${engagementClasses.text} font-bold text-lg">${data.engagementLevel}</p>
                         </div>
                         <div class="glass rounded-lg p-3">
                             <p class="text-white/70 text-xs mb-1">Risk Score</p>
-                            <p class="text-${riskColors[data.riskScore]}-400 font-bold text-lg">${data.riskScore}</p>
+                            <p class="${riskClasses.text} font-bold text-lg">${data.riskScore}</p>
                         </div>
                     </div>
 
@@ -15964,16 +15989,17 @@
                                     'Resolved': 'blue',
                                     'Processing': 'yellow',
                                     'Fulfilled': 'green',
-                                    'Under Investigation': 'orange'
+                                    'Under Investigation': 'yellow'
                                 };
-                                const statusColor = statusColors[record.status] || 'gray';
+                                const statusColor = statusColors[record.status] || 'blue';
+                                const statusClasses = getInboxColorClasses(statusColor);
                                 return `
                                     <div class="glass rounded-lg p-2 flex items-center justify-between">
                                         <div class="flex-1">
                                             <p class="text-white text-sm font-medium">${record.type} #${record.id}</p>
                                             <p class="text-white/60 text-xs">${record.date}${record.amount ? ` • ${record.amount}` : ''}</p>
                                         </div>
-                                        <span class="bg-${statusColor}-500/20 text-${statusColor}-400 px-2 py-1 rounded text-xs font-semibold">
+                                        <span class="${statusClasses.bg} ${statusClasses.text} px-2 py-1 rounded text-xs font-semibold">
                                             ${record.status}
                                         </span>
                                     </div>
@@ -19686,12 +19712,13 @@
                 };
 
                 const config = severityConfig[alert.severity];
+                const alertColors = getAPIColorClasses(config.color);
 
                 return `
-                    <div class="p-4 border border-${config.color}-500/30 bg-${config.color}-500/10 rounded-lg">
+                    <div class="p-4 border ${alertColors.border} ${alertColors.bg} rounded-lg">
                         <div class="flex items-start gap-3">
-                            <div class="w-8 h-8 rounded-full bg-${config.color}-500/20 flex items-center justify-center flex-shrink-0 ${config.pulse ? 'anomaly-pulse' : ''}">
-                                <i class="fas ${config.icon} text-${config.color}-400"></i>
+                            <div class="w-8 h-8 rounded-full ${alertColors.bg} flex items-center justify-center flex-shrink-0 ${config.pulse ? 'anomaly-pulse' : ''}">
+                                <i class="fas ${config.icon} ${alertColors.text}"></i>
                             </div>
                             <div class="flex-1">
                                 <div class="flex items-center justify-between mb-1">
@@ -20028,14 +20055,15 @@
             if (!container) return;
             container.innerHTML = blockchain.map((block, index) => {
                 const color = {genesis: 'purple', document_submit: 'blue', approval: 'green', rejection: 'red', status_update: 'yellow'}[block.type] || 'blue';
+                const blockColors = getInboxColorClasses(color);
                 return `
                     <div class="blockchain-block glass rounded-xl p-6 min-w-[280px] neon-${color} block-creating" onclick="showBlockchainDetails(${index})">
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center gap-2">
-                                <i class="fas fa-cube text-${color}-400 text-2xl"></i>
+                                <i class="fas fa-cube ${blockColors.text} text-2xl"></i>
                                 <span class="font-bold text-lg">Block #${block.index}</span>
                             </div>
-                            <span class="text-xs px-2 py-1 bg-${color}-500/20 rounded-full text-${color}-300">${block.type.toUpperCase()}</span>
+                            <span class="text-xs px-2 py-1 ${blockColors.bg} rounded-full ${blockColors.text}">${block.type.toUpperCase()}</span>
                         </div>
                         <div class="space-y-3">
                             <div><div class="text-white/50 text-xs mb-1">Department</div><div class="text-white font-medium">${block.department}</div></div>
@@ -20113,16 +20141,18 @@
                 {name: 'Tax Filing Validator', status: 'active', executions: 1243, icon: 'fa-calculator', color: 'blue'},
                 {name: 'Compliance Checker', status: 'pending', executions: 432, icon: 'fa-shield-alt', color: 'yellow'}
             ];
-            grid.innerHTML = contracts.map(c => `
+            grid.innerHTML = contracts.map(c => {
+                const contractColors = getInboxColorClasses(c.color);
+                return `
                 <div class="glass-dark rounded-xl p-6 contract-status">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-${c.color}-500/20 rounded-lg flex items-center justify-center"><i class="fas ${c.icon} text-${c.color}-400 text-xl"></i></div>
-                        <span class="px-3 py-1 bg-${c.color}-500/20 border border-${c.color}-500/40 rounded-full text-${c.color}-400 text-xs">${c.status.toUpperCase()}</span>
+                        <div class="w-12 h-12 ${contractColors.bg} rounded-lg flex items-center justify-center"><i class="fas ${c.icon} ${contractColors.text} text-xl"></i></div>
+                        <span class="px-3 py-1 ${contractColors.bg} border ${contractColors.border || 'border-current'} rounded-full ${contractColors.text} text-xs">${c.status.toUpperCase()}</span>
                     </div>
                     <h3 class="font-bold text-white mb-2">${c.name}</h3>
                     <div class="text-sm text-white/70">Executions: <span class="text-white font-medium">${c.executions.toLocaleString()}</span></div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function attachBlockchainEventListeners() {
@@ -21689,13 +21719,55 @@
             }
         ];
 
-        // Initialize Intelligence Hub on page load
-        document.addEventListener('DOMContentLoaded', () => {
+        // Track if Intelligence Hub has been initialized
+        let intelligenceHubInitialized = false;
+
+        // Helper function to get color classes
+        function getColorClasses(color) {
+            const colorMap = {
+                'blue': {
+                    bg: 'bg-blue-500/20',
+                    text: 'text-blue-400',
+                    btnBg: 'bg-blue-600 hover:bg-blue-700'
+                },
+                'purple': {
+                    bg: 'bg-purple-500/20',
+                    text: 'text-purple-400',
+                    btnBg: 'bg-purple-600 hover:bg-purple-700'
+                },
+                'yellow': {
+                    bg: 'bg-yellow-500/20',
+                    text: 'text-yellow-400',
+                    btnBg: 'bg-yellow-600 hover:bg-yellow-700'
+                },
+                'green': {
+                    bg: 'bg-green-500/20',
+                    text: 'text-green-400',
+                    btnBg: 'bg-green-600 hover:bg-green-700'
+                },
+                'red': {
+                    bg: 'bg-red-500/20',
+                    text: 'text-red-400',
+                    btnBg: 'bg-red-600 hover:bg-red-700'
+                }
+            };
+            return colorMap[color] || colorMap['blue'];
+        }
+
+        // Initialize Intelligence Hub when tab is switched to
+        function initializeIntelligenceHub() {
+            // Only initialize once to prevent flickering from repeated renders
+            if (intelligenceHubInitialized) {
+                console.log('Intelligence Hub: Already initialized, skipping...');
+                return;
+            }
+            console.log('Intelligence Hub: Initializing...');
+            intelligenceHubInitialized = true;
             loadInsightsFeed();
             loadActionCenter();
             loadAutomationSuggestions();
             renderKnowledgeGraph();
-        });
+        }
 
         function loadInsightsFeed() {
             const feed = document.getElementById('insightsFeed');
@@ -21704,11 +21776,13 @@
                 console.error('Intelligence Hub: insightsFeed element not found!');
                 return;
             }
-            feed.innerHTML = MOCK_INSIGHTS.map(insight => `
+            feed.innerHTML = MOCK_INSIGHTS.map(insight => {
+                const colors = getColorClasses(insight.color);
+                return `
                 <div class="insight-card glass rounded-lg p-4" onclick="viewInsightDetails('${insight.id}')">
                     <div class="flex items-start gap-3">
-                        <div class="w-10 h-10 bg-${insight.color}-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <i class="${insight.icon} text-${insight.color}-400"></i>
+                        <div class="w-10 h-10 ${colors.bg} rounded-lg flex items-center justify-center flex-shrink-0">
+                            <i class="${insight.icon} ${colors.text}"></i>
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 mb-1">
@@ -21719,18 +21793,18 @@
                             <div class="font-semibold text-white mb-1">${insight.title}</div>
                             <div class="text-sm text-white/70 mb-2">${insight.description}</div>
                             <div class="flex items-center justify-between">
-                                <button class="bg-${insight.color}-600 hover:bg-${insight.color}-700 text-white px-3 py-1 rounded-lg text-sm font-medium transition-all">
+                                <button class="${colors.btnBg} text-white px-3 py-1 rounded-lg text-sm font-medium transition-all">
                                     ${insight.action}
                                 </button>
                                 <div class="flex items-center gap-2 text-xs text-white/60">
                                     <span>Confidence:</span>
-                                    <span class="text-${insight.color}-400 font-semibold">${insight.confidence}%</span>
+                                    <span class="${colors.text} font-semibold">${insight.confidence}%</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function loadActionCenter() {
@@ -21885,7 +21959,61 @@
 
         function filterInsights(filter) {
             console.log('Filtering insights by:', filter);
-            // TODO: Implement filtering logic
+
+            // Update button states
+            const filterButtons = document.querySelectorAll('[onclick^="filterInsights"]');
+            filterButtons.forEach(btn => {
+                btn.classList.remove('bg-purple-500/20', 'text-purple-400', 'border-purple-500/30');
+                btn.classList.add('bg-white/10', 'text-white', 'border-white/20');
+            });
+            event.target.classList.remove('bg-white/10', 'text-white', 'border-white/20');
+            event.target.classList.add('bg-purple-500/20', 'text-purple-400', 'border-purple-500/30');
+
+            // Filter the insights based on the selected filter
+            const feed = document.getElementById('insightsFeed');
+            if (!feed) return;
+
+            let filteredInsights = MOCK_INSIGHTS;
+            if (filter === 'high') {
+                filteredInsights = MOCK_INSIGHTS.filter(i => i.priority === 'high');
+            } else if (filter === 'actionable') {
+                // For demo, show items with action buttons
+                filteredInsights = MOCK_INSIGHTS.filter(i => i.action);
+            } else if (filter === 'automated') {
+                // For demo, show subset
+                filteredInsights = MOCK_INSIGHTS.slice(0, 3);
+            }
+
+            // Re-render the filtered insights
+            feed.innerHTML = filteredInsights.map(insight => {
+                const colors = getColorClasses(insight.color);
+                return `
+                <div class="insight-card glass rounded-lg p-4" onclick="viewInsightDetails('${insight.id}')">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 ${colors.bg} rounded-lg flex items-center justify-center flex-shrink-0">
+                            <i class="${insight.icon} ${colors.text}"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs text-white/60">${insight.source}</span>
+                                <span class="priority-badge priority-${insight.priority}">${insight.priority.toUpperCase()}</span>
+                                <span class="text-xs text-white/50 ml-auto">${insight.timestamp}</span>
+                            </div>
+                            <div class="font-semibold text-white mb-1">${insight.title}</div>
+                            <div class="text-sm text-white/70 mb-2">${insight.description}</div>
+                            <div class="flex items-center justify-between">
+                                <button class="${colors.btnBg} text-white px-3 py-1 rounded-lg text-sm font-medium transition-all">
+                                    ${insight.action}
+                                </button>
+                                <div class="flex items-center gap-2 text-xs text-white/60">
+                                    <span>Confidence:</span>
+                                    <span class="${colors.text} font-semibold">${insight.confidence}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
         }
 
         function viewInsightDetails(id) {
@@ -21951,7 +22079,19 @@
         // MOCK DATA - Replace in production
         const MOCK_APIS = [{id:'api001',name:'FBI NCIC Database',category:'Public Safety',description:'National Crime Information Center - Criminal records and warrants',compatibility:92,auth:'OAuth 2.0 + CJIS',rateLimit:'1000 req/hour',uptime:99.9,latency:245,status:'healthy',compliance:['CJIS','FISMA'],cost:'$0.05/call'},{id:'api002',name:'State DMV Registry',category:'Administrative',description:'Vehicle registration, drivers license verification',compatibility:87,auth:'API Key',rateLimit:'5000 req/hour',uptime:98.5,latency:180,status:'healthy',compliance:['FISMA'],cost:'$0.02/call'},{id:'api003',name:'Grants.gov API',category:'Administrative',description:'Federal grant opportunities and application tracking',compatibility:95,auth:'OAuth 2.0',rateLimit:'10000 req/hour',uptime:99.7,latency:320,status:'healthy',compliance:['FedRAMP','FISMA'],cost:'Free'},{id:'api004',name:'IRS Tax API',category:'Regulatory',description:'Tax assessment and payment processing',compatibility:89,auth:'JWT + 2FA',rateLimit:'500 req/hour',uptime:99.95,latency:410,status:'healthy',compliance:['FISMA','IRS 1075'],cost:'$0.10/call'},{id:'api005',name:'Property Records',category:'Administrative',description:'Land records, deeds, property assessments',compatibility:84,auth:'API Key',rateLimit:'2000 req/hour',uptime:97.8,latency:290,status:'degraded',compliance:['FISMA'],cost:'$0.03/call'},{id:'api006',name:'Court Case Mgmt',category:'Public Safety',description:'Court records, case status, scheduling',compatibility:91,auth:'SAML 2.0',rateLimit:'3000 req/hour',uptime:99.2,latency:265,status:'healthy',compliance:['CJIS','FISMA'],cost:'$0.04/call'},{id:'api007',name:'911 Dispatch',category:'Public Safety',description:'Emergency call routing and resource dispatch',compatibility:93,auth:'OAuth 2.0 + CJIS',rateLimit:'10000 req/hour',uptime:99.99,latency:125,status:'healthy',compliance:['CJIS','NENA','FISMA'],cost:'$0.08/call'},{id:'api008',name:'NOAA Weather API',category:'Infrastructure',description:'Weather forecasts and disaster alerts',compatibility:96,auth:'API Key',rateLimit:'50000 req/hour',uptime:99.6,latency:195,status:'healthy',compliance:['FISMA'],cost:'Free'}];
 
-        const MOCK_ERRORS = [{type:'Timeout',count:45,percentage:35,color:'red'},{type:'Auth Failure',count:28,percentage:22,color:'yellow'},{type:'Rate Limit',count:23,percentage:18,color:'orange'},{type:'Bad Request',count:18,percentage:14,color:'blue'},{type:'Server Error',count:13,percentage:11,color:'purple'}];
+        const MOCK_ERRORS = [{type:'Timeout',count:45,percentage:35,color:'red'},{type:'Auth Failure',count:28,percentage:22,color:'yellow'},{type:'Rate Limit',count:23,percentage:18,color:'yellow'},{type:'Bad Request',count:18,percentage:14,color:'blue'},{type:'Server Error',count:13,percentage:11,color:'purple'}];
+
+        // Helper function to get API color classes
+        function getAPIColorClasses(color) {
+            const colorMap = {
+                'blue': { bg: 'bg-blue-500/20', text: 'text-blue-400', solid: 'bg-blue-500', border: 'border-blue-500/30' },
+                'purple': { bg: 'bg-purple-500/20', text: 'text-purple-400', solid: 'bg-purple-500', border: 'border-purple-500/30' },
+                'yellow': { bg: 'bg-yellow-600/10', text: 'text-yellow-400', solid: 'bg-yellow-500', border: 'border-yellow-500/30' },
+                'green': { bg: 'bg-green-500/20', text: 'text-green-400', solid: 'bg-green-500', border: 'border-green-500/30' },
+                'red': { bg: 'bg-red-600/10', text: 'text-red-400', solid: 'bg-red-500', border: 'border-red-500/30' }
+            };
+            return colorMap[color] || colorMap['blue'];
+        }
 
         function switchAPIModule(moduleName) {
             document.querySelectorAll('.api-tab-button').forEach(btn => btn.classList.remove('active'));
@@ -21963,7 +22103,10 @@
         function renderAPIResults(apis) {
             const container = document.getElementById('apiResults');
             if (!container) return;
-            container.innerHTML = apis.map(api => `<div class="glass rounded-xl p-6 hover:scale-105 transition-all cursor-pointer"><div class="flex items-start justify-between mb-3"><div><h4 class="font-bold text-white mb-1">${api.name}</h4><p class="text-xs text-white/60">${api.category}</p></div><div class="w-2 h-2 bg-${api.status === 'healthy' ? 'green' : 'yellow'}-400 rounded-full animate-pulse"></div></div><p class="text-sm text-white/70 mb-3">${api.description}</p><div class="mb-3"><div class="flex justify-between text-xs mb-1"><span class="text-white/60">Compatibility</span><span class="text-white font-medium">${api.compatibility}%</span></div><div class="compatibility-score relative overflow-hidden"><div class="absolute inset-0 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"></div><div class="absolute inset-0 bg-black/50" style="width: ${100 - api.compatibility}%; margin-left: ${api.compatibility}%"></div></div></div><div class="grid grid-cols-2 gap-2 text-xs mb-3"><div><span class="text-white/50">Auth:</span> <span class="text-white">${api.auth}</span></div><div><span class="text-white/50">Uptime:</span> <span class="text-green-400">${api.uptime}%</span></div></div><div class="flex gap-1 mb-3 flex-wrap">${api.compliance.map(badge => `<span class="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-full border border-green-500/30">${badge}</span>`).join('')}</div><div class="flex items-center justify-between"><span class="text-sm text-yellow-400 font-medium">${api.cost}</span><button onclick="connectAPI('${api.id}')" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white text-sm font-medium hover:shadow-lg transition-all">Connect</button></div></div>`).join('');
+            container.innerHTML = apis.map(api => {
+                const statusColors = getAPIColorClasses(api.status === 'healthy' ? 'green' : 'yellow');
+                return `<div class="glass rounded-xl p-6 hover:scale-105 transition-all cursor-pointer"><div class="flex items-start justify-between mb-3"><div><h4 class="font-bold text-white mb-1">${api.name}</h4><p class="text-xs text-white/60">${api.category}</p></div><div class="w-2 h-2 ${statusColors.text} rounded-full animate-pulse"></div></div><p class="text-sm text-white/70 mb-3">${api.description}</p><div class="mb-3"><div class="flex justify-between text-xs mb-1"><span class="text-white/60">Compatibility</span><span class="text-white font-medium">${api.compatibility}%</span></div><div class="compatibility-score relative overflow-hidden"><div class="absolute inset-0 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"></div><div class="absolute inset-0 bg-black/50" style="width: ${100 - api.compatibility}%; margin-left: ${api.compatibility}%"></div></div></div><div class="grid grid-cols-2 gap-2 text-xs mb-3"><div><span class="text-white/50">Auth:</span> <span class="text-white">${api.auth}</span></div><div><span class="text-white/50">Uptime:</span> <span class="text-green-400">${api.uptime}%</span></div></div><div class="flex gap-1 mb-3 flex-wrap">${api.compliance.map(badge => `<span class="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-full border border-green-500/30">${badge}</span>`).join('')}</div><div class="flex items-center justify-between"><span class="text-sm text-yellow-400 font-medium">${api.cost}</span><button onclick="connectAPI('${api.id}')" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white text-sm font-medium hover:shadow-lg transition-all">Connect</button></div></div>`
+            }).join('');
         }
 
         function renderHealthDashboard() {
@@ -21977,14 +22120,21 @@
         function renderErrorCategories() {
             const container = document.getElementById('errorCategories');
             if (!container) return;
-            container.innerHTML = MOCK_ERRORS.map(error => `<div class="p-3 bg-white/5 rounded-lg"><div class="flex justify-between mb-2"><span class="text-white font-medium">${error.type}</span><span class="text-${error.color}-400">${error.count} errors</span></div><div class="w-full h-2 bg-white/10 rounded-full overflow-hidden"><div class="h-full bg-${error.color}-500" style="width: ${error.percentage}%"></div></div></div>`).join('');
+            container.innerHTML = MOCK_ERRORS.map(error => {
+                const errorColors = getAPIColorClasses(error.color);
+                return `<div class="p-3 bg-white/5 rounded-lg"><div class="flex justify-between mb-2"><span class="text-white font-medium">${error.type}</span><span class="${errorColors.text}">${error.count} errors</span></div><div class="w-full h-2 bg-white/10 rounded-full overflow-hidden"><div class="h-full ${errorColors.solid}" style="width: ${error.percentage}%"></div></div></div>`
+            }).join('');
         }
 
         function renderDeadLetterQueue() {
             const container = document.getElementById('deadLetterQueue');
             if (!container) return;
             const errors = [{id:'err001',title:'DMV API Timeout',description:'Failed after 3 retry attempts - Request ID: req_8472hdj',time:'5 min ago',severity:'critical',api:'State DMV Registry',endpoint:'/api/v2/vehicles/registration',method:'POST',statusCode:504,requestPayload:{vin:'1HGBH41JXMN109186',plate:'ABC1234',state:'IL'},errorMessage:'Gateway Timeout - Upstream server failed to respond within 30s',retryAttempts:3,lastRetry:'2024-10-21 14:18:32',stackTrace:'Error: ETIMEDOUT\\n  at TLSSocket.emit (events.js:400:28)\\n  at Socket._onTimeout (net.js:482:8)',recommendations:['Check DMV API server status','Verify network connectivity','Consider increasing timeout threshold','Contact DMV API support if issue persists']},{id:'err002',title:'Auth Token Expired',description:'FBI NCIC API - Token refresh required',time:'12 min ago',severity:'high',api:'FBI NCIC Database',endpoint:'/api/ncic/v1/warrants/search',method:'GET',statusCode:401,requestPayload:{query:'John Doe',jurisdiction:'IL',recordType:'warrant'},errorMessage:'Unauthorized - JWT token expired at 2024-10-21 14:10:00 UTC',retryAttempts:0,lastRetry:null,stackTrace:'Error: 401 Unauthorized\\n  at validateToken (auth.js:156)\\n  at middleware (index.js:89)',recommendations:['Refresh OAuth token using refresh_token','Verify CJIS credentials are still valid','Check token expiration policies','Implement automatic token rotation']}];
-            container.innerHTML = errors.map(error => `<div class="p-4 bg-${error.severity === 'critical' ? 'red' : 'yellow'}-600/10 border border-${error.severity === 'critical' ? 'red' : 'yellow'}-500/30 rounded-lg"><div class="flex items-start justify-between mb-2"><div class="flex-1"><div class="text-white font-medium mb-1">${error.title}</div><div class="text-xs text-white/60">${error.description}</div></div><span class="text-xs text-${error.severity === 'critical' ? 'red' : 'yellow'}-400">${error.time}</span></div><div class="flex gap-2 mt-3"><button onclick="retryFromQueue('${error.id}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-white text-xs transition-all">${error.id === 'err002' ? 'Refresh Token' : 'Retry'}</button><button onclick="showErrorDetails('${error.id}')" class="px-3 py-1 bg-white/10 hover:bg-white/20 rounded text-white text-xs transition-all">View Details</button></div></div>`).join('');
+            container.innerHTML = errors.map(error => {
+                const severityColor = error.severity === 'critical' ? 'red' : 'yellow';
+                const severityColors = getAPIColorClasses(severityColor);
+                return `<div class="p-4 ${severityColors.bg} border ${severityColors.border} rounded-lg"><div class="flex items-start justify-between mb-2"><div class="flex-1"><div class="text-white font-medium mb-1">${error.title}</div><div class="text-xs text-white/60">${error.description}</div></div><span class="text-xs ${severityColors.text}">${error.time}</span></div><div class="flex gap-2 mt-3"><button onclick="retryFromQueue('${error.id}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-white text-xs transition-all">${error.id === 'err002' ? 'Refresh Token' : 'Retry'}</button><button onclick="showErrorDetails('${error.id}')" class="px-3 py-1 bg-white/10 hover:bg-white/20 rounded text-white text-xs transition-all">View Details</button></div></div>`
+            }).join('');
             window.DEAD_LETTER_ERRORS = errors;
         }
 
