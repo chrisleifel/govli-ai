@@ -14715,7 +14715,8 @@
                         <i class="fas fa-chevron-right"></i>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function viewAllRequests() {
@@ -19486,8 +19487,8 @@
 
         // Override switchTab to initialize workflow builder when needed
         const originalSwitchTab = switchTab;
-        switchTab = function(tabName) {
-            originalSwitchTab(tabName);
+        switchTab = function(tabName, event) {
+            originalSwitchTab(tabName, event);
             if (tabName === 'workflows') {
                 console.log('Workflows tab clicked, initializing...');
                 initializeWorkflowBuilder();
@@ -22972,8 +22973,8 @@
 
         // Enhanced switchTab to initialize public engagement
         const originalSwitchTabForEngagement = switchTab;
-        switchTab = function(tabName) {
-            originalSwitchTabForEngagement(tabName);
+        switchTab = function(tabName, event) {
+            originalSwitchTabForEngagement(tabName, event);
             if (tabName === 'citizen') {
                 initializePublicEngagement();
             }
@@ -23257,8 +23258,8 @@
 
         // Enhanced switchTab to initialize SecureMesh
         const originalSwitchTabForSecureMesh = switchTab;
-        switchTab = function(tabName) {
-            originalSwitchTabForSecureMesh(tabName);
+        switchTab = function(tabName, event) {
+            originalSwitchTabForSecureMesh(tabName, event);
             if (tabName === 'securemesh') {
                 initializeSecureMesh();
             }
@@ -24714,8 +24715,8 @@
 
         // Enhanced switchTab to initialize Department Process Center
         const originalSwitchTabForDeptCenter = switchTab;
-        switchTab = function(tabName) {
-            originalSwitchTabForDeptCenter(tabName);
+        switchTab = function(tabName, event) {
+            originalSwitchTabForDeptCenter(tabName, event);
             if (tabName === 'workflows') {
                 initializeDepartmentProcessCenter();
             }
@@ -24986,8 +24987,8 @@
 
         // Enhanced switchTab to initialize Mobile Command
         const originalSwitchTabForMobileCommand = switchTab;
-        switchTab = function(tabName) {
-            originalSwitchTabForMobileCommand(tabName);
+        switchTab = function(tabName, event) {
+            originalSwitchTabForMobileCommand(tabName, event);
             if (tabName === 'mobile-command') {
                 initializeMobileCommand();
 
