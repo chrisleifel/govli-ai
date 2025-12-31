@@ -212,6 +212,12 @@ const Auth = {
     async apiCall(endpoint, options = {}) {
         const token = this.getToken();
 
+        // DEMO MODE: Intercept API calls and return mock data
+        if (window.DEMO_CONFIG?.enabled && window.DemoData) {
+            console.log('Demo mode: Intercepting API call:', endpoint);
+            return await this.getMockDataForEndpoint(endpoint, options);
+        }
+
         const defaultOptions = {
             headers: {
                 'Content-Type': 'application/json',
@@ -263,6 +269,107 @@ const Auth = {
             console.error('API call error:', error);
             throw error;
         }
+    },
+
+    // Get mock data for endpoint in demo mode
+    async getMockDataForEndpoint(endpoint, options = {}) {
+        console.log('Demo mode: Generating mock data for:', endpoint, options);
+
+        // Parse endpoint to determine data type
+        const method = options.method || 'GET';
+
+        // Grants endpoints
+        if (endpoint.includes('/api/grants')) {
+            if (method === 'GET') {
+                const params = new URLSearchParams(endpoint.split('?')[1] || '');
+                return await window.DemoData.getGrants({
+                    query: params.get('query'),
+                    status: params.get('status'),
+                    page: params.get('page'),
+                    limit: params.get('limit')
+                });
+            }
+        }
+
+        // CRM/Contacts endpoints
+        if (endpoint.includes('/api/crm') || endpoint.includes('/api/contacts')) {
+            if (method === 'GET') {
+                const params = new URLSearchParams(endpoint.split('?')[1] || '');
+                return await window.DemoData.getContacts({
+                    query: params.get('query'),
+                    contactType: params.get('contactType')
+                });
+            }
+            if (method === 'POST') {
+                const body = JSON.parse(options.body || '{}');
+                return await window.DemoData.createRecord('contacts', body);
+            }
+            if (method === 'PUT') {
+                const id = endpoint.split('/').pop();
+                const body = JSON.parse(options.body || '{}');
+                return await window.DemoData.updateRecord('contacts', id, body);
+            }
+            if (method === 'DELETE') {
+                const id = endpoint.split('/').pop();
+                return await window.DemoData.deleteRecord('contacts', id);
+            }
+        }
+
+        // Dashboard endpoints
+        if (endpoint.includes('/api/dashboard')) {
+            if (endpoint.includes('/stats')) {
+                return await window.DemoData.getDashboardStats();
+            }
+            if (endpoint.includes('/activity')) {
+                return await window.DemoData.getRecentActivity();
+            }
+        }
+
+        // Permits endpoints
+        if (endpoint.includes('/api/permits')) {
+            if (method === 'GET') {
+                const params = new URLSearchParams(endpoint.split('?')[1] || '');
+                return await window.DemoData.getPermits({
+                    status: params.get('status')
+                });
+            }
+        }
+
+        // Documents endpoints
+        if (endpoint.includes('/api/documents')) {
+            if (method === 'GET') {
+                return await window.DemoData.getDocuments();
+            }
+        }
+
+        // Workflows endpoints
+        if (endpoint.includes('/api/workflows')) {
+            if (method === 'GET') {
+                return await window.DemoData.getWorkflows();
+            }
+        }
+
+        // Inspections endpoints
+        if (endpoint.includes('/api/inspections')) {
+            if (method === 'GET') {
+                return await window.DemoData.getInspections();
+            }
+        }
+
+        // Payments endpoints
+        if (endpoint.includes('/api/payments')) {
+            if (method === 'GET') {
+                return await window.DemoData.getPayments();
+            }
+        }
+
+        // Default fallback - return generic success
+        console.warn('Demo mode: No mock data handler for endpoint:', endpoint);
+        return {
+            success: true,
+            message: 'Demo mode - operation simulated',
+            data: []
+        };
     }
 };
 

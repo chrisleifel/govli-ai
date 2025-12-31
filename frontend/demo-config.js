@@ -25,6 +25,14 @@ const DEMO_CONFIG = {
     ui: {
         showBanner: true,  // Show "Demo Mode" banner at top of page
         bannerMessage: 'Demo Mode Active - No backend required'
+    },
+
+    // Mock data settings
+    mockData: {
+        simulateDelay: true,      // Simulate network delay for realism
+        minDelay: 300,             // Minimum delay in milliseconds
+        maxDelay: 800,             // Maximum delay in milliseconds
+        enableLocalStorage: true   // Persist data in localStorage
     }
 };
 

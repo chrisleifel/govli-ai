@@ -7882,7 +7882,7 @@
                                         </div>
                                     </div>
 
-                                    <button class="w-full mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm transition">
+                                    <button onclick="configureAgent('permit-processing')" class="w-full mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm transition">
                                         <i class="fas fa-cog mr-2"></i>Configure Agent
                                     </button>
                                 </div>
@@ -7944,7 +7944,7 @@
                                         </div>
                                     </div>
 
-                                    <button class="w-full mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white text-sm transition">
+                                    <button onclick="configureAgent('tax-processing')" class="w-full mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white text-sm transition">
                                         <i class="fas fa-cog mr-2"></i>Configure Agent
                                     </button>
                                 </div>
@@ -8006,7 +8006,7 @@
                                         </div>
                                     </div>
 
-                                    <button class="w-full mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white text-sm transition">
+                                    <button onclick="configureAgent('document-classification')" class="w-full mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white text-sm transition">
                                         <i class="fas fa-cog mr-2"></i>Configure Agent
                                     </button>
                                 </div>
@@ -8068,7 +8068,7 @@
                                         </div>
                                     </div>
 
-                                    <button class="w-full mt-4 px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg text-white text-sm transition">
+                                    <button onclick="configureAgent('citizen-query-response')" class="w-full mt-4 px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg text-white text-sm transition">
                                         <i class="fas fa-cog mr-2"></i>Configure Agent
                                     </button>
                                 </div>
@@ -8130,7 +8130,7 @@
                                         </div>
                                     </div>
 
-                                    <button class="w-full mt-4 px-4 py-2 bg-teal-600 hover:bg-teal-700 rounded-lg text-white text-sm transition">
+                                    <button onclick="configureAgent('grant-application')" class="w-full mt-4 px-4 py-2 bg-teal-600 hover:bg-teal-700 rounded-lg text-white text-sm transition">
                                         <i class="fas fa-cog mr-2"></i>Configure Agent
                                     </button>
                                 </div>
@@ -8192,7 +8192,7 @@
                                         </div>
                                     </div>
 
-                                    <button class="w-full mt-4 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-white text-sm transition">
+                                    <button onclick="configureAgent('compliance-monitoring')" class="w-full mt-4 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-white text-sm transition">
                                         <i class="fas fa-cog mr-2"></i>Configure Agent
                                     </button>
                                 </div>
@@ -12973,7 +12973,104 @@
                 </div>
             </div>
         </div>
-    
+
+    <!-- Agent Configuration Modal -->
+    <div id="agentConfigModal" class="modal">
+        <div class="glass rounded-2xl p-8 max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold text-white flex items-center gap-3">
+                    <i class="fas fa-robot text-purple-400"></i>
+                    <span id="agentConfigTitle">Configure Agent</span>
+                </h3>
+                <button onclick="closeAgentConfigModal()" class="text-white/60 hover:text-white text-2xl transition">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="agentConfigForm" class="space-y-6">
+                <!-- Agent Status -->
+                <div>
+                    <label class="block text-sm font-medium text-white mb-2">Agent Status</label>
+                    <select id="agentStatus" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="enabled" selected>Enabled - Agent is active</option>
+                        <option value="disabled">Disabled - Agent is paused</option>
+                        <option value="maintenance">Maintenance Mode</option>
+                    </select>
+                </div>
+
+                <!-- Priority Level -->
+                <div>
+                    <label class="block text-sm font-medium text-white mb-2">Priority Level</label>
+                    <select id="agentPriority" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="high">High - Process first</option>
+                        <option value="medium" selected>Medium - Normal priority</option>
+                        <option value="low">Low - Process last</option>
+                    </select>
+                </div>
+
+                <!-- Processing Schedule -->
+                <div>
+                    <label class="block text-sm font-medium text-white mb-2">Processing Schedule</label>
+                    <select id="agentSchedule" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="continuous" selected>Continuous - Process 24/7</option>
+                        <option value="business-hours">Business Hours Only (9 AM - 5 PM)</option>
+                        <option value="off-hours">Off-Hours Only (After 5 PM)</option>
+                        <option value="weekdays">Weekdays Only</option>
+                    </select>
+                </div>
+
+                <!-- Automation Rules -->
+                <div>
+                    <label class="block text-sm font-medium text-white mb-2">Automation Rules</label>
+                    <textarea
+                        id="agentRules"
+                        rows="4"
+                        placeholder="Enter custom automation rules and conditions..."
+                        class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    ></textarea>
+                    <p class="text-xs text-white/60 mt-2">Optional: Define specific conditions or rules for this agent</p>
+                </div>
+
+                <!-- Notification Settings -->
+                <div>
+                    <label class="block text-sm font-medium text-white mb-3">Notifications</label>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="notifySuccess" checked class="w-4 h-4 rounded border-white/30 bg-white/10 text-purple-600 focus:ring-purple-500">
+                            <span class="text-white/80 text-sm">Notify on successful completions</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="notifyErrors" checked class="w-4 h-4 rounded border-white/30 bg-white/10 text-purple-600 focus:ring-purple-500">
+                            <span class="text-white/80 text-sm">Notify on errors or failures</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="notifyUpdates" class="w-4 h-4 rounded border-white/30 bg-white/10 text-purple-600 focus:ring-purple-500">
+                            <span class="text-white/80 text-sm">Notify on configuration updates</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3 pt-4 border-t border-white/10">
+                    <button
+                        type="submit"
+                        class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
+                    >
+                        <i class="fas fa-save"></i>
+                        <span class="font-medium">Save Configuration</span>
+                    </button>
+                    <button
+                        type="button"
+                        onclick="closeAgentConfigModal()"
+                        class="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition border border-white/20"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- New Request Modal -->
     <div id="newRequestModal" class="modal">
         <div class="glass rounded-2xl p-8 max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
@@ -18984,6 +19081,100 @@
             alert('Exporting Compliance Report...\\n\\n🔒 Generating encrypted compliance report\\n📊 Including all audit trails\\n🛡️ CJIS & FedRAMP compliance verified\\n📄 Report will be available in secure download');
         }
 
+        // ===== AGENT CONFIGURATION FUNCTIONS =====
+
+        let currentAgentType = null;
+
+        function configureAgent(agentType) {
+            currentAgentType = agentType;
+
+            // Agent type display names
+            const agentNames = {
+                'permit-processing': 'Permit Processing Agent',
+                'tax-processing': 'Tax Processing Agent',
+                'inspection-scheduling': 'Inspection Scheduling Agent',
+                'document-classification': 'Document Classification Agent',
+                'citizen-query-response': 'Citizen Query Response Agent',
+                'grant-application': 'Grant Application Agent',
+                'compliance-monitoring': 'Compliance Monitoring Agent'
+            };
+
+            // Update modal title
+            const titleElement = document.getElementById('agentConfigTitle');
+            if (titleElement) {
+                titleElement.textContent = agentNames[agentType] || 'Configure Agent';
+            }
+
+            // Load existing configuration from localStorage
+            const existingConfig = localStorage.getItem(`agent_config_${agentType}`);
+            if (existingConfig) {
+                const config = JSON.parse(existingConfig);
+                document.getElementById('agentStatus').value = config.status || 'enabled';
+                document.getElementById('agentPriority').value = config.priority || 'medium';
+                document.getElementById('agentSchedule').value = config.schedule || 'continuous';
+                document.getElementById('agentRules').value = config.rules || '';
+                document.getElementById('notifySuccess').checked = config.notifySuccess !== false;
+                document.getElementById('notifyErrors').checked = config.notifyErrors !== false;
+                document.getElementById('notifyUpdates').checked = config.notifyUpdates || false;
+            }
+
+            // Show modal
+            const modal = document.getElementById('agentConfigModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+
+        function closeAgentConfigModal() {
+            const modal = document.getElementById('agentConfigModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            currentAgentType = null;
+        }
+
+        // Handle agent configuration form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('agentConfigForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    if (!currentAgentType) {
+                        alert('Error: No agent selected');
+                        return;
+                    }
+
+                    // Collect configuration
+                    const config = {
+                        status: document.getElementById('agentStatus').value,
+                        priority: document.getElementById('agentPriority').value,
+                        schedule: document.getElementById('agentSchedule').value,
+                        rules: document.getElementById('agentRules').value,
+                        notifySuccess: document.getElementById('notifySuccess').checked,
+                        notifyErrors: document.getElementById('notifyErrors').checked,
+                        notifyUpdates: document.getElementById('notifyUpdates').checked,
+                        lastUpdated: new Date().toISOString()
+                    };
+
+                    // In demo mode, save to localStorage
+                    if (window.DEMO_CONFIG?.enabled) {
+                        localStorage.setItem(`agent_config_${currentAgentType}`, JSON.stringify(config));
+                        console.log('Demo mode: Agent configuration saved to localStorage:', currentAgentType, config);
+                        alert('✓ Agent configuration saved successfully!\\n\\nConfiguration has been stored locally for demo purposes.');
+                    } else {
+                        // In production, would save to backend API
+                        console.log('Would save to backend API:', config);
+                        alert('✓ Agent configuration saved!\\n\\nConfiguration would be sent to backend in production mode.');
+                    }
+
+                    closeAgentConfigModal();
+                });
+            }
+        });
+
+        // ===== END AGENT CONFIGURATION FUNCTIONS =====
+
         // Handle Escape key for modal
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
@@ -24957,6 +25148,9 @@
 
     <!-- Demo Configuration -->
     <script src="demo-config.js"></script>
+
+    <!-- Demo Data (Mock data for all modules) -->
+    <script src="demo-data.js"></script>
 
     <!-- Authentication Module -->
     <script src="auth.js"></script>
