@@ -122,6 +122,7 @@
 
     <!-- Load config and auth modules -->
     <script src="config.js"></script>
+    <script src="demo-config.js"></script>
     <script src="auth.js"></script>
 
     <script>
@@ -197,6 +198,23 @@
         if (Auth.isLoggedIn()) {
             const user = Auth.getUser();
             showSuccess(`Already logged in as ${user.email}. You can access the portal or log out to switch accounts.`);
+        }
+
+        // Update UI for demo mode
+        if (window.DEMO_CONFIG?.enabled) {
+            const credentialsDiv = document.querySelector('.bg-blue-500\\/10');
+            if (credentialsDiv) {
+                credentialsDiv.innerHTML = `
+                    <p class="text-sm text-purple-300 font-medium mb-2">
+                        <i class="fas fa-flask mr-2"></i>Demo Mode Active
+                    </p>
+                    <div class="text-sm text-gray-300 space-y-1">
+                        <p class="font-semibold">Login with ANY credentials</p>
+                        <p class="text-xs text-gray-400">Backend authentication is bypassed for demonstration</p>
+                    </div>
+                `;
+                credentialsDiv.className = 'mt-6 p-4 rounded-lg bg-purple-500/10 border border-purple-500/30';
+            }
         }
     </script>
 </body>

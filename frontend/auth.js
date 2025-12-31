@@ -39,6 +39,33 @@ const Auth = {
     // Login function
     async login(email, password) {
         try {
+            // DEMO MODE: Skip backend authentication
+            if (window.DEMO_CONFIG?.enabled) {
+                console.log('Demo mode: Bypassing authentication');
+
+                // Create demo user with provided email or default
+                const demoUser = {
+                    ...window.DEMO_CONFIG.credentials,
+                    email: email || window.DEMO_CONFIG.credentials.email
+                };
+
+                const demoToken = 'DEMO_TOKEN_' + Date.now();
+
+                // Store demo token and user
+                this.setToken(demoToken);
+                this.setUser(demoUser);
+
+                // Simulate network delay for realism
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                return {
+                    token: demoToken,
+                    user: demoUser,
+                    message: 'Demo login successful'
+                };
+            }
+
+            // PRODUCTION MODE: Normal backend authentication
             const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.LOGIN}`, {
                 method: 'POST',
                 headers: {

@@ -2224,6 +2224,15 @@
     </style>
 </head>
 <body class="gradient-bg text-white overflow-hidden">
+    <!-- Demo Mode Banner -->
+    <div id="demoBanner" style="display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 999999; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); padding: 8px 16px; text-align: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+            <i class="fas fa-info-circle" style="color: #fbbf24;"></i>
+            <span style="color: white; font-weight: 600; font-size: 14px;">Demo Mode Active</span>
+            <span style="color: rgba(255, 255, 255, 0.9); font-size: 13px;">No backend required - Login with any credentials</span>
+        </div>
+    </div>
+
     <!-- Tooltip for Predictive Analytics -->
     <div id="predictiveTooltip" class="tooltip"></div>
 
@@ -24946,6 +24955,9 @@
     <!-- API Configuration -->
     <script src="config.js"></script>
 
+    <!-- Demo Configuration -->
+    <script src="demo-config.js"></script>
+
     <!-- Authentication Module -->
     <script src="auth.js"></script>
 
@@ -24972,6 +24984,16 @@
 
     <!-- Authentication Check -->
     <script>
+        // Show demo mode banner if enabled
+        if (window.DEMO_CONFIG?.enabled && window.DEMO_CONFIG?.ui?.showBanner) {
+            const banner = document.getElementById('demoBanner');
+            if (banner) {
+                banner.style.display = 'block';
+                // Adjust main content to account for banner height
+                document.body.style.paddingTop = '40px';
+            }
+        }
+
         // Check authentication on page load
         if (!Auth.isLoggedIn()) {
             window.location.href = 'login.html';
