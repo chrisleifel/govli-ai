@@ -18818,130 +18818,11 @@
             }
         }
 
-        function populateContactsTable(contacts = crmContacts) {
-            const tableBody = document.getElementById('contactsTableBody');
-            if (!tableBody) return;
-
-            tableBody.innerHTML = '';
-            contacts.forEach(contact => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-white/5 transition-all duration-200 border-b border-white/5';
-                
-                const statusClass = contact.status === 'active' ? 'text-emerald-400' : 'text-gray-400';
-                const typeConfig = {
-                    'citizen': { color: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-blue-400/30', icon: 'fas fa-user' },
-                    'official': { color: 'text-purple-400', bg: 'bg-purple-500/20', border: 'border-purple-400/30', icon: 'fas fa-user-tie' },
-                    'vendor': { color: 'text-emerald-400', bg: 'bg-emerald-500/20', border: 'border-emerald-400/30', icon: 'fas fa-building' },
-                    'contractor': { color: 'text-orange-400', bg: 'bg-orange-500/20', border: 'border-orange-400/30', icon: 'fas fa-hard-hat' }
-                };
-                
-                const typeInfo = typeConfig[contact.type] || { color: 'text-white', bg: 'bg-gray-500/20', border: 'border-gray-400/30', icon: 'fas fa-user' };
-                
-                // Calculate engagement score (simulated)
-                const engagementScore = Math.floor(Math.random() * 40) + 60;
-                const engagementColor = engagementScore > 85 ? 'text-emerald-400' : engagementScore > 70 ? 'text-yellow-400' : 'text-orange-400';
-
-                row.innerHTML = `
-                    <td class="py-4 px-6">
-                        <div class="flex items-center space-x-4">
-                            <input type="checkbox" class="rounded border-white/30 bg-white/10">
-                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
-                                <span class="text-white font-semibold">${contact.name[0]}</span>
-                            </div>
-                            <div class="flex-1">
-                                <div class="text-white font-semibold">${contact.name}</div>
-                                <div class="text-white/60 text-sm">${contact.email}</div>
-                                <div class="text-white/40 text-xs">${contact.phone}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="py-4 px-6">
-                        <div class="flex items-center space-x-2">
-                            <div class="${typeInfo.bg} ${typeInfo.border} border rounded-lg px-3 py-1.5 flex items-center space-x-2">
-                                <i class="${typeInfo.icon} ${typeInfo.color} text-xs"></i>
-                                <span class="${typeInfo.color} font-medium text-sm capitalize">${contact.type}</span>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="py-4 px-6">
-                        <div class="text-white/80 font-medium">${contact.department}</div>
-                        <div class="text-white/50 text-sm">${contact.address}</div>
-                    </td>
-                    <td class="py-4 px-6">
-                        <div class="text-white/80">${contact.lastContact}</div>
-                        <div class="flex items-center space-x-2 mt-1">
-                            <div class="w-2 h-2 ${engagementColor.replace('text-', 'bg-')} rounded-full"></div>
-                            <span class="${engagementColor} text-sm font-medium">${engagementScore}% engaged</span>
-                        </div>
-                    </td>
-                    <td class="py-4 px-6">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-2 h-2 ${statusClass.replace('text-', 'bg-')} rounded-full animate-pulse"></div>
-                            <span class="${statusClass} font-medium capitalize">${contact.status}</span>
-                        </div>
-                    </td>
-                    <td class="py-4 px-6">
-                        <div class="flex items-center space-x-2">
-                            <button onclick="viewContact(${contact.id})" class="p-2 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded-lg transition-all duration-200 border border-blue-500/30">
-                                <i class="fas fa-eye text-xs"></i>
-                            </button>
-                            <button onclick="editContact(${contact.id})" class="p-2 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 rounded-lg transition-all duration-200 border border-emerald-500/30">
-                                <i class="fas fa-edit text-xs"></i>
-                            </button>
-                            <button onclick="scheduleFollowUp(${contact.id})" class="p-2 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 rounded-lg transition-all duration-200 border border-purple-500/30">
-                                <i class="fas fa-calendar text-xs"></i>
-                            </button>
-                            <button onclick="deleteContact(${contact.id})" class="p-2 bg-red-600/20 hover:bg-red-600/40 text-red-300 rounded-lg transition-all duration-200 border border-red-500/30">
-                                <i class="fas fa-trash text-xs"></i>
-                            </button>
-                        </div>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-
-        function setupContactSearch() {
-            const searchInput = document.getElementById('contactSearch');
-            const filterSelect = document.getElementById('contactFilter');
-
-            if (searchInput) {
-                searchInput.addEventListener('input', filterContacts);
-            }
-            if (filterSelect) {
-                filterSelect.addEventListener('change', filterContacts);
-            }
-        }
-
-        function filterContacts() {
-            const searchTerm = document.getElementById('contactSearch')?.value.toLowerCase() || '';
-            const filterType = document.getElementById('contactFilter')?.value || 'all';
-
-            let filteredContacts = crmContacts.filter(contact => {
-                const matchesSearch = contact.name.toLowerCase().includes(searchTerm) ||
-                                    contact.email.toLowerCase().includes(searchTerm) ||
-                                    contact.department.toLowerCase().includes(searchTerm);
-                const matchesFilter = filterType === 'all' || contact.type === filterType;
-                return matchesSearch && matchesFilter;
-            });
-
-            populateContactsTable(filteredContacts);
-        }
-
-        function updateCRMAnalytics() {
-            // Update real-time contact analytics
-            const totalContacts = crmContacts.length;
-            const activeContacts = crmContacts.filter(c => c.status === 'active').length;
-            const recentContacts = crmContacts.filter(c => {
-                const contactDate = new Date(c.lastContact);
-                const weekAgo = new Date();
-                weekAgo.setDate(weekAgo.getDate() - 7);
-                return contactDate >= weekAgo;
-            }).length;
-
-            // These would update the analytics display if the elements exist
-            console.log(`CRM Analytics: ${totalContacts} total, ${activeContacts} active, ${recentContacts} recent`);
-        }
+        // REMOVED: Old mock CRM functions - Now handled by CRM module (crm.js)
+        // - populateContactsTable
+        // - setupContactSearch
+        // - filterContacts
+        // - updateCRMAnalytics
 
         function processCrmAiQuery() {
             const input = document.getElementById('crmAiInput');
@@ -18992,37 +18873,9 @@
             }, 1000);
         }
 
-        function showNewContactModal() {
-            alert('New Contact Modal - Coming Soon! This would open a secure CJIS-compliant contact creation form.');
-        }
-
-        function viewContact(contactId) {
-            const contact = crmContacts.find(c => c.id === contactId);
-            if (contact) {
-                alert(`Contact Details:\\nName: ${contact.name}\\nEmail: ${contact.email}\\nPhone: ${contact.phone}\\nDepartment: ${contact.department}\\nNotes: ${contact.notes}`);
-            }
-        }
-
-        function editContact(contactId) {
-            alert(`Edit Contact ${contactId} - This would open a secure editing form with audit logging.`);
-        }
-
-        function deleteContact(contactId) {
-            if (confirm('Are you sure you want to delete this contact? This action will be logged for compliance.')) {
-                crmContacts = crmContacts.filter(c => c.id !== contactId);
-                populateContactsTable();
-                updateCRMAnalytics();
-                alert('Contact deleted. Action logged for CJIS compliance.');
-            }
-        }
-
-        function bulkImportContacts() {
-            alert('Bulk Import - This would open a secure import interface with encryption validation and audit logging.');
-        }
-
-        function exportContacts() {
-            alert('Export Contacts - This would generate an encrypted export with audit trail for compliance.');
-        }
+        // REMOVED: Mock CRM functions - Now implemented in crm.js module
+        // - showNewContactModal, viewContact, editContact, deleteContact,
+        // - bulkImportContacts, exportContacts
 
         function runComplianceAudit() {
             alert('Running CJIS Compliance Audit...\\n\\n✓ Data encryption verified\\n✓ Access controls validated\\n✓ Audit trails complete\\n✓ No violations found\\n\\nCompliance Score: 99.8%');
@@ -19120,66 +18973,6 @@
 
         function exportComplianceReport() {
             alert('Exporting Compliance Report...\\n\\n🔒 Generating encrypted compliance report\\n📊 Including all audit trails\\n🛡️ CJIS & FedRAMP compliance verified\\n📄 Report will be available in secure download');
-        }
-
-        function processCrmAiQuery() {
-            const input = document.getElementById('crmAiInput');
-            if (!input) return;
-
-            const query = input.value.trim();
-            if (!query) return;
-
-            // Enhanced AI responses for enterprise features
-            setTimeout(() => {
-                const responses = [
-                    "🎯 Identified 12 high-value prospects from last month with 94% conversion probability",
-                    "📅 Scheduled 8 follow-up meetings automatically based on engagement patterns",
-                    "🔍 Found 3 compliance risks requiring immediate attention in vendor relationships", 
-                    "📈 Predictive analytics show 23% increase in citizen engagement opportunity",
-                    "🤖 AI recommends focusing on 5 key relationships for maximum ROI this quarter",
-                    "🔐 Security scan complete: All contact data properly encrypted and audit-logged",
-                    "💡 Smart insight: Contact Jennifer Martinez shows highest contractor performance metrics",
-                    "⚡ Real-time sync complete: All enterprise systems updated with latest contact data"
-                ];
-                
-                const response = responses[Math.floor(Math.random() * responses.length)];
-                
-                // Create enhanced AI response element
-                const responseDiv = document.createElement('div');
-                responseDiv.className = 'mt-4 p-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl border border-purple-400/30';
-                responseDiv.innerHTML = `
-                    <div class="flex items-start space-x-3">
-                        <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-brain text-white text-sm"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div class="text-purple-200 font-medium text-sm mb-1">CRM AI Assistant</div>
-                            <div class="text-white text-sm leading-relaxed">${response}</div>
-                            <div class="flex items-center space-x-4 mt-3 text-xs text-purple-300">
-                                <span>🕒 Processed in 0.3s</span>
-                                <span>🔒 Secure</span>
-                                <span>📊 Confidence: 96%</span>
-                            </div>
-                        </div>
-                        <button onclick="this.parentElement.parentElement.remove()" class="text-purple-300 hover:text-white transition-colors">
-                            <i class="fas fa-times text-xs"></i>
-                        </button>
-                    </div>
-                `;
-                
-                // Add response after the input container
-                const container = input.closest('.glass');
-                if (container) {
-                    // Remove any existing response
-                    const existingResponse = container.querySelector('.bg-gradient-to-r.from-purple-500\\/20');
-                    if (existingResponse) {
-                        existingResponse.remove();
-                    }
-                    container.appendChild(responseDiv);
-                }
-                
-                input.value = '';
-            }, 800);
         }
 
         // Handle Escape key for modal
