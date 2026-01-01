@@ -7232,10 +7232,10 @@
 
                                 <!-- Filters -->
                                 <div class="flex gap-2 mb-4 flex-wrap">
-                                    <button onclick="filterInsights('all')" class="bg-purple-500/20 text-purple-400 px-3 py-1 rounded-lg text-sm font-medium border border-purple-500/30">All (47)</button>
-                                    <button onclick="filterInsights('high')" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-sm border border-white/20 transition-all">High Priority (8)</button>
-                                    <button onclick="filterInsights('actionable')" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-sm border border-white/20 transition-all">Actionable (23)</button>
-                                    <button onclick="filterInsights('automated')" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-sm border border-white/20 transition-all">Auto-Run (16)</button>
+                                    <button onclick="filterInsights('all', event)" class="bg-purple-500/20 text-purple-400 px-3 py-1 rounded-lg text-sm font-medium border border-purple-500/30">All (47)</button>
+                                    <button onclick="filterInsights('high', event)" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-sm border border-white/20 transition-all">High Priority (8)</button>
+                                    <button onclick="filterInsights('actionable', event)" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-sm border border-white/20 transition-all">Actionable (23)</button>
+                                    <button onclick="filterInsights('automated', event)" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-sm border border-white/20 transition-all">Auto-Run (16)</button>
                                 </div>
 
                                 <!-- Insight Cards -->
@@ -21787,7 +21787,7 @@
                             <div class="font-semibold text-white mb-1">${insight.title}</div>
                             <div class="text-sm text-white/70 mb-2">${insight.description}</div>
                             <div class="flex items-center justify-between">
-                                <button class="${colors.btnBg} text-white px-3 py-1 rounded-lg text-sm font-medium transition-all">
+                                <button onclick="executeInsightAction('${insight.id}', '${insight.action}', event)" class="${colors.btnBg} text-white px-3 py-1 rounded-lg text-sm font-medium transition-all">
                                     ${insight.action}
                                 </button>
                                 <div class="flex items-center gap-2 text-xs text-white/60">
@@ -21951,8 +21951,14 @@
             `;
         }
 
-        function filterInsights(filter) {
+        function filterInsights(filter, event) {
             console.log('Filtering insights by:', filter);
+
+            // Safety guard
+            if (!event || !event.target) {
+                console.warn('filterInsights called without event');
+                return;
+            }
 
             // Update button states
             const filterButtons = document.querySelectorAll('[onclick^="filterInsights"]');
@@ -21996,7 +22002,7 @@
                             <div class="font-semibold text-white mb-1">${insight.title}</div>
                             <div class="text-sm text-white/70 mb-2">${insight.description}</div>
                             <div class="flex items-center justify-between">
-                                <button class="${colors.btnBg} text-white px-3 py-1 rounded-lg text-sm font-medium transition-all">
+                                <button onclick="executeInsightAction('${insight.id}', '${insight.action}', event)" class="${colors.btnBg} text-white px-3 py-1 rounded-lg text-sm font-medium transition-all">
                                     ${insight.action}
                                 </button>
                                 <div class="flex items-center gap-2 text-xs text-white/60">
@@ -22008,6 +22014,28 @@
                     </div>
                 </div>
             `}).join('');
+        }
+
+        // Handle insight action button clicks - prevents event bubbling to parent card
+        function executeInsightAction(insightId, actionText, event) {
+            // Stop event from bubbling to viewInsightDetails
+            if (event) {
+                event.stopPropagation();
+            }
+
+            console.log('Executing insight action:', { insightId, actionText });
+
+            // Route to appropriate action based on action text
+            if (actionText.includes('Execute')) {
+                executeAction(insightId);
+            } else if (actionText.includes('Review')) {
+                reviewAction(insightId);
+            } else if (actionText.includes('Automate') || actionText.includes('Build')) {
+                buildAutomation(insightId);
+            } else {
+                // Default action
+                alert(`Action: ${actionText}\n\nInsight: ${insightId}\n\nThis action would be executed.\n\nTODO: Implement specific action handler`);
+            }
         }
 
         function viewInsightDetails(id) {
