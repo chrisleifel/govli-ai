@@ -218,9 +218,8 @@
             </div>
             <div class="flex gap-3">
                 <input type="text" id="platformSearch" placeholder="Search across workflows, contacts, documents, policies, grants..."
-                       class="flex-1 bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                       onkeypress="if(event.key==='Enter') performPlatformSearch()">
-                <button onclick="performPlatformSearch()" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all">
+                       class="flex-1 bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                <button id="searchBtn" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all">
                     <i class="fas fa-magic mr-2"></i>AI Search
                 </button>
             </div>
@@ -268,11 +267,11 @@
                     </div>
 
                     <!-- Filters -->
-                    <div class="flex gap-2 mb-4 flex-wrap">
-                        <button onclick="filterInsights('all')" class="bg-purple-500/20 text-purple-400 px-3 py-1 rounded-lg text-sm font-medium border border-purple-500/30">All (47)</button>
-                        <button onclick="filterInsights('high')" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-sm border border-white/20 transition-all">High Priority (8)</button>
-                        <button onclick="filterInsights('actionable')" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-sm border border-white/20 transition-all">Actionable (23)</button>
-                        <button onclick="filterInsights('automated')" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-sm border border-white/20 transition-all">Auto-Run (16)</button>
+                    <div class="flex gap-2 mb-4 flex-wrap" id="filterButtons">
+                        <button data-filter="all" class="filter-btn bg-purple-500/20 text-purple-400 px-3 py-1 rounded-lg text-sm font-medium border border-purple-500/30">All (47)</button>
+                        <button data-filter="high" class="filter-btn bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-sm border border-white/20 transition-all">High Priority (8)</button>
+                        <button data-filter="actionable" class="filter-btn bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-sm border border-white/20 transition-all">Actionable (23)</button>
+                        <button data-filter="automated" class="filter-btn bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-sm border border-white/20 transition-all">Auto-Run (16)</button>
                     </div>
 
                     <!-- Insight Cards -->
@@ -313,7 +312,7 @@
                             <i class="fas fa-project-diagram text-blue-400"></i>
                             Knowledge Graph
                         </h3>
-                        <button onclick="openFullGraph()" class="text-blue-400 hover:text-blue-300 text-sm transition-colors">
+                        <button id="expandGraphBtn" class="text-blue-400 hover:text-blue-300 text-sm transition-colors">
                             <i class="fas fa-expand mr-1"></i>Expand
                         </button>
                     </div>
@@ -380,7 +379,7 @@
                             </div>
                         </div>
                     </div>
-                    <button onclick="viewExplainability()" class="mt-4 w-full bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium border border-white/20 transition-all">
+                    <button id="explainabilityBtn" class="mt-4 w-full bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium border border-white/20 transition-all">
                         <i class="fas fa-info-circle mr-2"></i>View Explainability
                     </button>
                 </div>
@@ -413,7 +412,7 @@
                             <span class="integration-status status-limited">⚠ Limited</span>
                         </div>
                     </div>
-                    <button onclick="viewIntegrationDetails()" class="mt-4 w-full bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium border border-white/20 transition-all">
+                    <button id="integrationDetailsBtn" class="mt-4 w-full bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium border border-white/20 transition-all">
                         <i class="fas fa-cog mr-2"></i>Configure Integrations
                     </button>
                 </div>
@@ -429,7 +428,7 @@
                     <i class="fas fa-project-diagram text-blue-400"></i>
                     Platform Knowledge Graph
                 </h2>
-                <button onclick="closeGraphModal()" class="text-white/70 hover:text-white transition-colors">
+                <button class="close-graph-modal text-white/70 hover:text-white transition-colors">
                     <i class="fas fa-times text-2xl"></i>
                 </button>
             </div>
@@ -447,7 +446,7 @@
                     <i class="fas fa-search text-purple-400"></i>
                     Search Results
                 </h2>
-                <button onclick="closeSearchModal()" class="text-white/70 hover:text-white transition-colors">
+                <button class="close-search-modal text-white/70 hover:text-white transition-colors">
                     <i class="fas fa-times text-2xl"></i>
                 </button>
             </div>
@@ -596,12 +595,70 @@
             loadActionCenter();
             loadAutomationSuggestions();
             renderKnowledgeGraph();
+            setupFilterButtons();
+            setupEventListeners();
         });
+
+        function setupFilterButtons() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    filterInsights(this.dataset.filter);
+                });
+            });
+        }
+
+        function setupEventListeners() {
+            // Search functionality
+            const searchBtn = document.getElementById('searchBtn');
+            const searchInput = document.getElementById('platformSearch');
+
+            if (searchBtn) {
+                searchBtn.addEventListener('click', performPlatformSearch);
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        performPlatformSearch();
+                    }
+                });
+            }
+
+            // Graph expand button
+            const expandBtn = document.getElementById('expandGraphBtn');
+            if (expandBtn) {
+                expandBtn.addEventListener('click', openFullGraph);
+            }
+
+            // Explainability button
+            const explainBtn = document.getElementById('explainabilityBtn');
+            if (explainBtn) {
+                explainBtn.addEventListener('click', viewExplainability);
+            }
+
+            // Integration details button
+            const integrationBtn = document.getElementById('integrationDetailsBtn');
+            if (integrationBtn) {
+                integrationBtn.addEventListener('click', viewIntegrationDetails);
+            }
+
+            // Modal close buttons
+            const closeGraphBtn = document.querySelector('.close-graph-modal');
+            if (closeGraphBtn) {
+                closeGraphBtn.addEventListener('click', closeGraphModal);
+            }
+
+            const closeSearchBtn = document.querySelector('.close-search-modal');
+            if (closeSearchBtn) {
+                closeSearchBtn.addEventListener('click', closeSearchModal);
+            }
+        }
 
         function loadInsightsFeed() {
             const feed = document.getElementById('insightsFeed');
             feed.innerHTML = MOCK_INSIGHTS.map(insight => `
-                <div class="insight-card glass rounded-lg p-4" onclick="viewInsightDetails('${insight.id}')">
+                <div class="insight-card glass rounded-lg p-4" data-insight-id="${insight.id}">
                     <div class="flex items-start gap-3">
                         <div class="w-10 h-10 bg-${insight.color}-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
                             <i class="${insight.icon} text-${insight.color}-400"></i>
@@ -615,7 +672,7 @@
                             <div class="font-semibold text-white mb-1">${insight.title}</div>
                             <div class="text-sm text-white/70 mb-2">${insight.description}</div>
                             <div class="flex items-center justify-between">
-                                <button class="bg-${insight.color}-600 hover:bg-${insight.color}-700 text-white px-3 py-1 rounded-lg text-sm font-medium transition-all">
+                                <button class="insight-action-btn bg-${insight.color}-600 hover:bg-${insight.color}-700 text-white px-3 py-1 rounded-lg text-sm font-medium transition-all" data-action="${insight.action}">
                                     ${insight.action}
                                 </button>
                                 <div class="flex items-center gap-2 text-xs text-white/60">
@@ -627,6 +684,22 @@
                     </div>
                 </div>
             `).join('');
+
+            // Add event listeners after creating elements
+            feed.querySelectorAll('.insight-card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    // Don't trigger if clicking on a button
+                    if (e.target.closest('.insight-action-btn')) return;
+                    viewInsightDetails(this.dataset.insightId);
+                });
+            });
+
+            feed.querySelectorAll('.insight-action-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    console.log('Action:', this.dataset.action);
+                });
+            });
         }
 
         function loadActionCenter() {
@@ -646,15 +719,30 @@
                         <i class="fas fa-robot text-purple-400 mr-1"></i>${action.aiAction}
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="executeAction('${action.id}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all">
+                        <button class="execute-action-btn flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all" data-action-id="${action.id}">
                             <i class="fas fa-check mr-1"></i>Approve & Execute
                         </button>
-                        <button onclick="reviewAction('${action.id}')" class="flex-1 bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg text-sm font-medium border border-white/20 transition-all">
+                        <button class="review-action-btn flex-1 bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg text-sm font-medium border border-white/20 transition-all" data-action-id="${action.id}">
                             <i class="fas fa-eye mr-1"></i>Review Details
                         </button>
                     </div>
                 </div>
             `).join('');
+
+            // Add event listeners
+            center.querySelectorAll('.execute-action-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    executeAction(this.dataset.actionId);
+                });
+            });
+
+            center.querySelectorAll('.review-action-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    reviewAction(this.dataset.actionId);
+                });
+            });
         }
 
         function loadAutomationSuggestions() {
@@ -676,13 +764,21 @@
                                 <div><strong>Accuracy:</strong> ${auto.accuracy}</div>
                                 <div><strong>Confidence:</strong> ${auto.confidence}%</div>
                             </div>
-                            <button onclick="buildAutomation('${auto.id}')" class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                            <button class="build-automation-btn bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all" data-auto-id="${auto.id}">
                                 <i class="fas fa-magic mr-2"></i>Build This Automation
                             </button>
                         </div>
                     </div>
                 </div>
             `).join('');
+
+            // Add event listeners
+            suggestions.querySelectorAll('.build-automation-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    buildAutomation(this.dataset.autoId);
+                });
+            });
         }
 
         function renderKnowledgeGraph() {
@@ -729,7 +825,10 @@
                     nodeEl.style.top = (node.y - 40) + 'px';
                     nodeEl.style.background = `linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3))`;
                     nodeEl.textContent = node.label;
-                    nodeEl.onclick = () => viewNodeDetails(node.id);
+                    nodeEl.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        viewNodeDetails(node.id);
+                    });
                     container.appendChild(nodeEl);
                 });
             });
@@ -783,23 +882,55 @@
         }
 
         function viewInsightDetails(id) {
-            console.log('Viewing insight:', id);
-            alert('📊 Insight Details\n\nThis would show detailed information about the insight including:\n\n• Full context and data sources\n• Historical patterns\n• Confidence breakdown\n• Recommended actions\n• Similar past insights\n\nTODO: Implement insight details modal');
+            try {
+                console.log('Viewing insight:', id);
+                const insight = MOCK_INSIGHTS.find(i => i.id === id);
+                if (insight) {
+                    console.log('Insight details:', insight);
+                    // TODO: Show modal with full insight details
+                }
+            } catch (error) {
+                console.error('Error viewing insight:', error);
+            }
         }
 
         function executeAction(id) {
-            console.log('Executing action:', id);
-            alert('✅ Action Executed\n\nCross-section action has been executed successfully.\n\n• Notifications sent\n• Records updated\n• Workflows triggered\n\nTODO: Implement actual action execution');
+            try {
+                console.log('Executing action:', id);
+                const action = MOCK_ACTIONS.find(a => a.id === id);
+                if (action) {
+                    console.log('Action executed:', action);
+                    // TODO: Implement actual action execution
+                }
+            } catch (error) {
+                console.error('Error executing action:', error);
+            }
         }
 
         function reviewAction(id) {
-            console.log('Reviewing action:', id);
-            alert('👁️ Action Review\n\nReview mode would show:\n\n• Detailed impact analysis\n• Affected records preview\n• Rollback plan\n• Approval workflow\n\nTODO: Implement action review interface');
+            try {
+                console.log('Reviewing action:', id);
+                const action = MOCK_ACTIONS.find(a => a.id === id);
+                if (action) {
+                    console.log('Action review:', action);
+                    // TODO: Implement action review interface
+                }
+            } catch (error) {
+                console.error('Error reviewing action:', error);
+            }
         }
 
         function buildAutomation(id) {
-            console.log('Building automation:', id);
-            alert('🤖 Build Automation\n\nThis would open the workflow builder with:\n\n• Pre-configured automation template\n• Suggested triggers and actions\n• Test data for validation\n• Deployment options\n\nTODO: Integrate with workflow builder');
+            try {
+                console.log('Building automation:', id);
+                const automation = MOCK_AUTOMATIONS.find(a => a.id === id);
+                if (automation) {
+                    console.log('Building automation:', automation);
+                    // TODO: Integrate with workflow builder
+                }
+            } catch (error) {
+                console.error('Error building automation:', error);
+            }
         }
 
         function openFullGraph() {
@@ -815,16 +946,30 @@
         }
 
         function viewNodeDetails(id) {
-            console.log('Viewing node:', id);
-            alert(`📍 Node Details: ${id}\n\nWould show:\n• All connections\n• Associated records\n• Timeline of interactions\n• Related insights\n\nTODO: Implement node details view`);
+            try {
+                console.log('Viewing node:', id);
+                // TODO: Implement node details view
+            } catch (error) {
+                console.error('Error viewing node:', error);
+            }
         }
 
         function viewExplainability() {
-            alert('🔍 AI Explainability\n\nFor any AI decision, we show:\n\n• Why did AI make this decision?\n• What data was used?\n• Confidence factors\n• Similar past decisions\n• Override options\n\nExample: "Why route to senior inspector?"\n✓ Project value >$100K\n✓ Structural changes detected\n✓ Historical pattern match\n\nTODO: Implement explainability interface');
+            try {
+                console.log('Viewing AI explainability');
+                // TODO: Implement explainability interface
+            } catch (error) {
+                console.error('Error viewing explainability:', error);
+            }
         }
 
         function viewIntegrationDetails() {
-            alert('🔗 Integration Configuration\n\nWould show:\n\n• Current integration status\n• Data flow diagrams\n• Configuration options\n• Performance metrics\n• Troubleshooting tools\n\nTODO: Implement integration management interface');
+            try {
+                console.log('Viewing integration details');
+                // TODO: Implement integration management interface
+            } catch (error) {
+                console.error('Error viewing integration details:', error);
+            }
         }
 
         // Close modals on escape
@@ -834,6 +979,15 @@
                     modal.classList.remove('active');
                 });
             }
+        });
+
+        // Close modals when clicking backdrop
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
         });
     </script>
 </body>
