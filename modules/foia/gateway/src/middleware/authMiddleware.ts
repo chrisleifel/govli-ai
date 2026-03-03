@@ -68,7 +68,26 @@ async function getSigningKey(kid: string): Promise<string> {
  */
 async function verifyToken(token: string): Promise<JWTPayload> {
   return new Promise((resolve, reject) => {
-    // Decode header to get kid (key ID)
+    // Use simple JWT_SECRET for testing/development
+    if (process.env.JWT_SECRET) {
+      jwt.verify(
+        token,
+        process.env.JWT_SECRET,
+        {
+          algorithms: ['HS256', 'RS256'],
+          clockTolerance: 30
+        },
+        (err, payload) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(payload as JWTPayload);
+        }
+      );
+      return;
+    }
+
+    // Production: Use JWKS for RS256 verification
     const decoded = jwt.decode(token, { complete: true });
     if (!decoded || !decoded.header.kid) {
       return reject(new Error('Invalid token structure'));
@@ -155,24 +174,46 @@ async function refreshAccessToken(refreshToken: string): Promise<string> {
  */
 const PUBLIC_ROUTES = [
   '/api/v1/foia/public/',
-  '/api/v1/foia/intake/requests', // POST submission
-  '/api/v1/foia/intake/requests/:id/status', // GET status with confirmation number
+  '/api/v1/foia/intake/requests', // POST submission (exact match for POST)
   '/health',
   '/api/health'
+];
+
+/**
+ * Exact public routes (must match exactly, no prefix matching)
+ */
+const EXACT_PUBLIC_ROUTES = [
+  '/'
+];
+
+/**
+ * Public route patterns (regex-based)
+ */
+const PUBLIC_ROUTE_PATTERNS = [
+  /^\/api\/v1\/foia\/intake\/requests\/[^\/]+\/status$/, // GET status endpoint
 ];
 
 /**
  * Check if route is public
  */
 function isPublicRoute(path: string): boolean {
-  return PUBLIC_ROUTES.some(route => {
+  // Check exact-only routes first
+  if (EXACT_PUBLIC_ROUTES.includes(path)) {
+    return true;
+  }
+
+  // Check prefix and exact matches
+  const match = PUBLIC_ROUTES.some(route => {
     if (route.endsWith('/')) {
       return path.startsWith(route);
     }
-    // Handle parameterized routes
-    const regex = new RegExp('^' + route.replace(/:[^/]+/g, '[^/]+') + '$');
-    return regex.test(path);
+    return path === route;
   });
+
+  if (match) return true;
+
+  // Check pattern matches
+  return PUBLIC_ROUTE_PATTERNS.some(pattern => pattern.test(path));
 }
 
 /**
