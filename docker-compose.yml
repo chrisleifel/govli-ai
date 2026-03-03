@@ -2,16 +2,22 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgis/postgis:15-3.3
+    image: pgvector/pgvector:pg15
     environment:
       POSTGRES_DB: govli_ai
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: govli_secure_password_2024
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./modules/foia/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
@@ -42,5 +48,37 @@ services:
     restart: unless-stopped
     command: sh -c "sleep 10 && npm start"
 
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - '6379:6379'
+    volumes:
+      - redisdata:/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@govli.ai
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - '5050:80'
+    depends_on:
+      - postgres
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ':9001'
+    environment:
+      MINIO_ROOT_USER: govli_minio
+      MINIO_ROOT_PASSWORD: govli_minio_2026
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - miniodata:/data
+
 volumes:
   postgres-data:
+  redisdata:
+  miniodata:

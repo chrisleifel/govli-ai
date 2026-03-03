@@ -1,1 +1,958 @@
-# Empty placeholder
+openapi: 3.0.3
+info:
+  title: Govli AI FOIA Module - Intake Service
+  version: 1.0.0
+  description: |
+    Request Intake & Validation service for FOIA requests.
+
+    This service handles:
+    - Public submission of FOIA requests
+    - Request status tracking (public and staff)
+    - Staff validation and review
+    - Acknowledgment delivery
+    - Staff queue management
+    - Duplicate detection
+
+    **Authentication**: Staff endpoints require `X-User-Role` and `X-User-Id` headers.
+    Public endpoints do not require authentication.
+  contact:
+    name: Govli AI Support
+    email: support@govli.ai
+
+servers:
+  - url: http://localhost:3001
+    description: Local development
+  - url: https://api.govli.ai/foia/intake
+    description: Production
+
+tags:
+  - name: Public
+    description: Public-facing endpoints for requesters
+  - name: Staff
+    description: Staff-only endpoints requiring authentication
+
+paths:
+  /intake/requests:
+    post:
+      tags:
+        - Public
+      summary: Submit a new FOIA request
+      description: |
+        Public endpoint for citizens to submit FOIA requests.
+
+        **Features**:
+        - Generates UUID v4 for request ID
+        - Creates confirmation number (format: FOIA-YYYY-XXXXXX)
+        - Calculates statutory deadline using business days
+        - Sets priority based on expedited flag, category, and agency count
+        - Emits `foia.request.submitted` event to analytics bus
+      operationId: submitRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitRequestInput'
+            examples:
+              standard:
+                summary: Standard request
+                value:
+                  requester_name: John Doe
+                  requester_email: john@example.com
+                  requester_category: PUBLIC_INTEREST
+                  subject: Budget Documents Request
+                  description: I would like to request all budget documents from fiscal year 2023, including revenue reports and expense breakdowns.
+                  agency_names:
+                    - Finance Department
+                  expedited_processing: false
+                  fee_waiver_requested: false
+              expedited:
+                summary: Expedited request
+                value:
+                  requester_name: Jane Smith
+                  requester_email: jane@newsorg.com
+                  requester_category: NEWS_MEDIA
+                  subject: Urgent - Public Safety Records
+                  description: Requesting all incident reports related to the recent public safety event for immediate news coverage.
+                  agency_names:
+                    - Police Department
+                  expedited_processing: true
+                  expedited_justification: Time-sensitive news story affecting public safety
+                  fee_waiver_requested: true
+                  fee_waiver_justification: News media request for public interest reporting
+      responses:
+        '201':
+          description: Request created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/SubmitRequestResponse'
+                  timestamp:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    get:
+      tags:
+        - Staff
+      summary: Get staff queue of FOIA requests
+      description: |
+        Retrieve paginated list of FOIA requests with filtering and sorting.
+
+        **Features**:
+        - Pagination with page/page_size
+        - Filter by status, priority, assigned staff, date ranges
+        - Sort by received_at, due_date, priority
+        - Search by requester name/email/subject
+      operationId: getStaffQueue
+      security:
+        - StaffAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, ACKNOWLEDGED, IN_PROGRESS, COMPLETED, DENIED, ON_HOLD]
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [LOW, MEDIUM, HIGH, URGENT]
+        - name: assigned_to
+          in: query
+          description: Filter by assigned staff member UUID
+          schema:
+            type: string
+            format: uuid
+        - name: received_after
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: received_before
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: due_after
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: due_before
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: search
+          in: query
+          description: Search in requester_name, requester_email, subject
+          schema:
+            type: string
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum: [received_at, due_date, priority]
+            default: received_at
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Staff queue retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/FoiaRequestSummary'
+                      total:
+                        type: integer
+                        example: 156
+                      page:
+                        type: integer
+                        example: 1
+                      page_size:
+                        type: integer
+                        example: 20
+                      total_pages:
+                        type: integer
+                        example: 8
+                  timestamp:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /intake/requests/{id}/status:
+    get:
+      tags:
+        - Public
+      summary: Get request status
+      description: |
+        Public and staff endpoint to check request status.
+
+        **Public Access**: Requires `confirmation_number` query parameter
+        **Staff Access**: Can use ID directly with authentication headers
+
+        Returns current status, due date, and validation information.
+      operationId: getRequestStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: FOIA request UUID
+          schema:
+            type: string
+            format: uuid
+        - name: confirmation_number
+          in: query
+          description: Confirmation number for public access (format FOIA-YYYY-XXXXXX)
+          schema:
+            type: string
+            pattern: '^FOIA-\d{4}-\d{6}$'
+            example: FOIA-2026-123456
+      responses:
+        '200':
+          description: Request status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/RequestStatus'
+                  timestamp:
+                    type: string
+                    format: date-time
+        '403':
+          description: Forbidden - Missing confirmation number or invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: FORBIDDEN
+                      message:
+                        type: string
+                        example: Confirmation number required for public access
+                  timestamp:
+                    type: string
+                    format: date-time
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /intake/requests/{id}/validate:
+    put:
+      tags:
+        - Staff
+      summary: Validate and review a FOIA request
+      description: |
+        Staff endpoint to validate incoming requests.
+
+        **Features**:
+        - Approve or reject requests
+        - Add validation notes
+        - Assign to staff member
+        - Update request status (ACKNOWLEDGED if approved, DENIED if rejected)
+        - Create history record
+        - Emit `foia.request.validated` event
+
+        **Permissions**: FOIA_OFFICER, REVIEWER, ANALYST
+      operationId: validateRequest
+      security:
+        - StaffAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateRequestInput'
+            examples:
+              approve:
+                summary: Approve request
+                value:
+                  validation_status: APPROVED
+                  validation_notes: Request is clear and within scope. Assigned to processing team.
+                  assigned_to: 550e8400-e29b-41d4-a716-446655440001
+              reject:
+                summary: Reject request
+                value:
+                  validation_status: REJECTED
+                  validation_notes: Request is too broad. Please narrow the scope to specific documents.
+      responses:
+        '200':
+          description: Request validated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/ValidateRequestResponse'
+                  timestamp:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /intake/requests/{id}/acknowledge:
+    post:
+      tags:
+        - Staff
+      summary: Send acknowledgment to requester
+      description: |
+        Staff endpoint to send acknowledgment notification.
+
+        **Features**:
+        - Send via EMAIL, MAIL, or FAX
+        - Update acknowledgment timestamp
+        - Update status to ACKNOWLEDGED
+        - Create history record
+        - Emit `foia.request.acknowledged` event
+
+        **Permissions**: FOIA_OFFICER, CLERK
+      operationId: acknowledgeRequest
+      security:
+        - StaffAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcknowledgeRequestInput'
+      responses:
+        '200':
+          description: Acknowledgment sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/AcknowledgeRequestResponse'
+                  timestamp:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /intake/requests/{id}/duplicate-check:
+    post:
+      tags:
+        - Staff
+      summary: Check for duplicate or similar requests
+      description: |
+        Staff endpoint to detect duplicate FOIA requests.
+
+        **Features**:
+        - Uses PostgreSQL similarity matching on subject/description
+        - Configurable similarity threshold (0.0-1.0)
+        - Configurable time window (check_last_days)
+        - Returns similarity scores
+        - Flags likely duplicates (score > threshold)
+
+        **Permissions**: FOIA_OFFICER, ANALYST
+      operationId: checkDuplicates
+      security:
+        - StaffAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DuplicateCheckInput'
+      responses:
+        '200':
+          description: Duplicate check completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/DuplicateCheckResponse'
+                  timestamp:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /health:
+    get:
+      tags:
+        - Public
+      summary: Health check endpoint
+      description: Check if the service is running
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                    example: foia-intake
+                  status:
+                    type: string
+                    example: healthy
+                  timestamp:
+                    type: string
+                    format: date-time
+
+components:
+  securitySchemes:
+    StaffAuth:
+      type: apiKey
+      in: header
+      name: X-User-Role
+      description: |
+        Staff authentication using role headers.
+
+        **Required Headers**:
+        - `X-User-Role`: One of ADMIN, FOIA_OFFICER, REVIEWER, ANALYST, CLERK, READ_ONLY
+        - `X-User-Id`: UUID of the authenticated staff member
+
+  schemas:
+    SubmitRequestInput:
+      type: object
+      required:
+        - requester_name
+        - requester_email
+        - requester_category
+        - subject
+        - description
+        - agency_names
+      properties:
+        requester_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: John Doe
+        requester_email:
+          type: string
+          format: email
+          example: john@example.com
+        requester_phone:
+          type: string
+          maxLength: 50
+          example: '+1-555-123-4567'
+        requester_organization:
+          type: string
+          maxLength: 255
+          example: Example News Organization
+        requester_category:
+          type: string
+          enum:
+            - COMMERCIAL
+            - EDUCATIONAL
+            - NEWS_MEDIA
+            - PUBLIC_INTEREST
+            - OTHER
+          description: |
+            Requester category affects processing priority and fee assessment:
+            - **COMMERCIAL**: Business use, standard fees apply
+            - **EDUCATIONAL**: Academic/research, reduced fees
+            - **NEWS_MEDIA**: Journalists, high priority, fee waiver eligible
+            - **PUBLIC_INTEREST**: Public good, fee waiver eligible
+            - **OTHER**: Unspecified category
+        subject:
+          type: string
+          minLength: 5
+          maxLength: 500
+          example: Budget Documents Request
+        description:
+          type: string
+          minLength: 20
+          example: I would like to request all budget documents from fiscal year 2023, including revenue reports and expense breakdowns for the Finance Department.
+        agency_names:
+          type: array
+          minItems: 1
+          items:
+            type: string
+          example:
+            - Finance Department
+        expedited_processing:
+          type: boolean
+          default: false
+          description: Request expedited processing (requires justification)
+        expedited_justification:
+          type: string
+          description: Required if expedited_processing is true
+          example: Time-sensitive matter affecting public safety
+        fee_waiver_requested:
+          type: boolean
+          default: false
+        fee_waiver_justification:
+          type: string
+          description: Required if fee_waiver_requested is true
+          example: Request serves the public interest and disclosure will contribute significantly to public understanding
+
+    SubmitRequestResponse:
+      type: object
+      properties:
+        request_id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        confirmation_number:
+          type: string
+          pattern: '^FOIA-\d{4}-\d{6}$'
+          example: FOIA-2026-123456
+        status:
+          type: string
+          enum: [PENDING]
+          example: PENDING
+        received_at:
+          type: string
+          format: date-time
+        due_date:
+          type: string
+          format: date-time
+          description: Calculated using business days (excludes weekends and federal holidays)
+        priority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, URGENT]
+          description: |
+            Priority is automatically determined by:
+            - **URGENT**: Expedited requests
+            - **HIGH**: News media or 3+ agencies
+            - **MEDIUM**: 2 agencies
+            - **LOW**: Single agency, non-expedited
+
+    RequestStatus:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - PENDING
+            - ACKNOWLEDGED
+            - IN_PROGRESS
+            - COMPLETED
+            - DENIED
+            - ON_HOLD
+        confirmation_number:
+          type: string
+          pattern: '^FOIA-\d{4}-\d{6}$'
+        received_at:
+          type: string
+          format: date-time
+        due_date:
+          type: string
+          format: date-time
+        acknowledged_at:
+          type: string
+          format: date-time
+          nullable: true
+        validation_status:
+          type: string
+          enum: [APPROVED, REJECTED]
+          nullable: true
+        validation_notes:
+          type: string
+          nullable: true
+        assigned_to:
+          type: string
+          format: uuid
+          nullable: true
+
+    ValidateRequestInput:
+      type: object
+      required:
+        - validation_status
+      properties:
+        validation_status:
+          type: string
+          enum: [APPROVED, REJECTED]
+        validation_notes:
+          type: string
+          example: Request is clear and within scope
+        assigned_to:
+          type: string
+          format: uuid
+          description: Assign to staff member UUID
+
+    ValidateRequestResponse:
+      type: object
+      properties:
+        request_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [ACKNOWLEDGED, DENIED]
+          description: ACKNOWLEDGED if approved, DENIED if rejected
+        validation_status:
+          type: string
+          enum: [APPROVED, REJECTED]
+        validation_notes:
+          type: string
+        assigned_to:
+          type: string
+          format: uuid
+          nullable: true
+        validated_at:
+          type: string
+          format: date-time
+
+    AcknowledgeRequestInput:
+      type: object
+      required:
+        - acknowledgment_method
+      properties:
+        acknowledgment_method:
+          type: string
+          enum: [EMAIL, MAIL, FAX]
+          example: EMAIL
+        custom_message:
+          type: string
+          description: Optional custom message to include in acknowledgment
+
+    AcknowledgeRequestResponse:
+      type: object
+      properties:
+        request_id:
+          type: string
+          format: uuid
+        method:
+          type: string
+          enum: [EMAIL, MAIL, FAX]
+        sent_to:
+          type: string
+          example: john@example.com
+        acknowledged_at:
+          type: string
+          format: date-time
+
+    DuplicateCheckInput:
+      type: object
+      properties:
+        similarity_threshold:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+          default: 0.85
+          example: 0.85
+          description: Minimum similarity score to flag as potential duplicate (0.0-1.0)
+        check_last_days:
+          type: integer
+          minimum: 1
+          default: 365
+          example: 365
+          description: Only check requests submitted within this many days
+
+    DuplicateCheckResponse:
+      type: object
+      properties:
+        request_id:
+          type: string
+          format: uuid
+        is_likely_duplicate:
+          type: boolean
+          description: True if any similar request exceeds threshold
+        similar_requests:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              subject:
+                type: string
+              description:
+                type: string
+              similarity_score:
+                type: number
+                minimum: 0.0
+                maximum: 1.0
+                example: 0.92
+              received_at:
+                type: string
+                format: date-time
+              status:
+                type: string
+
+    FoiaRequestSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        confirmation_number:
+          type: string
+        status:
+          type: string
+          enum:
+            - PENDING
+            - ACKNOWLEDGED
+            - IN_PROGRESS
+            - COMPLETED
+            - DENIED
+            - ON_HOLD
+        priority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, URGENT]
+        requester_name:
+          type: string
+        requester_email:
+          type: string
+        requester_category:
+          type: string
+        subject:
+          type: string
+        received_at:
+          type: string
+          format: date-time
+        due_date:
+          type: string
+          format: date-time
+        assigned_to:
+          type: string
+          format: uuid
+          nullable: true
+        validation_status:
+          type: string
+          enum: [APPROVED, REJECTED]
+          nullable: true
+
+  responses:
+    ValidationError:
+      description: Validation error - invalid request data
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: VALIDATION_ERROR
+                  message:
+                    type: string
+                    example: Invalid request data
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        path:
+                          type: array
+                          items:
+                            type: string
+                        message:
+                          type: string
+              timestamp:
+                type: string
+                format: date-time
+
+    Unauthorized:
+      description: Unauthorized - missing authentication
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: UNAUTHORIZED
+                  message:
+                    type: string
+                    example: Authentication required
+              timestamp:
+                type: string
+                format: date-time
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: FORBIDDEN
+                  message:
+                    type: string
+                    example: Requires one of the following roles FOIA_OFFICER, REVIEWER
+              timestamp:
+                type: string
+                format: date-time
+
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: NOT_FOUND
+                  message:
+                    type: string
+                    example: Request not found
+              timestamp:
+                type: string
+                format: date-time
+
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: INTERNAL_SERVER_ERROR
+                  message:
+                    type: string
+                    example: An unexpected error occurred
+                  details:
+                    type: string
+                    description: Only included in development environment
+              timestamp:
+                type: string
+                format: date-time
