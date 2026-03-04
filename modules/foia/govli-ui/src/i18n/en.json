@@ -1,4 +1,57 @@
 {
   "_locale": "en",
-  "_needsReview": true
+  "_language": "English",
+  "navigation": {
+    "home": "Home",
+    "submitRequest": "Submit Request",
+    "checkStatus": "Check Status",
+    "myRequests": "My Requests",
+    "agencies": "Agencies",
+    "faq": "FAQ",
+    "signIn": "Sign In",
+    "signOut": "Sign Out"
+  },
+  "statuses": {
+    "pending": "Pending",
+    "acknowledged": "Acknowledged",
+    "inProgress": "In Progress",
+    "fulfilled": "Fulfilled",
+    "denied": "Denied",
+    "appealed": "Appealed",
+    "closed": "Closed"
+  },
+  "buttons": {
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "download": "Download",
+    "appeal": "Appeal",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "save": "Save"
+  },
+  "errors": {
+    "networkError": "Network error. Please check your connection and try again.",
+    "notFound": "The requested resource was not found.",
+    "serverError": "Server error. Please try again later.",
+    "unauthorized": "You are not authorized to access this resource.",
+    "invalidInput": "Please check your input and try again."
+  },
+  "forms": {
+    "required": "Required",
+    "optional": "Optional",
+    "chooseFile": "Choose File",
+    "uploading": "Uploading...",
+    "uploadSuccess": "Upload successful",
+    "uploadError": "Upload failed. Please try again."
+  },
+  "footer": {
+    "aboutFOIA": "About FOIA",
+    "quickLinks": "Quick Links",
+    "resources": "Resources",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service"
+  }
 }

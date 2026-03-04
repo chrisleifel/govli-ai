@@ -1,4 +1,58 @@
 {
   "_locale": "zh",
-  "_needsReview": true
+  "_language": "Chinese",
+  "NEEDS_HUMAN_REVIEW": true,
+  "navigation": {
+    "home": "主页",
+    "submitRequest": "提交请求",
+    "checkStatus": "查看状态",
+    "myRequests": "我的请求",
+    "agencies": "机构",
+    "faq": "常见问题",
+    "signIn": "登录",
+    "signOut": "登出"
+  },
+  "statuses": {
+    "pending": "待处理",
+    "acknowledged": "已确认",
+    "inProgress": "处理中",
+    "fulfilled": "已完成",
+    "denied": "已拒绝",
+    "appealed": "已上诉",
+    "closed": "已关闭"
+  },
+  "buttons": {
+    "submit": "提交",
+    "cancel": "取消",
+    "edit": "编辑",
+    "delete": "删除",
+    "download": "下载",
+    "appeal": "上诉",
+    "close": "关闭",
+    "back": "返回",
+    "next": "下一步",
+    "save": "保存"
+  },
+  "errors": {
+    "networkError": "网络错误。请检查您的连接并重试。",
+    "notFound": "未找到请求的资源。",
+    "serverError": "服务器错误。请稍后再试。",
+    "unauthorized": "您无权访问此资源。",
+    "invalidInput": "请检查您的输入并重试。"
+  },
+  "forms": {
+    "required": "必填",
+    "optional": "可选",
+    "chooseFile": "选择文件",
+    "uploading": "上传中...",
+    "uploadSuccess": "上传成功",
+    "uploadError": "上传失败。请重试。"
+  },
+  "footer": {
+    "aboutFOIA": "关于FOIA",
+    "quickLinks": "快速链接",
+    "resources": "资源",
+    "privacyPolicy": "隐私政策",
+    "termsOfService": "服务条款"
+  }
 }

@@ -1,4 +1,58 @@
 {
   "_locale": "fr",
-  "_needsReview": true
+  "_language": "French",
+  "NEEDS_HUMAN_REVIEW": true,
+  "navigation": {
+    "home": "Accueil",
+    "submitRequest": "Soumettre une Demande",
+    "checkStatus": "Vérifier le Statut",
+    "myRequests": "Mes Demandes",
+    "agencies": "Agences",
+    "faq": "FAQ",
+    "signIn": "Se Connecter",
+    "signOut": "Se Déconnecter"
+  },
+  "statuses": {
+    "pending": "En Attente",
+    "acknowledged": "Reconnu",
+    "inProgress": "En Cours",
+    "fulfilled": "Accompli",
+    "denied": "Refusé",
+    "appealed": "Fait Appel",
+    "closed": "Fermé"
+  },
+  "buttons": {
+    "submit": "Soumettre",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "download": "Télécharger",
+    "appeal": "Faire Appel",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "save": "Enregistrer"
+  },
+  "errors": {
+    "networkError": "Erreur réseau. Veuillez vérifier votre connexion et réessayer.",
+    "notFound": "La ressource demandée n'a pas été trouvée.",
+    "serverError": "Erreur du serveur. Veuillez réessayer plus tard.",
+    "unauthorized": "Vous n'êtes pas autorisé à accéder à cette ressource.",
+    "invalidInput": "Veuillez vérifier votre saisie et réessayer."
+  },
+  "forms": {
+    "required": "Obligatoire",
+    "optional": "Optionnel",
+    "chooseFile": "Choisir un Fichier",
+    "uploading": "Téléchargement...",
+    "uploadSuccess": "Téléchargement réussi",
+    "uploadError": "Échec du téléchargement. Veuillez réessayer."
+  },
+  "footer": {
+    "aboutFOIA": "À propos de FOIA",
+    "quickLinks": "Liens Rapides",
+    "resources": "Ressources",
+    "privacyPolicy": "Politique de Confidentialité",
+    "termsOfService": "Conditions d'Utilisation"
+  }
 }

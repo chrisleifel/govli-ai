@@ -1,4 +1,58 @@
 {
   "_locale": "vi",
-  "_needsReview": true
+  "_language": "Vietnamese",
+  "NEEDS_HUMAN_REVIEW": true,
+  "navigation": {
+    "home": "Trang Chủ",
+    "submitRequest": "Gửi Yêu Cầu",
+    "checkStatus": "Kiểm Tra Trạng Thái",
+    "myRequests": "Yêu Cầu Của Tôi",
+    "agencies": "Cơ Quan",
+    "faq": "Câu Hỏi Thường Gặp",
+    "signIn": "Đăng Nhập",
+    "signOut": "Đăng Xuất"
+  },
+  "statuses": {
+    "pending": "Đang Chờ",
+    "acknowledged": "Đã Xác Nhận",
+    "inProgress": "Đang Xử Lý",
+    "fulfilled": "Đã Hoàn Thành",
+    "denied": "Bị Từ Chối",
+    "appealed": "Đã Kháng Cáo",
+    "closed": "Đã Đóng"
+  },
+  "buttons": {
+    "submit": "Gửi",
+    "cancel": "Hủy",
+    "edit": "Chỉnh Sửa",
+    "delete": "Xóa",
+    "download": "Tải Xuống",
+    "appeal": "Kháng Cáo",
+    "close": "Đóng",
+    "back": "Quay Lại",
+    "next": "Tiếp Theo",
+    "save": "Lưu"
+  },
+  "errors": {
+    "networkError": "Lỗi mạng. Vui lòng kiểm tra kết nối và thử lại.",
+    "notFound": "Không tìm thấy tài nguyên được yêu cầu.",
+    "serverError": "Lỗi máy chủ. Vui lòng thử lại sau.",
+    "unauthorized": "Bạn không có quyền truy cập tài nguyên này.",
+    "invalidInput": "Vui lòng kiểm tra đầu vào và thử lại."
+  },
+  "forms": {
+    "required": "Bắt Buộc",
+    "optional": "Tùy Chọn",
+    "chooseFile": "Chọn Tệp",
+    "uploading": "Đang Tải Lên...",
+    "uploadSuccess": "Tải lên thành công",
+    "uploadError": "Tải lên thất bại. Vui lòng thử lại."
+  },
+  "footer": {
+    "aboutFOIA": "Về FOIA",
+    "quickLinks": "Liên Kết Nhanh",
+    "resources": "Tài Nguyên",
+    "privacyPolicy": "Chính Sách Bảo Mật",
+    "termsOfService": "Điều Khoản Dịch Vụ"
+  }
 }

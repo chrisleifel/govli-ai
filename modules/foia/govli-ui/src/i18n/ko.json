@@ -1,4 +1,58 @@
 {
   "_locale": "ko",
-  "_needsReview": true
+  "_language": "Korean",
+  "NEEDS_HUMAN_REVIEW": true,
+  "navigation": {
+    "home": "홈",
+    "submitRequest": "요청 제출",
+    "checkStatus": "상태 확인",
+    "myRequests": "내 요청",
+    "agencies": "기관",
+    "faq": "자주 묻는 질문",
+    "signIn": "로그인",
+    "signOut": "로그아웃"
+  },
+  "statuses": {
+    "pending": "대기 중",
+    "acknowledged": "확인됨",
+    "inProgress": "진행 중",
+    "fulfilled": "완료됨",
+    "denied": "거부됨",
+    "appealed": "항소됨",
+    "closed": "닫힘"
+  },
+  "buttons": {
+    "submit": "제출",
+    "cancel": "취소",
+    "edit": "편집",
+    "delete": "삭제",
+    "download": "다운로드",
+    "appeal": "항소",
+    "close": "닫기",
+    "back": "뒤로",
+    "next": "다음",
+    "save": "저장"
+  },
+  "errors": {
+    "networkError": "네트워크 오류입니다. 연결을 확인하고 다시 시도하세요.",
+    "notFound": "요청한 리소스를 찾을 수 없습니다.",
+    "serverError": "서버 오류입니다. 나중에 다시 시도하세요.",
+    "unauthorized": "이 리소스에 접근할 권한이 없습니다.",
+    "invalidInput": "입력을 확인하고 다시 시도하세요."
+  },
+  "forms": {
+    "required": "필수",
+    "optional": "선택 사항",
+    "chooseFile": "파일 선택",
+    "uploading": "업로드 중...",
+    "uploadSuccess": "업로드 성공",
+    "uploadError": "업로드 실패. 다시 시도하세요."
+  },
+  "footer": {
+    "aboutFOIA": "FOIA 소개",
+    "quickLinks": "빠른 링크",
+    "resources": "리소스",
+    "privacyPolicy": "개인정보 보호정책",
+    "termsOfService": "서비스 약관"
+  }
 }

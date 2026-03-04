@@ -1,4 +1,58 @@
 {
   "_locale": "tl",
-  "_needsReview": true
+  "_language": "Tagalog",
+  "NEEDS_HUMAN_REVIEW": true,
+  "navigation": {
+    "home": "Tahanan",
+    "submitRequest": "Isumite ang Kahilingan",
+    "checkStatus": "Suriin ang Katayuan",
+    "myRequests": "Aking mga Kahilingan",
+    "agencies": "Mga Ahensya",
+    "faq": "Mga Madalas Itanong",
+    "signIn": "Mag-sign In",
+    "signOut": "Mag-sign Out"
+  },
+  "statuses": {
+    "pending": "Nakabinbin",
+    "acknowledged": "Kinikilala",
+    "inProgress": "Ginagawa",
+    "fulfilled": "Natupad",
+    "denied": "Tinanggihan",
+    "appealed": "Nag-apela",
+    "closed": "Sarado"
+  },
+  "buttons": {
+    "submit": "Isumite",
+    "cancel": "Kanselahin",
+    "edit": "I-edit",
+    "delete": "Tanggalin",
+    "download": "I-download",
+    "appeal": "Mag-apela",
+    "close": "Isara",
+    "back": "Bumalik",
+    "next": "Susunod",
+    "save": "I-save"
+  },
+  "errors": {
+    "networkError": "May error sa network. Pakisuri ang iyong koneksyon at subukang muli.",
+    "notFound": "Hindi nahanap ang hiniling na resource.",
+    "serverError": "May error sa server. Pakisubukan muli mamaya.",
+    "unauthorized": "Hindi ka awtorisado na ma-access ang resource na ito.",
+    "invalidInput": "Pakisuri ang iyong input at subukang muli."
+  },
+  "forms": {
+    "required": "Kailangan",
+    "optional": "Opsyonal",
+    "chooseFile": "Pumili ng File",
+    "uploading": "Nag-a-upload...",
+    "uploadSuccess": "Matagumpay ang pag-upload",
+    "uploadError": "Nabigo ang pag-upload. Pakisubukan muli."
+  },
+  "footer": {
+    "aboutFOIA": "Tungkol sa FOIA",
+    "quickLinks": "Mabilis na mga Link",
+    "resources": "Mga Mapagkukunan",
+    "privacyPolicy": "Patakaran sa Privacy",
+    "termsOfService": "Mga Tuntunin ng Serbisyo"
+  }
 }

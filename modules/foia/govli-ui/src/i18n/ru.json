@@ -1,4 +1,58 @@
 {
   "_locale": "ru",
-  "_needsReview": true
+  "_language": "Russian",
+  "NEEDS_HUMAN_REVIEW": true,
+  "navigation": {
+    "home": "Главная",
+    "submitRequest": "Отправить Запрос",
+    "checkStatus": "Проверить Статус",
+    "myRequests": "Мои Запросы",
+    "agencies": "Агентства",
+    "faq": "Часто Задаваемые Вопросы",
+    "signIn": "Войти",
+    "signOut": "Выйти"
+  },
+  "statuses": {
+    "pending": "В Ожидании",
+    "acknowledged": "Подтверждено",
+    "inProgress": "В Процессе",
+    "fulfilled": "Выполнено",
+    "denied": "Отклонено",
+    "appealed": "Обжаловано",
+    "closed": "Закрыто"
+  },
+  "buttons": {
+    "submit": "Отправить",
+    "cancel": "Отменить",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "download": "Скачать",
+    "appeal": "Обжаловать",
+    "close": "Закрыть",
+    "back": "Назад",
+    "next": "Далее",
+    "save": "Сохранить"
+  },
+  "errors": {
+    "networkError": "Ошибка сети. Проверьте подключение и повторите попытку.",
+    "notFound": "Запрашиваемый ресурс не найден.",
+    "serverError": "Ошибка сервера. Повторите попытку позже.",
+    "unauthorized": "У вас нет прав для доступа к этому ресурсу.",
+    "invalidInput": "Проверьте введенные данные и повторите попытку."
+  },
+  "forms": {
+    "required": "Обязательно",
+    "optional": "Необязательно",
+    "chooseFile": "Выбрать Файл",
+    "uploading": "Загрузка...",
+    "uploadSuccess": "Загрузка успешна",
+    "uploadError": "Ошибка загрузки. Повторите попытку."
+  },
+  "footer": {
+    "aboutFOIA": "О FOIA",
+    "quickLinks": "Быстрые Ссылки",
+    "resources": "Ресурсы",
+    "privacyPolicy": "Политика Конфиденциальности",
+    "termsOfService": "Условия Использования"
+  }
 }

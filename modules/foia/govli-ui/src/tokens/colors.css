@@ -1,4 +1,119 @@
+/**
+ * Design Tokens - Colors
+ * CSS custom properties for the Govli FOIA platform
+ * Supports tenant-specific color overrides via data attributes
+ */
+
 :root {
-  --primary-blue: #3B82F6;
-  --primary-purple: #8B5CF6;
+  /* Primary Brand Colors - Govli Default */
+  --color-navy: #1e3a5f;
+  --color-navy-light: #2d5080;
+  --color-navy-dark: #0f1d30;
+
+  --color-teal: #00a9a5;
+  --color-teal-light: #00c9c4;
+  --color-teal-dark: #008985;
+
+  --color-gold: #f6be00;
+  --color-gold-light: #ffd633;
+  --color-gold-dark: #d4a000;
+
+  /* Semantic Colors */
+  --color-success: #10b981;
+  --color-success-light: #34d399;
+  --color-success-dark: #059669;
+
+  --color-warning: #f59e0b;
+  --color-warning-light: #fbbf24;
+  --color-warning-dark: #d97706;
+
+  --color-danger: #ef4444;
+  --color-danger-light: #f87171;
+  --color-danger-dark: #dc2626;
+
+  --color-info: #3b82f6;
+  --color-info-light: #60a5fa;
+  --color-info-dark: #2563eb;
+
+  /* Neutral Colors */
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* Functional Colors */
+  --color-background: var(--color-white);
+  --color-background-secondary: var(--color-gray-50);
+  --color-background-tertiary: var(--color-gray-100);
+
+  --color-text-primary: var(--color-gray-900);
+  --color-text-secondary: var(--color-gray-600);
+  --color-text-muted: var(--color-gray-400);
+  --color-text-inverse: var(--color-white);
+
+  --color-border: var(--color-gray-200);
+  --color-border-strong: var(--color-gray-300);
+  --color-border-subtle: var(--color-gray-100);
+
+  --color-focus: var(--color-teal);
+  --color-focus-ring: rgba(0, 169, 165, 0.3);
+
+  /* Interactive States */
+  --color-hover-overlay: rgba(0, 0, 0, 0.05);
+  --color-active-overlay: rgba(0, 0, 0, 0.1);
+  --color-disabled: var(--color-gray-300);
+  --color-disabled-text: var(--color-gray-400);
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-background: var(--color-gray-900);
+    --color-background-secondary: var(--color-gray-800);
+    --color-background-tertiary: var(--color-gray-700);
+
+    --color-text-primary: var(--color-gray-50);
+    --color-text-secondary: var(--color-gray-300);
+    --color-text-muted: var(--color-gray-500);
+
+    --color-border: var(--color-gray-700);
+    --color-border-strong: var(--color-gray-600);
+    --color-border-subtle: var(--color-gray-800);
+
+    --color-hover-overlay: rgba(255, 255, 255, 0.1);
+    --color-active-overlay: rgba(255, 255, 255, 0.15);
+  }
+}
+
+/* Tenant-Specific Color Overrides */
+/* These can be dynamically set via data-tenant attribute */
+[data-tenant] {
+  /* Tenant colors will be injected via themeLoader.ts */
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  :root {
+    --color-border: var(--color-gray-400);
+    --color-border-strong: var(--color-gray-600);
+    --color-text-secondary: var(--color-gray-700);
+  }
+}
+
+/* Accessibility - Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

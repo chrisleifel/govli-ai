@@ -1,4 +1,58 @@
 {
   "_locale": "es",
-  "_needsReview": true
+  "_language": "Spanish",
+  "NEEDS_HUMAN_REVIEW": true,
+  "navigation": {
+    "home": "Inicio",
+    "submitRequest": "Enviar Solicitud",
+    "checkStatus": "Verificar Estado",
+    "myRequests": "Mis Solicitudes",
+    "agencies": "Agencias",
+    "faq": "Preguntas Frecuentes",
+    "signIn": "Iniciar Sesión",
+    "signOut": "Cerrar Sesión"
+  },
+  "statuses": {
+    "pending": "Pendiente",
+    "acknowledged": "Reconocido",
+    "inProgress": "En Progreso",
+    "fulfilled": "Cumplido",
+    "denied": "Denegado",
+    "appealed": "Apelado",
+    "closed": "Cerrado"
+  },
+  "buttons": {
+    "submit": "Enviar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "download": "Descargar",
+    "appeal": "Apelar",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "save": "Guardar"
+  },
+  "errors": {
+    "networkError": "Error de red. Por favor, verifique su conexión e intente nuevamente.",
+    "notFound": "El recurso solicitado no fue encontrado.",
+    "serverError": "Error del servidor. Por favor, intente más tarde.",
+    "unauthorized": "No está autorizado para acceder a este recurso.",
+    "invalidInput": "Por favor, verifique su entrada e intente nuevamente."
+  },
+  "forms": {
+    "required": "Requerido",
+    "optional": "Opcional",
+    "chooseFile": "Elegir Archivo",
+    "uploading": "Subiendo...",
+    "uploadSuccess": "Subida exitosa",
+    "uploadError": "Error en la subida. Por favor, intente nuevamente."
+  },
+  "footer": {
+    "aboutFOIA": "Acerca de FOIA",
+    "quickLinks": "Enlaces Rápidos",
+    "resources": "Recursos",
+    "privacyPolicy": "Política de Privacidad",
+    "termsOfService": "Términos de Servicio"
+  }
 }

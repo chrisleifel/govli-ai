@@ -1,4 +1,58 @@
 {
   "_locale": "ar",
-  "_needsReview": true
+  "_language": "Arabic",
+  "NEEDS_HUMAN_REVIEW": true,
+  "navigation": {
+    "home": "الصفحة الرئيسية",
+    "submitRequest": "إرسال طلب",
+    "checkStatus": "التحقق من الحالة",
+    "myRequests": "طلباتي",
+    "agencies": "الوكالات",
+    "faq": "الأسئلة الشائعة",
+    "signIn": "تسجيل الدخول",
+    "signOut": "تسجيل الخروج"
+  },
+  "statuses": {
+    "pending": "قيد الانتظار",
+    "acknowledged": "تم الإقرار",
+    "inProgress": "قيد التنفيذ",
+    "fulfilled": "مكتمل",
+    "denied": "مرفوض",
+    "appealed": "تم الاستئناف",
+    "closed": "مغلق"
+  },
+  "buttons": {
+    "submit": "إرسال",
+    "cancel": "إلغاء",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "download": "تحميل",
+    "appeal": "استئناف",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "next": "التالي",
+    "save": "حفظ"
+  },
+  "errors": {
+    "networkError": "خطأ في الشبكة. يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
+    "notFound": "لم يتم العثور على المورد المطلوب.",
+    "serverError": "خطأ في الخادم. يرجى المحاولة لاحقًا.",
+    "unauthorized": "غير مصرح لك بالوصول إلى هذا المورد.",
+    "invalidInput": "يرجى التحقق من إدخالك والمحاولة مرة أخرى."
+  },
+  "forms": {
+    "required": "مطلوب",
+    "optional": "اختياري",
+    "chooseFile": "اختر ملف",
+    "uploading": "جاري الرفع...",
+    "uploadSuccess": "تم الرفع بنجاح",
+    "uploadError": "فشل الرفع. يرجى المحاولة مرة أخرى."
+  },
+  "footer": {
+    "aboutFOIA": "حول FOIA",
+    "quickLinks": "روابط سريعة",
+    "resources": "الموارد",
+    "privacyPolicy": "سياسة الخصوصية",
+    "termsOfService": "شروط الخدمة"
+  }
 }
