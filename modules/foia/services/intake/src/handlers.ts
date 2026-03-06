@@ -6,6 +6,7 @@
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { Pool } from 'pg';
+import axios from 'axios';
 import {
   FoiaRequest,
   GovliEvent,
@@ -20,6 +21,7 @@ import {
   StaffQueueFilters,
   DuplicateCheckInput
 } from './schemas';
+import { ComplexityScorer } from '../../../ai-sidecar/src/complexityScorer';
 
 // Database connection pool (should be injected in production)
 let dbPool: Pool;
@@ -85,14 +87,19 @@ export async function submitRequest(
       updated_at: receivedAt
     };
 
-    // Insert into database
+    // v2.0: Extract migration_source from headers or body
+    const migrationSource = (req.body as any).migration_source ||
+                           req.headers['x-migration-source'] as string ||
+                           null;
+
+    // Insert into database (v2.0: added complexity_score and migration_source)
     await dbPool.query(
       `INSERT INTO foia_requests (
         id, tenant_id, requester_name, requester_email, requester_category,
         subject, description, date_range_start, date_range_end, agency_names,
         status, priority, due_date, received_at, created_at, updated_at,
-        confirmation_number
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
+        confirmation_number, complexity_score, migration_source
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
       [
         foiaRequest.id,
         foiaRequest.tenant_id,
@@ -110,9 +117,38 @@ export async function submitRequest(
         foiaRequest.received_at,
         foiaRequest.created_at,
         foiaRequest.updated_at,
-        confirmationNumber
+        confirmationNumber,
+        null, // complexity_score - calculated below
+        migrationSource
       ]
     );
+
+    // v2.0: Calculate complexity score after INSERT
+    let complexityScore = 0;
+    try {
+      const scorer = new ComplexityScorer();
+      const scoreResult = scorer.calculateScore({
+        request_text_length: (requestData.description || '').length,
+        document_count: 0, // No documents at intake stage
+        has_legal_citations: /\d+\s*U\.?S\.?C\.?|\d+\s*C\.?F\.?R\.?/i.test(requestData.description || ''),
+        requires_legal_analysis: requestData.expedited_processing || false,
+        has_multiple_exemptions: false,
+        is_urgent: requestData.expedited_processing || false,
+        feature_id: 'AI-1', // Intake Triage
+        estimated_analysis_depth: 'moderate'
+      });
+
+      complexityScore = scoreResult.total_score;
+
+      // Update the request with the calculated score
+      await dbPool.query(
+        `UPDATE foia_requests SET complexity_score = $1 WHERE id = $2`,
+        [complexityScore, requestId]
+      );
+    } catch (error: any) {
+      console.error('Failed to calculate complexity score:', error);
+      // Don't fail the request if scoring fails
+    }
 
     // Emit event for analytics
     const event: GovliEvent = {
@@ -126,12 +162,53 @@ export async function submitRequest(
         requester_category: requestData.requester_category,
         agency_count: requestData.agency_names.length,
         expedited: requestData.expedited_processing,
-        fee_waiver: requestData.fee_waiver_requested
+        fee_waiver: requestData.fee_waiver_requested,
+        complexity_score: complexityScore,
+        migration_source: migrationSource
       },
       timestamp: new Date()
     };
 
     await analyticsBus.emit(event);
+
+    // v2.0: Emit webhook to legacy CRM if configured
+    try {
+      const webhookUrl = await getLegacyCrmWebhookUrl(tenantId);
+      if (webhookUrl) {
+        // Fire-and-forget webhook
+        axios.post(webhookUrl, {
+          request_id: requestId,
+          confirmation_number: confirmationNumber,
+          requester_email: requestData.requester_email,
+          subject: requestData.subject,
+          status: 'PENDING',
+          received_at: receivedAt,
+          due_date: dueDate
+        }, {
+          timeout: 5000,
+          headers: { 'Content-Type': 'application/json' }
+        }).catch((error) => {
+          console.error('Webhook delivery failed (non-blocking):', error.message);
+        });
+
+        // Log webhook attempt to audit
+        await dbPool.query(
+          `INSERT INTO foia_request_history (
+            id, request_id, action, performed_by, notes, created_at
+          ) VALUES ($1, $2, $3, $4, $5, NOW())`,
+          [
+            uuidv4(),
+            requestId,
+            'WEBHOOK_SENT',
+            null,
+            `Webhook sent to ${webhookUrl}`
+          ]
+        );
+      }
+    } catch (error: any) {
+      console.error('Webhook emission failed (non-blocking):', error);
+      // Don't fail the request if webhook fails
+    }
 
     // Return response
     const response: ApiResponse<{
@@ -600,6 +677,30 @@ export async function checkDuplicates(
       timestamp: new Date()
     });
   }
+}
+
+/**
+ * Helper: Get legacy CRM webhook URL from tenant config
+ * v2.0: Added for webhook integration
+ */
+async function getLegacyCrmWebhookUrl(tenantId: string): Promise<string | null> {
+  try {
+    const result = await dbPool.query(
+      `SELECT config FROM tenant_settings
+       WHERE tenant_id = $1
+         AND key = 'integrations'`,
+      [tenantId]
+    );
+
+    if (result.rows.length > 0) {
+      const config = result.rows[0].config;
+      return config?.legacy_crm_webhook || null;
+    }
+  } catch (error: any) {
+    console.warn('Could not fetch webhook config:', error.message);
+  }
+
+  return null;
 }
 
 /**
